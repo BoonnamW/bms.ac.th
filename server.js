@@ -3,13 +3,19 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { getSettings, ROOT, UPLOAD_DIR } from './lib/db.js';
 import { navTree } from './lib/nav.js';
-import { parseCookies, icon, thDate, token } from './lib/helpers.js';
+import { parseCookies, icon, thDate, token, IFRAME_HOSTS } from './lib/helpers.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const PROD = process.env.NODE_ENV === 'production';
+
+// ไฟล์จาก WordPress เดิมเก็บที่ uploads/wp/ — ระหว่างที่ยังไม่ได้คัดลอกโฟลเดอร์ wp-content/uploads มา
+// ให้ตั้ง WP_MEDIA_URL (เช่น https://www.bms.ac.th/bs/wp-content/uploads/) ระบบจะส่งต่อไปยังเว็บเดิมให้
+const WP_MEDIA_URL = /^https:\/\/[^\s/]+\//.test(process.env.WP_MEDIA_URL || '') ? process.env.WP_MEDIA_URL.replace(/\/?$/, '/') : '';
+const WP_MEDIA_ORIGIN = WP_MEDIA_URL ? new URL(WP_MEDIA_URL).origin : null;
+const WP_FILE = /\.(jpe?g|png|gif|webp|pdf|docx?|xlsx?|pptx?|zip|mp4)$/i;
 
 app.disable('x-powered-by');
 if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
@@ -26,7 +32,8 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:'],
+      imgSrc: ["'self'", 'data:', ...(WP_MEDIA_ORIGIN ? [WP_MEDIA_ORIGIN] : [])],
+      frameSrc: ["'self'", ...IFRAME_HOSTS.map((h) => `https://${h}`), ...(WP_MEDIA_ORIGIN ? [WP_MEDIA_ORIGIN] : [])],
       connectSrc: ["'self'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -48,10 +55,13 @@ app.use((req, res, next) => { req.cookies = parseCookies(req.headers.cookie); ne
 
 // ---------- ไฟล์สาธารณะ ----------
 app.use(express.static(path.join(ROOT, 'public'), { maxAge: PROD ? '7d' : 0 }));
+// ไฟล์จากเว็บเดิม: เปิดเฉพาะชนิดไฟล์รูป/เอกสาร (กันไฟล์ .html/.js/.svg ในโฟลเดอร์เดิมถูกเปิดจากโดเมนนี้)
+app.use('/uploads/wp', (req, res, next) => (WP_FILE.test(req.path) ? next() : res.status(404).end()));
 app.use('/uploads', express.static(UPLOAD_DIR, {
   maxAge: '30d', index: false, dotfiles: 'deny',
   setHeaders: (res) => res.setHeader('Content-Disposition', 'inline'),
 }));
+app.use('/uploads/wp', (req, res, next) => (WP_MEDIA_URL ? res.redirect(302, WP_MEDIA_URL + req.path.slice(1)) : next()));
 
 app.get('/theme.css', (req, res) => {
   const s = getSettings();

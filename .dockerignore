@@ -4,3 +4,6 @@ uploads
 .git
 .env
 README.md
+*.sql
+*.sql.zip
+*.sql.gz

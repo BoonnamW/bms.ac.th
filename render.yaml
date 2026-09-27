@@ -7,3 +7,5 @@ services:
     envVars:
       - key: ADMIN_PASSWORD   # ตั้งเองใน Render Dashboard (อย่างน้อย 10 ตัวอักษร มีตัวอักษรและตัวเลข)
         sync: false
+      - key: WP_MEDIA_URL     # รูป/ไฟล์ของเว็บเดิม — ดึงจากเว็บ WordPress เดิมจนกว่าจะคัดลอกโฟลเดอร์ uploads มาไว้ที่ uploads/wp
+        value: https://www.bms.ac.th/bs/wp-content/uploads/

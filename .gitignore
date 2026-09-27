@@ -2,3 +2,8 @@ node_modules/
 data/
 uploads/
 .env
+
+# ไฟล์ส่งออกฐานข้อมูลเว็บเดิม มีข้อมูลผู้ใช้ — ห้าม commit (ใช้ seed/bms-wp.json.gz ที่มีเฉพาะเนื้อหาสาธารณะแทน)
+*.sql
+*.sql.zip
+*.sql.gz

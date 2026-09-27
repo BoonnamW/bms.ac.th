@@ -42,7 +42,26 @@ npm start
 3. รันด้วย process manager เช่น `pm2 start server.js`
 4. สำรองโฟลเดอร์ `data/` และ `uploads/` เป็นประจำ
 
-ตัวแปรที่ใช้ได้: `PORT`, `NODE_ENV`, `TRUST_PROXY`, `ADMIN_PASSWORD`
+ตัวแปรที่ใช้ได้: `PORT`, `NODE_ENV`, `TRUST_PROXY`, `ADMIN_PASSWORD`, `DATA_PATH`, `WP_MEDIA_URL`
+
+## ย้ายข้อมูลจากเว็บ WordPress เดิม (www.bms.ac.th/bs)
+
+`scripts/import-wp.mjs` นำเข้าเนื้อหาที่เผยแพร่แล้วทั้งหมด: ข่าว 440 เรื่อง, หน้าเว็บ, อัลบั้มภาพ (Responsive Lightbox),
+เมนู (จัดกลุ่มใหม่ ลึกไม่เกิน 2 ชั้น), หน้า ITA/OIT ที่มีเนื้อหาอยู่แล้ว และลิงก์เดิมทุกลิงก์ (`/bs/ปี/เดือน/วัน/ชื่อข่าว/`, `/bs/?p=123`)
+จะถูกส่งต่อ (301) ไปยังหน้าใหม่อัตโนมัติ — รันซ้ำได้ ไม่สร้างซ้ำและไม่ทับสิ่งที่แก้ไขในหลังบ้าน
+
+```bash
+# จากไฟล์ส่งออกฐานข้อมูล (phpMyAdmin → Export) — ไฟล์ .sql มีข้อมูลผู้ใช้ ห้าม commit
+node scripts/import-wp.mjs bmsacth_benjamadb2019.sql
+
+# สร้างไฟล์เนื้อหาสาธารณะใหม่ (ไม่มีตารางผู้ใช้) สำหรับ seed/ ที่ใช้ตอนขึ้นเซิร์ฟเวอร์
+node scripts/import-wp.mjs bmsacth_benjamadb2019.sql --export seed/bms-wp.json.gz
+```
+
+**รูปและไฟล์แนบ** ถูกอ้างอิงเป็น `/uploads/wp/<ปี>/<เดือน>/<ไฟล์>`
+- ระหว่างย้าย: ตั้ง `WP_MEDIA_URL=https://www.bms.ac.th/bs/wp-content/uploads/` ระบบจะดึงไฟล์จากเว็บเดิมให้
+- ย้ายเสร็จ: คัดลอกโฟลเดอร์ `public_html/bs/wp-content/uploads/` ของโฮสต์เดิมไปไว้ที่ `<DATA_PATH>/uploads/wp/` (ประมาณ 6 GB) แล้วเลิกตั้ง `WP_MEDIA_URL`
+- โฟลเดอร์ `uploads/wp` เปิดให้เข้าถึงเฉพาะไฟล์รูป/เอกสาร (jpg png gif webp pdf doc xls ppt zip mp4) เท่านั้น
 
 ## โครงสร้าง
 
@@ -50,6 +69,10 @@ npm start
 server.js        เริ่มระบบ + security headers
 lib/entities.js  นิยามฟอร์ม/ข้อมูลที่จัดการได้ (เพิ่มฟิลด์ที่นี่)
 lib/db.js        โครงสร้างฐานข้อมูล + ข้อมูลตัวอย่าง
+lib/wp.js        อ่านไฟล์ส่งออกฐานข้อมูล WordPress
+lib/oit.js       รายการหัวข้อเปิดเผยข้อมูลสาธารณะ (OIT)
+scripts/         import-wp.mjs (นำเข้าจากเว็บเดิม) / add-standard-pages.mjs (หน้า ITA/PDPA)
+seed/            เนื้อหาสาธารณะของเว็บเดิม ใช้นำเข้าอัตโนมัติตอนขึ้นเซิร์ฟเวอร์ครั้งแรก
 routes/          public.js (หน้าเว็บ) / admin.js (หลังบ้าน)
 views/           แม่แบบหน้า (EJS)
 public/          CSS / JS

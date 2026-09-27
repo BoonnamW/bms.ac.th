@@ -8,6 +8,19 @@ import { formToken, checkFormToken } from '../lib/helpers.js';
 const r = Router();
 const PAGE_SIZE = 9;
 
+// ลิงก์เดิมจาก WordPress (/bs/2024/01/02/ชื่อข่าว/, /bs/?p=123 ฯลฯ) → หน้าใหม่ เพื่อไม่ให้ลิงก์จาก Google/Facebook เสีย
+const legacy = db.prepare('SELECT target FROM legacy_urls WHERE path=?');
+r.use((req, res, next) => {
+  if (!req.path.startsWith('/bs')) return next();
+  if (req.path.startsWith('/bs/wp-content/uploads/')) return res.redirect(301, '/uploads/wp/' + req.path.slice(23));
+  let key;
+  try { key = decodeURIComponent(req.path).replace(/\/+$/, '') || '/bs'; } catch { return next(); }
+  const id = /^\d+$/.test(req.query.p || req.query.page_id || '') ? (req.query.p || req.query.page_id) : '';
+  const hit = (id && legacy.get(`?id=${id}`)) || legacy.get(key)
+    || (key.startsWith('/bs/category/') && { target: '/news' }) || (key === '/bs' && { target: '/' });
+  return hit ? res.redirect(301, hit.target) : next();
+});
+
 r.use((req, res, next) => { res.locals.nav = navTree(); next(); });
 
 r.get('/robots.txt', (req, res) => {
