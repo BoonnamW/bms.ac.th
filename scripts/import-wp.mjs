@@ -248,7 +248,7 @@ try {
   setSetting.run('wp_imported', '1');
   db.exec('COMMIT');
   console.log(`✓ นำเข้าจาก WordPress: ข่าว ${nNews} · หน้าเว็บ ${nPages} · ลิงก์ e-Service ${extLinks.eservice.length} · วารสาร ${extLinks.journal.length}`);
-  console.log(`  ไฟล์รูป/เอกสารที่อ้างถึง ${content.files.length} ไฟล์ (อยู่ใน wp-content/uploads ของเว็บเดิม → คัดลอกไปที่ uploads/wp)`);
+  console.log('  รูปและไฟล์แนบยังอยู่บนเว็บเดิม (ระบบดึงมาแสดงให้) — ถ้าต้องการเก็บไว้ในเครื่อง: npm run fetch-media');
 } catch (e) {
   db.exec('ROLLBACK');
   throw e;

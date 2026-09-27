@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { getSettings, ROOT, UPLOAD_DIR } from './lib/db.js';
 import { navTree } from './lib/nav.js';
-import { parseCookies, icon, thDate, token, IFRAME_HOSTS } from './lib/helpers.js';
+import { parseCookies, icon, thDate, token, IFRAME_HOSTS, WP_FILE } from './lib/helpers.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 
@@ -16,7 +16,6 @@ const PROD = process.env.NODE_ENV === 'production';
 const httpsBase = (v) => (/^https:\/\/[^\s/]+\//.test(v || '') ? v.replace(/\/?$/, '/') : '');
 const WP_MEDIA_URL = httpsBase(process.env.WP_MEDIA_URL) || httpsBase(getSettings().wp_media_url);
 const WP_MEDIA_ORIGIN = WP_MEDIA_URL ? new URL(WP_MEDIA_URL).origin : null;
-const WP_FILE = /\.(jpe?g|png|gif|webp|pdf|docx?|xlsx?|pptx?|zip|mp4)$/i;
 
 app.disable('x-powered-by');
 if (process.env.TRUST_PROXY) app.set('trust proxy', Number(process.env.TRUST_PROXY) || process.env.TRUST_PROXY);
