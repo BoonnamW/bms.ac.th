@@ -11,9 +11,10 @@ const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 const PROD = process.env.NODE_ENV === 'production';
 
-// ไฟล์จาก WordPress เดิมเก็บที่ uploads/wp/ — ระหว่างที่ยังไม่ได้คัดลอกโฟลเดอร์ wp-content/uploads มา
-// ให้ตั้ง WP_MEDIA_URL (เช่น https://www.bms.ac.th/bs/wp-content/uploads/) ระบบจะส่งต่อไปยังเว็บเดิมให้
-const WP_MEDIA_URL = /^https:\/\/[^\s/]+\//.test(process.env.WP_MEDIA_URL || '') ? process.env.WP_MEDIA_URL.replace(/\/?$/, '/') : '';
+// ไฟล์จาก WordPress เดิมเก็บที่ uploads/wp/ — ไฟล์ที่ยังไม่ได้คัดลอกมาจะส่งต่อไปยังเว็บเดิม
+// ใช้ค่า WP_MEDIA_URL (เช่น https://www.bms.ac.th/bs/wp-content/uploads/) หรือค่าที่สคริปต์นำเข้าบันทึกไว้
+const httpsBase = (v) => (/^https:\/\/[^\s/]+\//.test(v || '') ? v.replace(/\/?$/, '/') : '');
+const WP_MEDIA_URL = httpsBase(process.env.WP_MEDIA_URL) || httpsBase(getSettings().wp_media_url);
 const WP_MEDIA_ORIGIN = WP_MEDIA_URL ? new URL(WP_MEDIA_URL).origin : null;
 const WP_FILE = /\.(jpe?g|png|gif|webp|pdf|docx?|xlsx?|pptx?|zip|mp4)$/i;
 

@@ -243,6 +243,8 @@ try {
     }
   }
 
+  // ที่อยู่ไฟล์บนเว็บเดิม — server.js ใช้ส่งต่อรูป/ไฟล์ที่ยังไม่ได้คัดลอกมาไว้ใน uploads/wp
+  if (/^https:\/\//.test(content.source?.uploads || '')) setSetting.run('wp_media_url', content.source.uploads);
   setSetting.run('wp_imported', '1');
   db.exec('COMMIT');
   console.log(`✓ นำเข้าจาก WordPress: ข่าว ${nNews} · หน้าเว็บ ${nPages} · ลิงก์ e-Service ${extLinks.eservice.length} · วารสาร ${extLinks.journal.length}`);

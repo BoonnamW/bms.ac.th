@@ -59,8 +59,8 @@ node scripts/import-wp.mjs bmsacth_benjamadb2019.sql --export seed/bms-wp.json.g
 ```
 
 **รูปและไฟล์แนบ** ถูกอ้างอิงเป็น `/uploads/wp/<ปี>/<เดือน>/<ไฟล์>`
-- ระหว่างย้าย: ตั้ง `WP_MEDIA_URL=https://www.bms.ac.th/bs/wp-content/uploads/` ระบบจะดึงไฟล์จากเว็บเดิมให้
-- ย้ายเสร็จ: คัดลอกโฟลเดอร์ `public_html/bs/wp-content/uploads/` ของโฮสต์เดิมไปไว้ที่ `<DATA_PATH>/uploads/wp/` (ประมาณ 6 GB) แล้วเลิกตั้ง `WP_MEDIA_URL`
+- ระหว่างย้าย: ไฟล์ที่ยังไม่มีในเครื่องจะถูกส่งต่อไปดึงจากเว็บเดิมอัตโนมัติ (ที่อยู่บันทึกไว้ตอนนำเข้า หรือกำหนดเองด้วย `WP_MEDIA_URL`)
+- ย้ายเสร็จ: คัดลอกโฟลเดอร์ `public_html/bs/wp-content/uploads/` ของโฮสต์เดิมไปไว้ที่ `<DATA_PATH>/uploads/wp/` (ประมาณ 6 GB) — ไฟล์ที่มีในเครื่องจะถูกใช้ก่อนเสมอ
 - โฟลเดอร์ `uploads/wp` เปิดให้เข้าถึงเฉพาะไฟล์รูป/เอกสาร (jpg png gif webp pdf doc xls ppt zip mp4) เท่านั้น
 
 ## โครงสร้าง
