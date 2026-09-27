@@ -1,0 +1,52 @@
+<% if (f.group) { %><h2 class="grp"><%= f.group %></h2><% } else { %>
+<% var v = values[f.n]; if (v === null || v === undefined) v = ''; %>
+<div class="fld <%= f.type === 'checkbox' ? 'chk' : '' %>">
+  <% if (f.type === 'checkbox') { %>
+    <label><input type="checkbox" name="<%= f.n %>" value="1" <%= v ? 'checked' : '' %>> <%= f.label %></label>
+  <% } else { %>
+    <label for="f_<%= f.n %>"><%= f.label %><%= f.req ? ' *' : '' %></label>
+    <% if (readonly) { %>
+      <div class="ro"><%= v %></div>
+    <% } else if (f.type === 'textarea') { %>
+      <textarea id="f_<%= f.n %>" name="<%= f.n %>" rows="4" <%= f.max ? 'maxlength=' + f.max : '' %>><%= v %></textarea>
+    <% } else if (f.type === 'richtext') { %>
+      <div class="rte" data-target="f_<%= f.n %>">
+        <div class="rte-bar">
+          <button type="button" data-cmd="formatBlock" data-val="h2" title="หัวข้อใหญ่">H2</button>
+          <button type="button" data-cmd="formatBlock" data-val="h3" title="หัวข้อรอง">H3</button>
+          <button type="button" data-cmd="formatBlock" data-val="p" title="ย่อหน้า">¶</button>
+          <button type="button" data-cmd="bold" title="ตัวหนา"><b>B</b></button>
+          <button type="button" data-cmd="italic" title="ตัวเอียง"><i>I</i></button>
+          <button type="button" data-cmd="underline" title="ขีดเส้นใต้"><u>U</u></button>
+          <button type="button" data-cmd="insertUnorderedList" title="รายการ">• รายการ</button>
+          <button type="button" data-cmd="insertOrderedList" title="รายการลำดับ">1. รายการ</button>
+          <button type="button" data-cmd="formatBlock" data-val="blockquote" title="คำพูด">❝</button>
+          <button type="button" data-cmd="createLink" title="แทรกลิงก์">🔗 ลิงก์</button>
+          <button type="button" data-cmd="unlink" title="ลบลิงก์">ยกเลิกลิงก์</button>
+          <button type="button" data-cmd="removeFormat" title="ล้างรูปแบบ">ล้าง</button>
+        </div>
+        <div class="rte-area" contenteditable="true" role="textbox" aria-multiline="true"><%- v %></div>
+        <textarea id="f_<%= f.n %>" name="<%= f.n %>" hidden></textarea>
+      </div>
+    <% } else if (f.type === 'select') { %>
+      <select id="f_<%= f.n %>" name="<%= f.n %>">
+        <% if (!f.req) { %><option value="">— เลือก —</option><% } %>
+        <% f.options.forEach(function (o) { %><option value="<%= o %>" <%= v === o ? 'selected' : '' %>><%= f.labels ? f.labels[o] : o %></option><% }) %>
+      </select>
+    <% } else if (f.type === 'image') { %>
+      <% if (v) { %>
+        <div class="imgcur"><img src="/uploads/<%= v %>" alt=""><label class="inl"><input type="checkbox" name="remove_<%= f.n %>" value="1"> ลบรูปนี้</label></div>
+      <% } %>
+      <input id="f_<%= f.n %>" type="file" name="<%= f.n %>" accept="image/jpeg,image/png,image/webp,image/gif">
+    <% } else if (f.type === 'color') { %>
+      <input id="f_<%= f.n %>" type="color" name="<%= f.n %>" value="<%= v %>" class="colorin">
+    <% } else if (f.type === 'datetime') { %>
+      <input id="f_<%= f.n %>" type="datetime-local" name="<%= f.n %>" value="<%= v ? new Date(new Date(String(v).replace(' ', 'T') + 'Z').getTime() + 7 * 3600 * 1000).toISOString().slice(0, 16) : '' %>">
+    <% } else { %>
+      <input id="f_<%= f.n %>" name="<%= f.n %>" value="<%= v %>" <%= f.max ? 'maxlength=' + f.max : '' %>
+        <%= f.type === 'number' ? 'inputmode=numeric' : '' %> <%= f.req ? 'required' : '' %>>
+    <% } %>
+    <% if (f.help) { %><small><%= f.help %></small><% } %>
+  <% } %>
+</div>
+<% } %>

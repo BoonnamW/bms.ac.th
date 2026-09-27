@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title ? title + ' | ' : '' %><%= S.school_name %></title>
+  <meta name="description" content="<%= S.school_name %> – <%= S.tagline %>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/css/site.css">
+  <script src="/js/site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">ข้ามไปยังเนื้อหา</a>
+
+<div class="topbar">
+  <div class="wrap topbar-in">
+    <div class="topbar-l">
+      <span><%- icon('phone', 14) %> <%= S.phone %></span>
+      <span class="hide-sm"><%- icon('mail', 14) %> <%= S.email %></span>
+    </div>
+    <div class="topbar-r">
+      <form action="/search" class="tsearch" role="search">
+        <input type="search" name="q" placeholder="ค้นหา…" aria-label="ค้นหา" maxlength="80">
+        <button aria-label="ค้นหา"><%- icon('search', 16) %></button>
+      </form>
+      <a href="/admin" class="staff"><%- icon('lock', 14) %> เจ้าหน้าที่</a>
+    </div>
+  </div>
+</div>
+
+<header class="header" id="header">
+  <div class="wrap header-in">
+    <a class="brand" href="/">
+      <% if (S.logo) { %><img src="/uploads/<%= S.logo %>" alt="" width="56" height="56">
+      <% } else { %>
+      <svg class="emblem" viewBox="0 0 64 64" width="56" height="56" aria-hidden="true">
+        <path d="M32 3 8 11v18c0 15 10 26 24 32 14-6 24-17 24-32V11z" fill="var(--primary)"/>
+        <path d="M32 8 13 14v15c0 12 8 21 19 27 11-6 19-15 19-27V14z" fill="none" stroke="var(--accent)" stroke-width="2"/>
+        <path d="M32 24c-4-3-9-3-13-2v17c4-1 9-1 13 2 4-3 9-3 13-2V22c-4-1-9-1-13 2z" fill="#fff"/>
+        <path d="M32 24v17" stroke="var(--primary)" stroke-width="2"/>
+      </svg>
+      <% } %>
+      <span class="brand-t"><strong><%= S.school_name %></strong><small><%= S.school_name_en %></small></span>
+    </a>
+    <button class="burger" id="burger" aria-label="เปิดเมนู" aria-expanded="false" aria-controls="nav"><%- icon('menu', 26) %></button>
+    <nav class="nav" id="nav" aria-label="เมนูหลัก">
+      <ul>
+        <li><a href="/" class="<%= path === '/' ? 'on' : '' %>">หน้าแรก</a></li>
+        <% nav.forEach(function (it) { %>
+          <% if (it.children) { %>
+          <li class="has-sub">
+            <button class="sub-btn" aria-haspopup="true" aria-expanded="false"><%= it.label %> <%- icon('down', 14) %></button>
+            <ul class="sub">
+              <% it.children.forEach(function (c) { %><li><a href="<%= c.href %>"><%= c.label %></a></li><% }) %>
+            </ul>
+          </li>
+          <% } else { %>
+          <li><a href="<%= it.href %>" class="<%= path === it.href ? 'on' : '' %>"><%= it.label %></a></li>
+          <% } %>
+        <% }) %>
+        <li><a href="/news" class="<%= path.startsWith('/news') ? 'on' : '' %>">ข่าวสาร</a></li>
+        <li><a href="/contact" class="btn-nav">ติดต่อเรา</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main">

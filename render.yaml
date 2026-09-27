@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: school-website
+    runtime: docker
+    plan: free            # เดโม: ข้อมูลที่แก้ในหลังบ้านจะหายเมื่อเซิร์ฟเวอร์รีสตาร์ต — ดู README หัวข้อขึ้นโฮสต์
+    healthCheckPath: /
+    envVars:
+      - key: ADMIN_PASSWORD   # ตั้งเองใน Render Dashboard (อย่างน้อย 10 ตัวอักษร มีตัวอักษรและตัวเลข)
+        sync: false

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title><%= title %> | หลังบ้าน</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Prompt:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="/js/admin.js" defer></script>
+</head>
+<body class="<%= user ? 'app' : 'auth' %>">
+<% if (user) { %>
+<aside class="sb">
+  <a class="sb-brand" href="/admin"><%- icon('building', 22) %> <span>หลังบ้าน<small><%= S.school_name %></small></span></a>
+  <nav>
+    <a href="/admin" class="<%= (path === '/admin' || path === '/admin/') ? 'on' : '' %>">แดชบอร์ด</a>
+    <p>เนื้อหา</p>
+    <% ['news','pages','slides','links','stats','gallery'].forEach(function (k) { %>
+      <a href="/admin/<%= k %>" class="<%= path.startsWith('/admin/' + k) ? 'on' : '' %>"><%= entities[k].title %></a>
+    <% }) %>
+    <p>ระบบ</p>
+    <a href="/admin/messages" class="<%= path.startsWith('/admin/messages') ? 'on' : '' %>"><%= entities.messages.title %></a>
+    <a href="/admin/settings" class="<%= path.startsWith('/admin/settings') ? 'on' : '' %>">ตั้งค่าเว็บไซต์</a>
+    <a href="/admin/password" class="<%= path.startsWith('/admin/password') ? 'on' : '' %>">เปลี่ยนรหัสผ่าน</a>
+  </nav>
+  <div class="sb-foot">
+    <a href="/" target="_blank" rel="noopener">ดูหน้าเว็บไซต์ ↗</a>
+    <form method="post" action="/admin/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>ออกจากระบบ (<%= user.username %>)</button></form>
+  </div>
+</aside>
+<main class="main">
+  <header class="top"><h1><%= title %></h1></header>
+<% } %>

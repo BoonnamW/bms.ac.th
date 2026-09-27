@@ -1,0 +1,12 @@
+<article class="card reveal" data-cat="<%= n.category %>">
+  <a href="/news/<%= n.id %>" class="thumb">
+    <% if (n.image) { %><img src="/uploads/<%= n.image %>" alt="" loading="lazy">
+    <% } else { %><div class="ph ph-<%= n.id % 5 %>"><%- icon('book', 44) %></div><% } %>
+    <span class="chip"><%= n.category %></span>
+  </a>
+  <div class="card-b">
+    <time><%= thDate(n.created_at) %></time>
+    <h3><a href="/news/<%= n.id %>"><%= n.title %></a></h3>
+    <p><%= n.excerpt %></p>
+  </div>
+</article>

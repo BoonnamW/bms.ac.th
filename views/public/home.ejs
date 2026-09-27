@@ -1,0 +1,97 @@
+<%- include('_head') %>
+
+<section class="hero" id="hero" aria-roledescription="carousel" aria-label="ประชาสัมพันธ์">
+  <% slides.forEach(function (s, i) { %>
+  <div class="slide <%= i === 0 ? 'on' : '' %> sl-<%= i % 4 %>">
+    <% if (s.image) { %><img class="slide-img" src="/uploads/<%= s.image %>" alt="" <%= i ? 'loading=lazy' : '' %>><% } %>
+    <div class="slide-shade"></div>
+    <div class="wrap slide-in">
+      <span class="eyebrow"><%= S.school_name %></span>
+      <h1><%= s.title %></h1>
+      <% if (s.subtitle) { %><p><%= s.subtitle %></p><% } %>
+      <% if (s.link) { %><a class="btn btn-gold" href="<%= s.link %>">ดูรายละเอียด <%- icon('arrow', 18) %></a><% } %>
+    </div>
+  </div>
+  <% }) %>
+  <% if (slides.length > 1) { %>
+  <button class="arrow prev" id="prev" aria-label="สไลด์ก่อนหน้า"><%- icon('left', 24) %></button>
+  <button class="arrow next" id="next" aria-label="สไลด์ถัดไป"><%- icon('right', 24) %></button>
+  <div class="dots" id="dots"><% slides.forEach(function (s, i) { %><button aria-label="สไลด์ที่ <%= i + 1 %>" class="<%= i === 0 ? 'on' : '' %>"></button><% }) %></div>
+  <% } %>
+</section>
+
+<% if (links.length) { %>
+<section class="quick wrap">
+  <% links.forEach(function (l) { %>
+  <a href="<%= l.url %>" class="q reveal"><span class="q-ic"><%- icon(l.icon, 30) %></span><span><%= l.title %></span></a>
+  <% }) %>
+</section>
+<% } %>
+
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-h">
+      <div><span class="eyebrow dark">NEWS &amp; ANNOUNCEMENTS</span><h2>ข่าวสารและประกาศ</h2></div>
+      <a class="more" href="/news">ดูทั้งหมด <%- icon('arrow', 18) %></a>
+    </div>
+    <div class="tabs" id="tabs" role="tablist">
+      <button class="on" data-cat="">ทั้งหมด</button>
+      <% categories.forEach(function (c) { %><button data-cat="<%= c %>"><%= c %></button><% }) %>
+    </div>
+    <div class="grid3" id="newsGrid">
+      <% news.forEach(function (n) { %><%- include('_card', { n: n }) %><% }) %>
+    </div>
+    <p class="empty" id="newsEmpty" hidden>ยังไม่มีข่าวในหมวดนี้</p>
+  </div>
+</section>
+
+<section class="about">
+  <div class="wrap about-in">
+    <div class="about-art reveal" aria-hidden="true">
+      <div class="art-a"></div><div class="art-b"></div>
+      <div class="art-c"><%- icon('graduation', 90) %></div>
+    </div>
+    <div class="reveal">
+      <span class="eyebrow dark">ABOUT US</span>
+      <h2><%= S.about_title %></h2>
+      <p class="lead"><%= S.about_text %></p>
+      <a class="btn btn-primary" href="/p/about">รู้จักโรงเรียนของเรา <%- icon('arrow', 18) %></a>
+    </div>
+  </div>
+</section>
+
+<% if (stats.length) { %>
+<section class="stats">
+  <div class="wrap stats-in">
+    <% stats.forEach(function (s) { %>
+    <div class="stat reveal"><strong class="count" data-to="<%= s.value %>">0</strong><span><%= s.label %></span></div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+
+<% if (gallery.length) { %>
+<section class="sec">
+  <div class="wrap">
+    <div class="sec-h"><div><span class="eyebrow dark">GALLERY</span><h2>ภาพกิจกรรม</h2></div></div>
+    <div class="gallery">
+      <% gallery.forEach(function (g, i) { %>
+      <figure class="g g-<%= i %> reveal">
+        <% if (g.image) { %><img src="/uploads/<%= g.image %>" alt="<%= g.title %>" loading="lazy">
+        <% } else { %><div class="ph ph-<%= i % 5 %>"><%- icon('star', 40) %></div><% } %>
+        <figcaption><%= g.title %></figcaption>
+      </figure>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<section class="cta">
+  <div class="wrap cta-in">
+    <div><h2><%= S.admission_title %></h2><p><%= S.admission_text %></p></div>
+    <a class="btn btn-gold" href="<%= S.admission_link || '/contact' %>">สมัครเรียน / สอบถาม <%- icon('arrow', 18) %></a>
+  </div>
+</section>
+
+<%- include('_foot') %>

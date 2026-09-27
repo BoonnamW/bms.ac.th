@@ -1,0 +1,19 @@
+<%- include('_head') %>
+<div class="welcome">
+  <h2>ยินดีต้อนรับ 👋</h2>
+  <p>จัดการเนื้อหาเว็บไซต์ได้จากเมนูด้านซ้าย การเปลี่ยนแปลงจะแสดงบนหน้าเว็บทันที</p>
+  <div class="actions">
+    <a class="btn" href="/admin/news/new">+ เพิ่มข่าวใหม่</a>
+    <a class="btn ghost" href="/admin/pages/new">+ เพิ่มหน้าเว็บ</a>
+    <a class="btn ghost" href="/admin/slides/new">+ เพิ่มสไลด์</a>
+  </div>
+</div>
+<div class="cards">
+  <% Object.keys(entities).forEach(function (k) { %>
+  <a class="stat" href="/admin/<%= k %>"><strong><%= counts[k] %></strong><span><%= entities[k].title %></span></a>
+  <% }) %>
+</div>
+<% if (user.username === 'admin') { %>
+<div class="tip"><b>คำแนะนำด้านความปลอดภัย:</b> ใช้รหัสผ่านที่คาดเดายาก, ออกจากระบบทุกครั้งเมื่อใช้เครื่องสาธารณะ และสำรองโฟลเดอร์ <code>data</code> กับ <code>uploads</code> เป็นประจำ</div>
+<% } %>
+<%- include('_foot') %>

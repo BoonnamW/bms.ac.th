@@ -1,0 +1,33 @@
+</main>
+
+<footer class="footer">
+  <div class="wrap foot-grid">
+    <div>
+      <h3><%= S.school_name %></h3>
+      <p class="muted"><%= S.school_name_en %></p>
+      <p><%= S.tagline %></p>
+      <% if (S.facebook) { %><a class="soc" href="<%= S.facebook %>" target="_blank" rel="noopener noreferrer"><%- icon('facebook', 18) %> Facebook</a><% } %>
+    </div>
+    <div>
+      <h4>ลิงก์ด่วน</h4>
+      <ul class="flinks">
+        <li><a href="/news">ข่าวสารและประกาศ</a></li>
+        <% nav.filter(function (i) { return !i.children; }).slice(0, 4).forEach(function (i) { %><li><a href="<%= i.href %>"><%= i.label %></a></li><% }) %>
+        <li><a href="/contact">ติดต่อเรา</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>ติดต่อ</h4>
+      <ul class="fcontact">
+        <li><%- icon('pin', 18) %><span><%= S.address %></span></li>
+        <li><%- icon('phone', 18) %><span><%= S.phone %></span></li>
+        <li><%- icon('mail', 18) %><span><%= S.email %></span></li>
+        <li><%- icon('clock', 18) %><span><%= S.hours %></span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="copy"><div class="wrap">© <%= new Date().getFullYear() + 543 %> <%= S.school_name %> · <%= S.footer_text %>
+    · <a href="/p/privacy-policy">นโยบายความเป็นส่วนตัว</a> · <a href="/sitemap.xml">แผนผังเว็บไซต์</a></div></div>
+</footer>
+</body>
+</html>

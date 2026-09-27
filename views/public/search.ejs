@@ -1,0 +1,11 @@
+<%- include('_head') %>
+<section class="pagehead"><div class="wrap">
+  <nav class="crumb" aria-label="breadcrumb"><a href="/">หน้าแรก</a> / <span>ค้นหา</span></nav>
+  <h1>ผลการค้นหา<%= q ? ': ' + q : '' %></h1>
+</div></section>
+<section class="sec"><div class="wrap one">
+  <% if (q && !news.length && !pages.length) { %><p class="empty">ไม่พบผลลัพธ์ที่ตรงกับคำค้นหา</p><% } %>
+  <% if (pages.length) { %><h3>หน้าเว็บไซต์</h3><ul class="results"><% pages.forEach(function (p) { %><li><a href="/p/<%= p.slug %>"><%= p.title %></a></li><% }) %></ul><% } %>
+  <% if (news.length) { %><h3>ข่าวสาร</h3><ul class="results"><% news.forEach(function (n) { %><li><a href="/news/<%= n.id %>"><%= n.title %></a><small><%= thDate(n.created_at) %></small></li><% }) %></ul><% } %>
+</div></section>
+<%- include('_foot') %>

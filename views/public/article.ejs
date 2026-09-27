@@ -1,0 +1,17 @@
+<%- include('_head') %>
+<section class="pagehead"><div class="wrap">
+  <nav class="crumb" aria-label="breadcrumb"><a href="/">หน้าแรก</a> / <a href="/news">ข่าวสาร</a> / <span><%= item.category %></span></nav>
+  <h1><%= item.title %></h1>
+  <p class="meta"><span class="chip inline"><%= item.category %></span> <time><%= thDate(item.created_at) %></time></p>
+</div></section>
+<section class="sec"><div class="wrap two">
+  <article class="prose">
+    <% if (item.image) { %><img class="cover" src="/uploads/<%= item.image %>" alt=""><% } %>
+    <%- item.body %>
+  </article>
+  <aside class="side">
+    <h3>ข่าวล่าสุด</h3>
+    <ul><% recent.forEach(function (r) { %><li><a href="/news/<%= r.id %>"><%= r.title %></a><time><%= thDate(r.created_at) %></time></li><% }) %></ul>
+  </aside>
+</div></section>
+<%- include('_foot') %>

@@ -1,0 +1,31 @@
+<%- include('_head') %>
+<% if (saved) { %><div class="alert ok">บันทึกเรียบร้อยแล้ว</div><% } %>
+<% if (deleted) { %><div class="alert ok">ลบรายการเรียบร้อยแล้ว</div><% } %>
+<% if (!ent.readonly) { %><p class="bar"><a class="btn" href="/admin/<%= table %>/new">+ เพิ่ม<%= ent.singular %></a></p><% } %>
+<div class="tablewrap">
+<table class="tbl">
+  <thead><tr><% ent.columns.forEach(function (c) { %><th><%= c[1] %></th><% }) %><th class="r">จัดการ</th></tr></thead>
+  <tbody>
+  <% if (!rows.length) { %><tr><td colspan="<%= ent.columns.length + 1 %>" class="none">ยังไม่มีข้อมูล</td></tr><% } %>
+  <% rows.forEach(function (row) { %>
+    <tr>
+      <% ent.columns.forEach(function (c, i) { var v = row[c[0]]; var f = ent.fields.find(function (x) { return x.n === c[0]; }) || {}; %>
+        <td>
+          <% if (f.type === 'checkbox') { %><span class="pill <%= v ? 'yes' : 'no' %>"><%= v ? 'ใช่' : 'ไม่' %></span>
+          <% } else if (c[0] === 'created_at') { %><%= thDate(v) %>
+          <% } else if (i === 0) { %><a href="/admin/<%= table %>/<%= row.id %>"><strong><%= v %></strong></a>
+          <% } else { %><%= v %><% } %>
+        </td>
+      <% }) %>
+      <td class="r act">
+        <a href="/admin/<%= table %>/<%= row.id %>"><%= ent.readonly ? 'ดู' : 'แก้ไข' %></a>
+        <form method="post" action="/admin/<%= table %>/<%= row.id %>/delete" data-confirm="ยืนยันการลบรายการนี้? การลบไม่สามารถกู้คืนได้">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="del">ลบ</button>
+        </form>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<%- include('_foot') %>

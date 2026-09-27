@@ -1,0 +1,21 @@
+<%- include('_head') %>
+<section class="pagehead"><div class="wrap">
+  <nav class="crumb" aria-label="breadcrumb"><a href="/">หน้าแรก</a> / <span>ข่าวสารและประกาศ</span></nav>
+  <h1>ข่าวสารและประกาศ</h1>
+</div></section>
+<section class="sec"><div class="wrap">
+  <div class="tabs">
+    <a class="<%= cat === '' ? 'on' : '' %>" href="/news">ทั้งหมด</a>
+    <% categories.forEach(function (c) { %><a class="<%= cat === c ? 'on' : '' %>" href="/news?cat=<%= encodeURIComponent(c) %>"><%= c %></a><% }) %>
+  </div>
+  <% if (!items.length) { %><p class="empty">ยังไม่มีข่าวในหมวดนี้</p><% } %>
+  <div class="grid3"><% items.forEach(function (n) { %><%- include('_card', { n: n }) %><% }) %></div>
+  <% if (pages > 1) { %>
+  <nav class="pager" aria-label="เปลี่ยนหน้า">
+    <% for (let i = 1; i <= pages; i++) { %>
+      <a class="<%= i === page ? 'on' : '' %>" href="/news?<%= cat ? 'cat=' + encodeURIComponent(cat) + '&' : '' %>page=<%= i %>"><%= i %></a>
+    <% } %>
+  </nav>
+  <% } %>
+</div></section>
+<%- include('_foot') %>

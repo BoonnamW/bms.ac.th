@@ -1,0 +1,12 @@
+<%- include('_head') %>
+<% if (errors.length) { %><div class="alert err" role="alert"><ul><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div><% } %>
+<form class="form" method="post" action="/admin/<%= table %>/save" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <% if (item.id) { %><input type="hidden" name="id" value="<%= item.id %>"><% } %>
+  <% ent.fields.forEach(function (f) { %><%- include('_field', { f: f, values: item, readonly: !!ent.readonly }) %><% }) %>
+  <div class="formbar">
+    <% if (!ent.readonly) { %><button class="btn">บันทึก</button><% } %>
+    <a class="btn ghost" href="/admin/<%= table %>">← กลับ</a>
+  </div>
+</form>
+<%- include('_foot') %>

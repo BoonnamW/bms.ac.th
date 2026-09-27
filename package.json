@@ -1,0 +1,23 @@
+{
+  "name": "school-website-cms",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "เว็บไซต์โรงเรียน พร้อมระบบจัดการเนื้อหา (CMS) ที่ปลอดภัยและใช้งานง่าย",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "ejs": "^6.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "multer": "^2.4.0",
+    "sanitize-html": "^2.17.7"
+  }
+}

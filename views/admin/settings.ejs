@@ -1,0 +1,9 @@
+<%- include('_head') %>
+<% if (saved) { %><div class="alert ok">บันทึกการตั้งค่าเรียบร้อยแล้ว</div><% } %>
+<% if (errors.length) { %><div class="alert err" role="alert"><ul><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div><% } %>
+<form class="form" method="post" action="/admin/settings" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <% fields.forEach(function (f) { %><%- include('_field', { f: f, values: values, readonly: false }) %><% }) %>
+  <div class="formbar"><button class="btn">บันทึกการตั้งค่า</button></div>
+</form>
+<%- include('_foot') %>

@@ -1,0 +1,8 @@
+<%- include('_head') %>
+<section class="sec"><div class="wrap errbox">
+  <div class="code"><%= code %></div>
+  <h1><%= title %></h1>
+  <p><%= code === 404 ? 'หน้าที่คุณค้นหาอาจถูกย้ายหรือลบไปแล้ว' : 'ขออภัย ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง' %></p>
+  <a class="btn btn-primary" href="/">กลับหน้าแรก</a>
+</div></section>
+<%- include('_foot') %>

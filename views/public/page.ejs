@@ -1,0 +1,15 @@
+<%- include('_head') %>
+<section class="pagehead"><div class="wrap">
+  <nav class="crumb" aria-label="breadcrumb"><a href="/">หน้าแรก</a> / <% if (page.menu_group) { %><span><%= page.menu_group %></span> / <% } %><span><%= page.title %></span></nav>
+  <h1><%= page.title %></h1>
+</div></section>
+<section class="sec"><div class="wrap <%= siblings.length > 1 ? 'two' : 'one' %>">
+  <article class="prose"><%- page.body %></article>
+  <% if (siblings.length > 1) { %>
+  <aside class="side">
+    <h3><%= page.menu_group %></h3>
+    <ul class="sidenav"><% siblings.forEach(function (s) { %><li><a class="<%= s.slug === page.slug ? 'on' : '' %>" href="/p/<%= s.slug %>"><%= s.title %></a></li><% }) %></ul>
+  </aside>
+  <% } %>
+</div></section>
+<%- include('_foot') %>
