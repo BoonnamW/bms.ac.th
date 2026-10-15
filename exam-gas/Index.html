@@ -20,6 +20,7 @@ h1{font-size:23px}h2{font-size:18px;margin-bottom:8px}
 .enter{max-width:440px;margin:30px auto;display:grid;gap:12px}
 .muted{color:var(--muted)}.center{text-align:center}
 label{display:grid;gap:4px;font-weight:500;font-size:15px}
+select{font:inherit;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;width:100%;background:var(--card);color:var(--ink)}
 input[type=text]{font:inherit;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;width:100%;background:var(--card);color:var(--ink)}
 input[type=text]:focus{border-color:var(--primary);outline:0}
 input.code{font:600 22px/1.3 ui-monospace,monospace;letter-spacing:.15em;text-align:center;text-transform:uppercase}
@@ -86,11 +87,13 @@ call('getInfo').then((i) => { info = i; $('#top').textContent = i.title; documen
   .catch((e) => { app.innerHTML = `<div class="card"><h1>ยังเปิดสอบไม่ได้</h1><p>${h(errMsg(e))}</p></div>`; });
 
 function enter(error) {
+  if (!info.exams.length) { app.innerHTML = `<div class="card enter"><h1>${h(info.title)}</h1><p>ยังไม่มีชุดข้อสอบ</p></div>`; return; }
   if (!info.open) { app.innerHTML = `<div class="card enter"><h1>${h(info.title)}</h1><p>ข้อสอบชุดนี้ปิดรับคำตอบแล้ว</p></div>`; return; }
   const d = store.get('who');
   app.innerHTML = `<form class="card enter" id="f" autocomplete="off">
       <h1>${h(info.title)}</h1>
       ${error ? `<div class="alert" role="alert">${h(error)}</div>` : ''}
+      ${info.exams.length > 1 ? `<label>เลือกชุดข้อสอบ<select name="exam" required>${info.exams.map((x) => `<option value="${h(x.id)}" ${d.exam === x.id ? 'selected' : ''}>${h(x.title)} (${x.nq} ข้อ)</option>`).join('')}</select></label>` : ''}
       ${info.needCode ? '<label>รหัสเข้าสอบ<input type="text" name="code" class="code" required maxlength="40" autocapitalize="characters" spellcheck="false"></label>' : ''}
       <label>ชื่อ-นามสกุล *<input type="text" name="name" required maxlength="100" value="${h(d.name)}"></label>
       <div class="row2"><label>เลขที่/รหัส<input type="text" name="studentNo" maxlength="20" value="${h(d.studentNo)}"></label>
@@ -103,8 +106,10 @@ function enter(error) {
     if (!who.name) return;
     store.set('who', who);
     const code = String(fd.get('code') || '').trim();
+    const exam = String(fd.get('exam') || (info.exams[0] && info.exams[0].id) || '');
+    store.set('who', Object.assign({ exam: exam }, who));
     const btn = e.target.querySelector('.btn'); btn.disabled = true; btn.textContent = 'กำลังเปิดข้อสอบ…';
-    call('getExam', code).then((ex) => take(code, who, ex)).catch((x) => enter(errMsg(x)));
+    call('getExam', code, exam).then((ex) => take(code, who, ex)).catch((x) => enter(errMsg(x)));
   });
 }
 
@@ -158,7 +163,7 @@ function take(code, who, ex) {
     } else if (!confirm('ยืนยันการส่งคำตอบ? ส่งแล้วแก้ไขไม่ได้')) return;
     sending = true;
     const btn = form.querySelector('.submitbar .btn'); btn.disabled = true; btn.textContent = 'กำลังส่ง…';
-    call('submit', code, Object.assign({ answers: a }, who)).then((r) => {
+    call('submit', code, ex.id, Object.assign({ answers: a }, who)).then((r) => {
       store.del(dk); window.onbeforeunload = null; result(who, r); window.scrollTo(0, 0);
     }).catch((x) => {
       sending = false; btn.disabled = false; btn.textContent = 'ส่งคำตอบ';
@@ -176,7 +181,7 @@ function result(who, r) {
       <div class="${q.ok ? 'ok' : 'ng'}"><b>${q.no}.</b> ${q.ok ? '✓' : '✗'} ตอบ ${q.chosen >= 0 ? L[q.chosen] : '–'}${q.ok ? '' : ` · เฉลย <b>${L[q.answer]}</b>`}</div>
       ${!q.ok && (q.explain || q.text) ? `<div class="exp"><b>ข้อ ${q.no}.</b> ${h(q.text)}${q.explain ? `<br><b>อธิบาย:</b> ${h(q.explain)}` : ''}</div>` : ''}`).join('')}</div></div>`
     : `<div class="card">${r.wrong.length ? `ข้อที่ผิด/ไม่ได้ตอบ: <b>${r.wrong.join(', ')}</b>` : '🎉 ถูกทุกข้อ'}<p class="muted">ครูจะเฉลยภายหลัง</p></div>`;
-  app.innerHTML = `<div class="card score"><p class="muted">${h(info.title)}</p><h1>${h(who.name)}</h1>
+  app.innerHTML = `<div class="card score"><p class="muted">${h(r.title || info.title)}</p><h1>${h(who.name)}</h1>
       <p class="big">${r.score}<small>/${r.total}</small></p>
       <p><progress class="${r.pct >= 50 ? '' : 'fail'}" max="100" value="${r.pct}"></progress> <b>${r.pct}%</b> · ${h(r.level)}</p>
       <p class="muted">บันทึกคำตอบเรียบร้อยแล้ว ✓</p></div>${topics}${items}`;

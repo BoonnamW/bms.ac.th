@@ -8,6 +8,7 @@
 
 const SH = { SET: 'ตั้งค่า', KEY: 'เฉลย', ANS: 'คำตอบ', SUM: 'สรุปผล', ANA: 'วิเคราะห์รายข้อ' };
 const L = ['ก', 'ข', 'ค', 'ง', 'จ'];
+const EXAM_PREFIX = 'ข้อสอบ '; // แผ่นงานที่ขึ้นต้นด้วยคำนี้ = ข้อสอบ 1 ชุด (หลายชุดได้)
 const FIXED_COLS = ['เวลาส่ง', 'ชื่อ-นามสกุล', 'เลขที่/รหัส', 'ห้อง', 'คะแนน', 'เต็ม', 'ร้อยละ', 'ระดับ', 'เรื่องที่ควรทบทวน', 'ข้อที่ผิด'];
 
 // ---------------- เว็บ ----------------
@@ -19,23 +20,26 @@ function doGet() {
     .addMetaTag('robots', 'noindex, nofollow');
 }
 
-/** ข้อมูลหน้าแรก (ยังไม่ส่งข้อสอบ) */
+/** ข้อมูลหน้าแรก (ยังไม่ส่งข้อสอบ) — รายชื่อชุดข้อสอบไม่มีเฉลย */
 function getInfo() {
   const s = settings_();
-  return { title: s.title, needCode: !!s.code, open: s.open };
+  const exams = examSheets_().map(function (sh) { return { id: sh.getName(), title: examTitle_(sh), nq: questions_(sh).length }; })
+    .filter(function (e) { return e.nq > 0; });
+  return { title: s.title, needCode: !!s.code, open: s.open, exams: exams };
 }
 
 /** เปิดข้อสอบ: ตรวจรหัส แล้วส่งจำนวนข้อ/หน้ารูป (ไม่ส่งเฉลย) */
-function getExam(code) {
+function getExam(code, id) {
   const s = checkAccess_(code);
-  const qs = questions_();
-  if (!qs.length) throw new Error('ครูยังไม่ได้ใส่เฉลยในแผ่นงาน "เฉลย"');
+  const sh = findExam_(id);
+  const qs = questions_(sh);
+  if (!qs.length) throw new Error('ข้อสอบชุดนี้ยังไม่มีเฉลย');
   const typed = qs.every(function (q) { return q.text; }); // ข้อสอบแบบพิมพ์ทุกข้อ
-  const files = s.folder ? images_(s) : [];
+  const files = s.folder && !typed ? images_(s) : [];
   const pages = files.length;
   if (!pages && !typed) throw new Error('ยังไม่มีไฟล์ข้อสอบ (รูปหรือ PDF) ในโฟลเดอร์ Google Drive');
   return {
-    title: s.title, intro: s.intro, nq: qs.length, nc: s.nc, pages: pages,
+    id: sh.getName(), title: examTitle_(sh), intro: s.intro, nq: qs.length, nc: s.nc, pages: pages,
     pdf: files.map(function (f) { return isPdf_(f) ? f.getId() : null; }), // PDF แสดงผ่านตัวดูของ Google Drive
     questions: typed ? qs.map(function (q) { return { text: q.text, choices: q.choices }; }) : null, // ไม่ส่งเฉลย
   };
@@ -52,9 +56,10 @@ function getPage(code, i) {
 }
 
 /** ส่งคำตอบ → ตรวจ บันทึกลงชีต แล้วส่งผลกลับ */
-function submit(code, p) {
+function submit(code, id, p) {
   const s = checkAccess_(code);
-  const qs = questions_();
+  const ex = findExam_(id);
+  const qs = questions_(ex);
   const name = String(p && p.name || '').trim().slice(0, 100);
   if (!name) throw new Error('กรุณากรอกชื่อ-นามสกุล');
   const studentNo = String(p.studentNo || '').trim().slice(0, 20);
@@ -68,16 +73,16 @@ function submit(code, p) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    const sh = answersSheet_(qs.length);
+    const sh = answersSheet_(examTitle_(ex), qs.length);
     sh.appendRow([new Date(), safe_(name), safe_(studentNo), safe_(room), g.score, g.total, g.pct, g.level,
       g.weak.join(', '), g.wrong.join(', ')].concat(ans.map(function (a) { return a >= 0 ? L[a] : '-'; })));
     SpreadsheetApp.flush();
-    try { analyze(); } catch (e) { console.error(e); } // วิเคราะห์ใหม่ทุกครั้งที่มีคนส่ง
+    try { analyzeExam_(ex); } catch (e) { console.error(e); } // วิเคราะห์ใหม่ทุกครั้งที่มีคนส่ง
   } finally {
     lock.releaseLock();
   }
 
-  const out = { score: g.score, total: g.total, pct: g.pct, level: g.level, topics: g.topics, weak: g.weak, strong: g.strong, wrong: g.wrong, showKey: s.showKey };
+  const out = { title: examTitle_(ex), score: g.score, total: g.total, pct: g.pct, level: g.level, topics: g.topics, weak: g.weak, strong: g.strong, wrong: g.wrong, showKey: s.showKey };
   if (s.showKey) out.items = g.items;
   return out;
 }
@@ -87,6 +92,7 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('ห้องสอบ')
     .addItem('1) ตั้งค่าครั้งแรก', 'setup')
     .addItem('2) ให้ผู้สอบเปิดดู PDF ได้ (ถ้าใช้ PDF)', 'sharePdfs')
+    .addItem('นำเข้าข้อสอบจาก Drive (ไฟล์ชื่อ "ข้อสอบ ...")', 'importExams')
     .addItem('คำนวณผลวิเคราะห์ใหม่', 'analyze')
     .addItem('เปิด/ปิดรับคำตอบ', 'toggleOpen')
     .addSeparator()
@@ -129,7 +135,35 @@ function setup() {
   }
   ['Sheet1', 'แผ่น1', 'ชีต1'].forEach(function (n) { const x = ss.getSheetByName(n); if (x && ss.getSheets().length > 2 && x.getLastRow() === 0) ss.deleteSheet(x); });
   ss.setActiveSheet(key);
-  SpreadsheetApp.getUi().alert('ตั้งค่าเรียบร้อย\n\n1. อัปโหลดรูปข้อสอบลงโฟลเดอร์ใน Drive (ลิงก์อยู่ในแผ่นงาน "ตั้งค่า")\n2. ใส่เฉลยในแผ่นงาน "เฉลย"\n3. Deploy → New deployment → Web app (Execute as: Me, Who has access: Anyone)');
+  SpreadsheetApp.getUi().alert('ตั้งค่าเรียบร้อย\n\n1. ใส่ข้อสอบในแผ่นงาน "เฉลย" หรือนำเข้าแผ่นงานชื่อ "ข้อสอบ ..." ได้หลายชุด\n2. (ถ้าใช้รูป/PDF) อัปโหลดลงโฟลเดอร์ใน Drive ตามลิงก์ในแผ่นงาน "ตั้งค่า"\n3. Deploy → New deployment → Web app (Execute as: Me, Who has access: Anyone)');
+}
+
+/** คัดลอกข้อสอบจากไฟล์ Google Sheet ใน Drive ที่ชื่อขึ้นต้นด้วย "ข้อสอบ " มาเป็นแผ่นงานในไฟล์นี้ (ชุดละแผ่นงาน) */
+function importExams() {
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActive();
+  const files = [];
+  const it = DriveApp.searchFiles('mimeType = "application/vnd.google-apps.spreadsheet" and trashed = false and title contains "' + EXAM_PREFIX.trim() + '"');
+  while (it.hasNext()) {
+    const f = it.next();
+    if (f.getName().indexOf(EXAM_PREFIX) === 0 && f.getId() !== ss.getId()) files.push(f);
+  }
+  if (!files.length) { ui.alert('ไม่พบไฟล์ข้อสอบใน Drive (ชื่อไฟล์ต้องขึ้นต้นด้วย "' + EXAM_PREFIX + '")'); return; }
+  files.sort(function (a, b) { return a.getName().localeCompare(b.getName(), undefined, { numeric: true }); });
+  const names = files.map(function (f) { return '• ' + f.getName(); }).join('\n');
+  if (ui.alert('นำเข้าข้อสอบ ' + files.length + ' ชุด?', names + '\n\n(แผ่นงานชื่อเดียวกันจะถูกแทนที่ · ผลสอบเดิมไม่หาย)', ui.ButtonSet.YES_NO) !== ui.Button.YES) return;
+  files.forEach(function (f) {
+    const src = SpreadsheetApp.openById(f.getId()).getSheets()[0];
+    const values = src.getDataRange().getDisplayValues();
+    const name = f.getName().slice(0, 99);
+    const sh = ss.getSheetByName(name) || ss.insertSheet(name);
+    sh.clear();
+    sh.getRange(1, 1, values.length, values[0].length).setNumberFormat('@').setValues(values);
+    sh.getRange(1, 1, 1, values[0].length).setFontWeight('bold').setBackground('#e8eef8');
+    sh.setFrozenRows(1);
+    sh.setColumnWidth(4, 280); sh.setColumnWidth(5, 420);
+  });
+  ui.alert('นำเข้าเรียบร้อย ' + files.length + ' ชุด\nผู้สอบจะเห็นรายชื่อชุดให้เลือกในหน้าเว็บทันที (ไม่ต้อง Deploy ใหม่)');
 }
 
 function toggleOpen() {
@@ -143,14 +177,23 @@ function clearAnswers() {
   const ui = SpreadsheetApp.getUi();
   if (ui.alert('ลบคำตอบและผลวิเคราะห์ทั้งหมด?', 'ควรดาวน์โหลด/คัดลอกชีตเก็บไว้ก่อน — กู้คืนไม่ได้', ui.ButtonSet.YES_NO) !== ui.Button.YES) return;
   const ss = SpreadsheetApp.getActive();
-  [SH.ANS, SH.SUM, SH.ANA].forEach(function (n) { const x = ss.getSheetByName(n); if (x) ss.deleteSheet(x); });
+  ss.getSheets().forEach(function (x) {
+    const n = x.getName();
+    if (n.indexOf('ผล ') === 0 || n.indexOf('วิเคราะห์ ') === 0 || [SH.ANS, SH.SUM, SH.ANA].indexOf(n) >= 0) ss.deleteSheet(x);
+  });
 }
 
 // ---------------- วิเคราะห์ผล ----------------
 function analyze() {
+  examSheets_().forEach(analyzeExam_);
+}
+
+function analyzeExam_(ex) {
   const ss = SpreadsheetApp.getActive();
-  const qs = questions_();
-  const ans = ss.getSheetByName(SH.ANS);
+  const title = examTitle_(ex);
+  const qs = questions_(ex);
+  const ans = ss.getSheetByName(ansName_(title));
+  if (!ans) return;
   const nq = qs.length, F = FIXED_COLS.length;
   const rows = ans && ans.getLastRow() > 1
     ? ans.getRange(2, 1, ans.getLastRow() - 1, F + nq).getValues().map(function (r) {
@@ -190,25 +233,11 @@ function analyze() {
     t.items++; t.total += n; t.ok += counts[q.answer];
     return [q.no, q.topic, L[q.answer]].concat(counts, [blank, n ? Math.round(p * 100) : '', n ? round_(p) : '', r === '' ? '-' : round_(r), notes.join(' · ')]);
   });
-  const ana = sheet_(SH.ANA);
-  ana.clear();
-  ana.getRange(1, 1, 1, head.length).setValues([head]).setFontWeight('bold').setBackground('#e8eef8');
-  if (items.length) ana.getRange(2, 1, items.length, head.length).setValues(items);
-  ana.getRange(items.length + 3, 1, 3, 1).setValues([
-    ['p = สัดส่วนคนตอบถูก · 0.20–0.80 กำลังดี · ต่ำกว่า 0.20 ยากมาก · เกิน 0.80 ง่าย'],
-    ['r = กลุ่มเก่ง 27% ตอบถูกมากกว่ากลุ่มอ่อน 27% เท่าใด · 0.40 ขึ้นไปดี · ต่ำกว่า 0.20 ควรปรับ · ติดลบ = อาจเฉลยผิดหรือโจทย์กำกวม'],
-    ['ตัวลวงที่ดีควรมีคนเลือกอย่างน้อย 5%'],
-  ]).setFontColor('#64708a');
-  ana.setFrozenRows(1);
-  ana.setColumnWidth(head.length, 520);
-
   // ---- สรุปผล
   const k = nq;
   const kr20 = n > 1 && k > 1 && sd > 0 ? (k / (k - 1)) * (1 - pq / (sd * sd)) : '';
-  const sum = sheet_(SH.SUM);
-  sum.clear();
   const stats = [
-    ['สรุปผลการสอบ', ''],
+    ['สรุปผลการสอบ: ' + title, ''],
     ['จำนวนผู้สอบ', n],
     ['คะแนนเต็ม', nq],
     ['คะแนนเฉลี่ย', n ? round_(mean) : '-'],
@@ -221,16 +250,25 @@ function analyze() {
     ['ผลรายเรื่อง (ทั้งกลุ่ม)', 'ตอบถูก %'],
   ].concat(Object.keys(topicMap).map(function (t) { return [t + ' (' + topicMap[t].items + ' ข้อ)', topicMap[t].total ? Math.round(topicMap[t].ok / topicMap[t].total * 100) : '-']; }),
     [['', ''], ['ช่วงคะแนน (ร้อยละ)', 'จำนวนคน']]);
-  const bins = [];
-  for (let b = 9; b >= 0; b--) {
-    bins.push([(b * 10) + '–' + (b === 9 ? 100 : b * 10 + 9) + '%', rows.filter(function (r) { return Math.min(9, Math.floor(r.score / nq * 10)) === b; }).length]);
+  for (let bin = 9; bin >= 0; bin--) {
+    stats.push([(bin * 10) + '–' + (bin === 9 ? 100 : bin * 10 + 9) + '%', rows.filter(function (r) { return Math.min(9, Math.floor(r.score / nq * 10)) === bin; }).length]);
   }
-  const all = stats.concat(bins);
-  sum.getRange(1, 1, all.length, 2).setValues(all);
-  sum.getRange('A1').setFontSize(14).setFontWeight('bold');
-  sum.getRange(11, 1, 1, 2).setFontWeight('bold');
-  sum.getRange(stats.length, 1, 1, 2).setFontWeight('bold');
-  sum.setColumnWidth(1, 260);
+  const ana = sheet_(anaName_(title));
+  ana.clear();
+  ana.getRange(1, 1, stats.length, 2).setValues(stats);
+  ana.getRange('A1').setFontSize(14).setFontWeight('bold');
+  ana.setColumnWidth(1, 260);
+  // ---- วิเคราะห์รายข้อ (ใต้สรุปผล)
+  const top = stats.length + 3;
+  ana.getRange(top - 1, 1).setValue('วิเคราะห์รายข้อ').setFontWeight('bold').setFontSize(13);
+  ana.getRange(top, 1, 1, head.length).setValues([head]).setFontWeight('bold').setBackground('#e8eef8');
+  if (items.length) ana.getRange(top + 1, 1, items.length, head.length).setValues(items);
+  ana.getRange(top + items.length + 2, 1, 3, 1).setValues([
+    ['p = สัดส่วนคนตอบถูก · 0.20–0.80 กำลังดี · ต่ำกว่า 0.20 ยากมาก · เกิน 0.80 ง่าย'],
+    ['r = กลุ่มเก่ง 27% ตอบถูกมากกว่ากลุ่มอ่อน 27% เท่าใด · 0.40 ขึ้นไปดี · ต่ำกว่า 0.20 ควรปรับ · ติดลบ = อาจเฉลยผิดหรือโจทย์กำกวม'],
+    ['ตัวลวงที่ดีควรมีคนเลือกอย่างน้อย 5%'],
+  ]).setFontColor('#64708a');
+  ana.setColumnWidth(head.length, 520);
 }
 
 // ---------------- ตัวช่วย ----------------
@@ -258,8 +296,28 @@ function checkAccess_(code) {
   return s;
 }
 
-function questions_() {
-  const key = SpreadsheetApp.getActive().getSheetByName(SH.KEY);
+// ---- ชุดข้อสอบ: แผ่นงานชื่อ "ข้อสอบ ..." (ถ้าไม่มี ใช้แผ่นงาน "เฉลย" แบบเดิม)
+function examSheets_() {
+  const ss = SpreadsheetApp.getActive();
+  const list = ss.getSheets().filter(function (x) { return x.getName().indexOf(EXAM_PREFIX) === 0; });
+  if (list.length) return list;
+  const key = ss.getSheetByName(SH.KEY);
+  return key ? [key] : [];
+}
+function examTitle_(sh) {
+  const n = sh.getName();
+  return n.indexOf(EXAM_PREFIX) === 0 ? n.slice(EXAM_PREFIX.length).trim() : settings_().title;
+}
+function findExam_(id) {
+  const list = examSheets_();
+  const sh = list.filter(function (x) { return x.getName() === id; })[0] || (list.length === 1 ? list[0] : null);
+  if (!sh) throw new Error('ไม่พบชุดข้อสอบนี้');
+  return sh;
+}
+function ansName_(title) { return ('ผล ' + title).slice(0, 99); }
+function anaName_(title) { return ('วิเคราะห์ ' + title).slice(0, 99); }
+
+function questions_(key) {
   if (!key || key.getLastRow() < 2) return [];
   const nc = settings_().nc;
   const out = [];
@@ -323,8 +381,8 @@ function grade_(qs, ans) {
   };
 }
 
-function answersSheet_(nq) {
-  const sh = sheet_(SH.ANS);
+function answersSheet_(title, nq) {
+  const sh = sheet_(ansName_(title));
   const head = FIXED_COLS.concat(Array.from({ length: nq }, function (_, i) { return 'ข้อ ' + (i + 1); }));
   const cur = sh.getLastColumn() ? sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0] : [];
   if (cur.length !== head.length || cur[0] !== head[0]) {
