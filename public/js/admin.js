@@ -40,3 +40,9 @@
     pv.src = URL.createObjectURL(f);
   }));
 })();
+
+(() => {
+  // หน้าผลสอบรายคน: แสดงเฉพาะข้อที่ผิด
+  const only = document.querySelector('[data-only-wrong]');
+  if (only) only.addEventListener('change', () => document.body.classList.toggle('only-wrong', only.checked));
+})();

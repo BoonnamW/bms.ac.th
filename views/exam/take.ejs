@@ -1,0 +1,29 @@
+<%- include('_head') %>
+<form method="post" action="/exam/submit" class="ex-take" data-exam-form>
+  <div class="ex-card">
+    <h1><%= exam.title %></h1>
+    <p class="muted"><%= exam.qs.length %> ข้อ<%= exam.intro ? '' : ' · เลือกคำตอบที่ถูกที่สุดเพียงข้อเดียว' %></p>
+    <% if (exam.intro) { %><p class="ex-intro"><%= exam.intro %></p><% } %>
+    <% if (error) { %><div class="alert err" role="alert"><%= error %></div><% } %>
+    <input type="hidden" name="_ft" value="<%= ft %>">
+    <input type="hidden" name="code" value="<%= code %>">
+    <div class="row3">
+      <label>ชื่อ-นามสกุล *<input name="name" required maxlength="100" value="<%= prev.name || '' %>" autocomplete="name"></label>
+      <label>เลขที่ / รหัสนักเรียน<input name="student_no" maxlength="20" value="<%= prev.student_no || '' %>"></label>
+      <label>ห้อง / ชั้น<input name="room" maxlength="20" value="<%= prev.room || '' %>"></label>
+    </div>
+  </div>
+  <% exam.qs.forEach(function (q, i) { var pa = prev.answers ? prev.answers[i] : -1; %>
+    <div class="ex-q" id="q<%= i %>" role="radiogroup" aria-labelledby="qt<%= i %>" data-q>
+      <p class="ex-qt" id="qt<%= i %>"><b><%= q.no %>.</b> <%= q.text %></p>
+      <% q.choices.forEach(function (c, k) { %>
+        <label class="opt"><input type="radio" name="q<%= i %>" value="<%= k %>" <%= pa === k ? 'checked' : '' %>><b><%= L[k] %>.</b> <span><%= c %></span></label>
+      <% }) %>
+    </div>
+  <% }) %>
+  <div class="ex-submit">
+    <span data-progress>ตอบแล้ว 0/<%= exam.qs.length %> ข้อ</span>
+    <button class="btn">ส่งคำตอบ</button>
+  </div>
+</form>
+<%- include('_foot') %>

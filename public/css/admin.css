@@ -88,3 +88,34 @@ input:focus,textarea:focus,select:focus{border-color:var(--primary);outline:0;bo
   .main{padding:0 16px 40px}
   .login{grid-template-columns:1fr}.login-art{padding:36px 28px}.login-box{padding:36px 28px}
 }
+
+/* ข้อสอบออนไลน์ */
+.mono{font:14px/1.6 ui-monospace,Menlo,Consolas,monospace}
+.ex-tip{margin:0 0 16px}
+.ex-h{font-size:19px;color:var(--primary);margin:28px 0 12px}
+.ex-box,.ex-q{background:#fff;border-radius:var(--r);padding:20px 22px;box-shadow:0 2px 10px rgba(20,50,94,.06);margin-bottom:12px}
+.ex-list{max-width:900px}
+.ex-qt{white-space:pre-wrap;margin-bottom:8px}
+.ex-ch{list-style:none;display:grid;gap:3px}.ex-ch li{padding:4px 12px;border-radius:8px}
+.ex-ch li.right{background:#e7f6ec;color:#166534}.ex-ch li.wrong{background:#fdecec;color:#991b1b}
+.ex-ch em{font-style:normal;font-size:12px;border:1px solid currentColor;border-radius:99px;padding:0 8px;margin-left:6px}
+.ex-exp{white-space:pre-wrap;margin-top:8px;background:#f5f8fc;padding:8px 14px;border-radius:10px}
+.ex-note{color:#991b1b;font-size:14px}.ex-topic,.muted{color:var(--muted);font-size:13.5px}
+.ex-q.ok{border-left:5px solid #16a34a}.ex-q.ng{border-left:5px solid #dc2626}
+.mark{display:inline-block;width:22px;font-weight:700}.ok .mark{color:#16a34a}.ng .mark{color:#dc2626}
+.ex-filter{margin-bottom:10px}.ex-filter label{display:flex;gap:8px;align-items:center}
+.only-wrong .ex-q.ok{display:none}
+.ex-box p{margin-top:10px}.ex-meta{margin:14px 0 0}
+.hist{display:grid;grid-template-columns:90px 1fr 70px;gap:12px;align-items:center;margin:5px 0;font-size:14px}
+.hist.wide{grid-template-columns:minmax(140px,1fr) 2fr 60px}.hist b{text-align:right;font-weight:500}
+progress{width:100%;height:12px;vertical-align:middle;appearance:none;border:0;border-radius:99px;background:#eef1f6;overflow:hidden}
+progress.bar-p{width:90px}
+progress::-webkit-progress-bar{background:#eef1f6;border-radius:99px}
+progress::-webkit-progress-value{background:var(--primary);border-radius:99px}progress::-moz-progress-bar{background:var(--primary)}
+progress.pass::-webkit-progress-value{background:#16a34a}progress.pass::-moz-progress-bar{background:#16a34a}
+progress.fail::-webkit-progress-value{background:#dc2626}progress.fail::-moz-progress-bar{background:#dc2626}
+.pillbtn{border:0;cursor:pointer;font:inherit;font-size:12.5px}
+.items .dist span{display:inline-block;margin:2px 8px 2px 0;padding:1px 8px;border-radius:8px;background:#f3f5f9;white-space:nowrap}
+.items .dist span.right{background:#e7f6ec;color:#166534}.items .dist span.weak{background:#fff4e0;color:#92400e}
+.items tr.warn td{background:#fff7f7}.bad{color:#b91c1c}
+.bar.actions{align-items:center}

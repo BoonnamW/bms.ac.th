@@ -1,0 +1,11 @@
+<%- include('_head') %>
+<p class="bar actions"><a class="btn ghost" href="/admin/exams/<%= exam.id %>">← ผลสอบ <%= exam.title %></a></p>
+<div class="cards">
+  <div class="stat"><strong><%= g.score %>/<%= g.total %></strong><span>คะแนน (<%= adv.pct %>%)</span></div>
+  <div class="stat"><strong><%= rank %>/<%= n %></strong><span>อันดับในกลุ่ม</span></div>
+  <div class="stat"><strong><%= adv.level %></strong><span>ระดับผลสอบ</span></div>
+  <div class="stat"><strong><%= g.items.filter(function (x) { return x.chosen < 0; }).length %></strong><span>ข้อที่ไม่ได้ตอบ</span></div>
+</div>
+<p class="muted ex-meta">เลขที่/รหัส: <%= a.student_no || '-' %> · ห้อง: <%= a.room || '-' %> · ส่งเมื่อ <%= new Date(String(a.created_at).replace(' ', 'T') + 'Z').toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' }) %> น.</p>
+<%- include('../exam/_analysis', { g: g, adv: adv, showKey: true }) %>
+<%- include('_foot') %>

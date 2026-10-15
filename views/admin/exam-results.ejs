@@ -1,0 +1,96 @@
+<%- include('_head') %>
+<% if (deleted) { %><div class="alert ok">ลบผลสอบเรียบร้อยแล้ว</div><% } %>
+<p class="bar actions">
+  <a class="btn ghost" href="/admin/exams">← ทุกชุดข้อสอบ</a>
+  <a class="btn ghost" href="/admin/exams/<%= exam.id %>/edit">แก้ไขข้อสอบ</a>
+  <% if (A.n) { %><a class="btn ghost" href="/admin/exams/<%= exam.id %>/csv">ดาวน์โหลดคะแนน (Excel/CSV)</a><% } %>
+  <span class="pill <%= exam.open ? 'yes' : 'no' %>"><%= exam.open ? 'เปิดรับคำตอบ' : 'ปิดรับแล้ว' %></span>
+  <span>รหัสเข้าสอบ <code><%= exam.code %></code></span>
+</p>
+
+<div class="cards">
+  <div class="stat"><strong><%= A.n %></strong><span>ผู้สอบ</span></div>
+  <div class="stat"><strong><%= A.n ? A.mean.toFixed(1) : '-' %></strong><span>คะแนนเฉลี่ย (เต็ม <%= A.total %>)</span></div>
+  <div class="stat"><strong><%= A.n ? A.max + ' / ' + A.min : '-' %></strong><span>สูงสุด / ต่ำสุด</span></div>
+  <div class="stat"><strong><%= A.n > 1 ? A.sd.toFixed(2) : '-' %></strong><span>ส่วนเบี่ยงเบนมาตรฐาน</span></div>
+  <div class="stat"><strong><%= A.kr20 == null ? '-' : A.kr20.toFixed(2) %></strong><span>ความเชื่อมั่น KR-20</span></div>
+</div>
+
+<% if (!A.n) { %>
+  <div class="tip">ยังไม่มีผู้สอบ — ส่งลิงก์ <code>/exam</code> และรหัส <code><%= exam.code %></code> ให้นักเรียน</div>
+<% } else { %>
+
+<h2 class="ex-h">ผลรายคน</h2>
+<div class="tablewrap">
+<table class="tbl">
+  <thead><tr><th class="r">อันดับ</th><th>ชื่อ-นามสกุล</th><th>เลขที่/รหัส</th><th>ห้อง</th><th class="r">คะแนน</th><th>ร้อยละ</th><th>ส่งเมื่อ</th><th class="r">จัดการ</th></tr></thead>
+  <tbody>
+  <% A.rows.forEach(function (a, i) { var p = Math.round(a.score / (a.total || 1) * 100); %>
+    <tr>
+      <td class="r"><%= A.rows.filter(function (x) { return x.score > a.score; }).length + 1 %></td>
+      <td><a href="/admin/exams/<%= exam.id %>/a/<%= a.id %>"><strong><%= a.name %></strong></a></td>
+      <td><%= a.student_no %></td><td><%= a.room %></td>
+      <td class="r"><%= a.score %>/<%= a.total %></td>
+      <td><progress class="bar-p <%= p >= 50 ? 'pass' : 'fail' %>" max="100" value="<%= p %>"></progress> <%= p %>%</td>
+      <td><%= thDate(a.created_at) %></td>
+      <td class="r act"><a href="/admin/exams/<%= exam.id %>/a/<%= a.id %>">วิเคราะห์รายคน</a>
+        <form method="post" action="/admin/exams/<%= exam.id %>/a/<%= a.id %>/delete" data-confirm="ลบผลสอบของ <%= a.name %>?">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="del">ลบ</button></form></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+
+<h2 class="ex-h">การกระจายคะแนน</h2>
+<div class="ex-box">
+  <% var maxBin = Math.max.apply(null, A.bins.map(function (b) { return b.count; })) || 1; %>
+  <% A.bins.slice().reverse().forEach(function (b) { %>
+    <div class="hist"><span><%= b.label %></span><progress max="<%= maxBin %>" value="<%= b.count %>"></progress><b><%= b.count %> คน</b></div>
+  <% }) %>
+</div>
+
+<h2 class="ex-h">ผลรายเรื่อง (ทั้งกลุ่ม)</h2>
+<div class="ex-box">
+  <% A.topics.slice().sort(function (a, b) { return a.pct - b.pct; }).forEach(function (t) { %>
+    <div class="hist wide"><span><%= t.topic %> <small>(<%= t.items %> ข้อ)</small></span>
+      <progress class="<%= t.pct >= 50 ? 'pass' : 'fail' %>" max="100" value="<%= t.pct %>"></progress><b><%= t.pct %>%</b></div>
+  <% }) %>
+  <p class="muted">เรื่องที่ได้ต่ำกว่า 50% (สีแดง) ควรสอนทบทวนทั้งกลุ่ม</p>
+</div>
+
+<h2 class="ex-h">วิเคราะห์รายข้อ</h2>
+<div class="tip ex-tip">
+  <b>p (ความยาก)</b> = สัดส่วนคนตอบถูก · 0.20–0.80 กำลังดี · ต่ำกว่า 0.20 ยากมาก · เกิน 0.80 ง่าย<br>
+  <b>r (อำนาจจำแนก)</b> = กลุ่มเก่ง 27% ตอบถูกมากกว่ากลุ่มอ่อน 27% เท่าใด · 0.40 ขึ้นไปดี · ต่ำกว่า 0.20 ควรปรับ · ติดลบ = อาจเฉลยผิดหรือโจทย์กำกวม (ต้องมีผู้สอบ 4 คนขึ้นไป)<br>
+  <b>ตัวลวง</b> ที่ดีควรมีคนเลือกอย่างน้อย 5% และกลุ่มอ่อนเลือกมากกว่ากลุ่มเก่ง
+</div>
+<div class="tablewrap">
+<table class="tbl items">
+  <thead><tr><th class="r">ข้อ</th><th>เรื่อง</th><th>จำนวนคนเลือกแต่ละตัวเลือก (✓ = เฉลย)</th><th class="r">p</th><th class="r">r</th><th>ผลวิเคราะห์</th></tr></thead>
+  <tbody>
+  <% A.items.forEach(function (it) { %>
+    <tr class="<%= (it.r !== null && it.r < 0) || it.p < 0.2 ? 'warn' : '' %>">
+      <td class="r"><b><%= it.no %></b></td>
+      <td><%= it.topic %></td>
+      <td class="dist">
+        <% it.counts.forEach(function (c, i) { %>
+          <span class="<%= i === it.answer ? 'right' : (it.distractors[i] ? 'weak' : '') %>" title="<%= it.choices[i] %><%= it.distractors[i] ? ' — ' + it.distractors[i] : '' %>"><%= L[i] %><%= i === it.answer ? '✓' : '' %> <b><%= c %></b></span>
+        <% }) %>
+        <% if (it.blank) { %><span>ไม่ตอบ <b><%= it.blank %></b></span><% } %>
+      </td>
+      <td class="r"><%= it.p.toFixed(2) %></td>
+      <td class="r"><%= it.r === null ? '-' : it.r.toFixed(2) %></td>
+      <td>
+        <%= it.pLabel %> · <%= it.rLabel %>
+        <% if (it.popularWrong >= 0 && it.counts[it.popularWrong] >= it.counts[it.answer]) { %><br><small class="bad">คนส่วนใหญ่เลือก “<%= L[it.popularWrong] %>” — ตรวจเฉลยหรือสอนแก้ความเข้าใจผิด</small><% } %>
+        <% var weakD = it.distractors.map(function (d, i) { return d ? L[i] + ' (' + d + ')' : ''; }).filter(Boolean); %>
+        <% if (weakD.length) { %><br><small class="muted">ตัวลวงควรปรับ: <%= weakD.join(', ') %></small><% } %>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<% } %>
+<%- include('_foot') %>

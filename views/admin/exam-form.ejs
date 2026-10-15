@@ -1,0 +1,43 @@
+<%- include('_head') %>
+<% if (errors.length) { %><div class="alert err"><b>ตรวจพบปัญหา</b><ul><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div><% } %>
+<form class="form" method="post" action="/admin/exams/save">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <% if (item.id) { %><input type="hidden" name="id" value="<%= item.id %>"><% } %>
+  <div class="fld"><label for="f-title">ชื่อชุดข้อสอบ *</label><input id="f-title" name="title" value="<%= item.title %>" maxlength="200" required placeholder="เช่น ข้อสอบเตรียมสอบเข้า ม.1 ชุดที่ 1"></div>
+  <div class="fld"><label for="f-code">รหัสเข้าสอบ *</label><input id="f-code" name="code" value="<%= item.code %>" maxlength="40" required pattern="[A-Za-z0-9]{6,40}" autocomplete="off">
+    <small>ให้เฉพาะผู้สอบ — A-Z, 0-9 อย่างน้อย 6 ตัว (ยิ่งยาวยิ่งเดายาก)</small></div>
+  <div class="fld"><label for="f-intro">คำชี้แจงก่อนสอบ</label><textarea id="f-intro" name="intro" rows="2" maxlength="2000"><%= item.intro %></textarea></div>
+  <div class="fld"><label for="f-src">ข้อสอบ + เฉลย *</label>
+    <textarea id="f-src" name="source" rows="18" class="mono" required placeholder="1. 25 × 4 มีค่าเท่าใด
+ก. 90
+ข. 100
+ค. 110
+ง. 120
+ตอบ: ข
+เรื่อง: การคูณ
+อธิบาย: 25 × 4 = 100
+
+2. ..."><%= item.source %></textarea>
+    <small>วางข้อสอบตามรูปแบบตัวอย่าง: ข้อขึ้นต้นด้วย <code>1.</code> ตัวเลือก <code>ก.</code>–<code>จ.</code> (หรือ A–E) แล้วตามด้วย
+      <code>ตอบ: ข</code> · <code>เรื่อง:</code> ใช้จัดกลุ่มการวิเคราะห์ (ไม่บังคับ) · <code>อธิบาย:</code> แสดงในเฉลย (ไม่บังคับ, หลายบรรทัดได้)</small></div>
+  <div class="fld chk"><label><input type="checkbox" name="open" value="1" <%= item.open ? 'checked' : '' %>> เปิดรับคำตอบ</label></div>
+  <div class="fld chk"><label><input type="checkbox" name="show_key" value="1" <%= item.show_key ? 'checked' : '' %>> แสดงเฉลยและคำอธิบายให้นักเรียนดูหลังส่งคำตอบ</label></div>
+  <div class="formbar">
+    <button class="btn">บันทึก</button>
+    <button class="btn ghost" name="preview" value="1">ตรวจรูปแบบ / ดูตัวอย่าง</button>
+    <a class="btn ghost" href="/admin/exams">ยกเลิก</a>
+  </div>
+</form>
+<% if (preview && preview.length) { %>
+<h2 class="ex-h">ตัวอย่าง (<%= preview.length %> ข้อ) — ยังไม่ได้บันทึกจนกว่าจะกด “บันทึก”</h2>
+<div class="ex-list">
+<% preview.forEach(function (q) { %>
+  <div class="ex-q">
+    <p class="ex-qt"><b><%= q.no %>.</b> <%= q.text %> <span class="pill no"><%= q.topic %></span></p>
+    <ol class="ex-ch"><% q.choices.forEach(function (c, i) { %><li class="<%= i === q.answer ? 'right' : '' %>"><b><%= L[i] %>.</b> <%= c %><%= i === q.answer ? ' ✓' : '' %></li><% }) %></ol>
+    <% if (q.explain) { %><p class="ex-exp"><b>อธิบาย:</b> <%= q.explain %></p><% } %>
+  </div>
+<% }) %>
+</div>
+<% } %>
+<%- include('_foot') %>

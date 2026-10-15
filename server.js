@@ -6,6 +6,7 @@ import { navTree } from './lib/nav.js';
 import { parseCookies, icon, thDate, token, IFRAME_HOSTS, WP_FILE } from './lib/helpers.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
+import examRoutes from './routes/exam.js';
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -77,6 +78,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/admin', adminRoutes);
+app.use('/exam', examRoutes);
 app.use('/', publicRoutes);
 
 app.use((req, res) => res.status(404).render('public/error', { title: 'ไม่พบหน้าที่ต้องการ', code: 404, nav: navTree() }));

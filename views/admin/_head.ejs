@@ -22,6 +22,8 @@
     <% ['news','pages','slides','links','stats','gallery'].forEach(function (k) { %>
       <a href="/admin/<%= k %>" class="<%= path.startsWith('/admin/' + k) ? 'on' : '' %>"><%= entities[k].title %></a>
     <% }) %>
+    <p>ข้อสอบ</p>
+    <a href="/admin/exams" class="<%= path.startsWith('/admin/exams') ? 'on' : '' %>">ข้อสอบออนไลน์</a>
     <p>ระบบ</p>
     <a href="/admin/messages" class="<%= path.startsWith('/admin/messages') ? 'on' : '' %>"><%= entities.messages.title %></a>
     <a href="/admin/settings" class="<%= path.startsWith('/admin/settings') ? 'on' : '' %>">ตั้งค่าเว็บไซต์</a>

@@ -1,0 +1,10 @@
+<%- include('_head') %>
+<form class="ex-card ex-enter" method="post" action="/exam" autocomplete="off">
+  <h1>เข้าสอบ</h1>
+  <p class="muted">กรอกรหัสเข้าสอบที่ได้รับจากครู</p>
+  <% if (error) { %><div class="alert err" role="alert"><%= error %></div><% } %>
+  <input type="hidden" name="_ft" value="<%= ft %>">
+  <label>รหัสเข้าสอบ<input name="code" value="<%= code %>" required maxlength="40" autofocus autocapitalize="characters" spellcheck="false" class="code"></label>
+  <button class="btn">เริ่มทำข้อสอบ</button>
+</form>
+<%- include('_foot') %>

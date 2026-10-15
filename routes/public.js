@@ -24,7 +24,7 @@ r.use((req, res, next) => {
 r.use((req, res, next) => { res.locals.nav = navTree(); next(); });
 
 r.get('/robots.txt', (req, res) => {
-  res.type('text/plain').send('User-agent: *\nDisallow: /admin\nDisallow: /search\nSitemap: ' + `${req.protocol}://${req.get('host')}/sitemap.xml\n`);
+  res.type('text/plain').send('User-agent: *\nDisallow: /admin\nDisallow: /exam\nDisallow: /search\nSitemap: ' + `${req.protocol}://${req.get('host')}/sitemap.xml\n`);
 });
 
 r.get('/sitemap.xml', (req, res) => {

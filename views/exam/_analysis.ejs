@@ -1,0 +1,33 @@
+<section class="ex-sec">
+  <h2 class="ex-h">ผลรายเรื่อง</h2>
+  <div class="ex-box">
+    <% g.topics.forEach(function (t) { var p = Math.round(t.ok / t.total * 100); %>
+      <div class="hist wide"><span><%= t.topic %></span><progress class="<%= p >= 50 ? 'pass' : 'fail' %>" max="100" value="<%= p %>"></progress><b><%= t.ok %>/<%= t.total %></b></div>
+    <% }) %>
+    <% if (adv.strong.length) { %><p>👍 <b>ทำได้ดี:</b> <%= adv.strong.join(', ') %></p><% } %>
+    <% if (adv.weak.length) { %><p>📌 <b>ควรทบทวน:</b> <%= adv.weak.join(', ') %></p><% } %>
+    <% if (!adv.weak.length && !adv.strong.length) { %><p>ผลแต่ละเรื่องอยู่ในระดับปานกลาง ทบทวนข้อที่ผิดด้านล่าง</p><% } %>
+  </div>
+</section>
+<% if (showKey) { %>
+<section class="ex-sec">
+  <h2 class="ex-h">เฉลยและข้อที่ผิด <small>(ผิด <%= g.items.filter(function (x) { return !x.ok; }).length %> ข้อ)</small></h2>
+  <p class="ex-filter"><label><input type="checkbox" data-only-wrong> แสดงเฉพาะข้อที่ผิด</label></p>
+  <div class="ex-list">
+  <% g.items.forEach(function (q) { %>
+    <article class="ex-q <%= q.ok ? 'ok' : 'ng' %>">
+      <p class="ex-qt"><span class="mark"><%= q.ok ? '✓' : '✗' %></span><b><%= q.no %>.</b> <%= q.text %></p>
+      <ol class="ex-ch">
+        <% q.choices.forEach(function (c, i) { %>
+          <li class="<%= i === q.answer ? 'right' : (i === q.chosen ? 'wrong' : '') %>"><b><%= L[i] %>.</b> <%= c %>
+            <% if (i === q.answer) { %><em>เฉลย</em><% } %><% if (i === q.chosen) { %><em>ตอบ</em><% } %></li>
+        <% }) %>
+      </ol>
+      <% if (q.chosen < 0) { %><p class="ex-note">ไม่ได้ตอบข้อนี้</p><% } %>
+      <% if (q.explain) { %><p class="ex-exp"><b>อธิบาย:</b> <%= q.explain %></p><% } %>
+      <p class="ex-topic">เรื่อง: <%= q.topic %></p>
+    </article>
+  <% }) %>
+  </div>
+</section>
+<% } %>

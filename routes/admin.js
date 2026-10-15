@@ -7,6 +7,7 @@ import { entities, settingsFields } from '../lib/entities.js';
 import {
   token, sha256, safeEqual, cookieOpts, cleanHtml, saveImage, removeImage, safeUrl,
 } from '../lib/helpers.js';
+import examAdmin from './exam-admin.js';
 
 const r = Router();
 const SESSION_MS = 2 * 60 * 60 * 1000; // 2 ชั่วโมง
@@ -142,6 +143,9 @@ r.post('/settings', requireAuth, upload.single('logo'), csrfCheck, (req, res) =>
   for (const [k, v] of Object.entries(values)) up.run(k, String(v ?? ''));
   res.redirect('/admin/settings?saved=1');
 });
+
+// ---------- ข้อสอบออนไลน์ (ต้องอยู่ก่อน CRUD ทั่วไป) ----------
+examAdmin(r, { requireAuth, csrfCheck });
 
 // ---------- CRUD ทั่วไป ----------
 function getEntity(req, res, next) {

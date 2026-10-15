@@ -1,0 +1,34 @@
+<%- include('_head') %>
+<% if (saved) { %><div class="alert ok">บันทึกชุดข้อสอบเรียบร้อยแล้ว</div><% } %>
+<% if (deleted) { %><div class="alert ok">ลบชุดข้อสอบเรียบร้อยแล้ว</div><% } %>
+<p class="bar"><a class="btn" href="/admin/exams/new">+ สร้างชุดข้อสอบ</a></p>
+<div class="tip ex-tip">นักเรียนเข้าสอบที่ <code>/exam</code> แล้วกรอก<b>รหัสเข้าสอบ</b> — หน้านี้ไม่มีลิงก์จากเว็บไซต์และไม่ถูกค้นหาใน Google
+  ส่งลิงก์และรหัสให้เฉพาะผู้สอบ และกด <b>ปิดรับ</b> เมื่อสอบเสร็จ</div>
+<div class="tablewrap">
+<table class="tbl">
+  <thead><tr><th>ชุดข้อสอบ</th><th>รหัสเข้าสอบ</th><th class="r">ข้อ</th><th class="r">ผู้สอบ</th><th class="r">เฉลี่ย</th><th>สถานะ</th><th class="r">จัดการ</th></tr></thead>
+  <tbody>
+  <% if (!rows.length) { %><tr><td colspan="7" class="none">ยังไม่มีชุดข้อสอบ — กด “สร้างชุดข้อสอบ” แล้ววางข้อสอบลงไป</td></tr><% } %>
+  <% rows.forEach(function (e) { %>
+    <tr>
+      <td><a href="/admin/exams/<%= e.id %>"><strong><%= e.title %></strong></a></td>
+      <td><code><%= e.code %></code></td>
+      <td class="r"><%= e.qn %></td>
+      <td class="r"><%= e.n %></td>
+      <td class="r"><%= e.avg == null ? '-' : Math.round(e.avg) + '%' %></td>
+      <td>
+        <form method="post" action="/admin/exams/<%= e.id %>/toggle"><input type="hidden" name="_csrf" value="<%= csrf %>">
+          <button class="pill <%= e.open ? 'yes' : 'no' %> pillbtn" title="กดเพื่อสลับ"><%= e.open ? 'เปิดรับคำตอบ' : 'ปิดรับ' %></button></form>
+      </td>
+      <td class="r act">
+        <a href="/admin/exams/<%= e.id %>">ผล/วิเคราะห์</a>
+        <a href="/admin/exams/<%= e.id %>/edit">แก้ไข</a>
+        <form method="post" action="/admin/exams/<%= e.id %>/delete" data-confirm="ลบชุดข้อสอบนี้และผลสอบทั้งหมด? กู้คืนไม่ได้">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="del">ลบ</button></form>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<%- include('_foot') %>

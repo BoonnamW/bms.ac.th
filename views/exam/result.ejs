@@ -1,0 +1,11 @@
+<%- include('_head') %>
+<div class="ex-card ex-score">
+  <p class="muted"><%= a.title %></p>
+  <h1><%= a.name %></h1>
+  <p class="big"><%= g.score %><small>/<%= g.total %></small></p>
+  <p><progress class="<%= adv.pct >= 50 ? 'pass' : 'fail' %>" max="100" value="<%= adv.pct %>"></progress> <b><%= adv.pct %>%</b> · <%= adv.level %></p>
+  <p class="muted small">บันทึกคำตอบแล้ว · เก็บลิงก์หน้านี้ไว้เพื่อกลับมาดูผลได้ (อย่าแชร์ให้คนอื่น)</p>
+</div>
+<%- include('_analysis', { g: g, adv: adv, showKey: !!a.show_key }) %>
+<% if (!a.show_key) { %><p class="ex-card muted">ครูจะเฉลยคำตอบภายหลัง</p><% } %>
+<%- include('_foot') %>
