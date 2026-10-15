@@ -53,7 +53,13 @@ progress.fail::-webkit-progress-value{background:var(--ng)}progress.fail::-moz-p
 .hist{display:grid;grid-template-columns:minmax(110px,1fr) 2fr 56px;gap:10px;align-items:center;margin:4px 0}.hist progress{width:100%}.hist b{text-align:right;font-weight:500}
 .res{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
 .res div{padding:6px 10px;border-radius:10px;font-size:14.5px}.res .ok{background:var(--ok-bg);color:var(--ok)}.res .ng{background:var(--ng-bg);color:var(--ng)}
-.exp{grid-column:1/-1;background:var(--soft)!important;color:var(--ink)!important;white-space:pre-wrap}
+.res a{padding:6px 10px;border-radius:10px;font-size:14.5px;text-decoration:none}.res a.ok{background:var(--ok-bg);color:var(--ok)}.res a.ng{background:var(--ng-bg);color:var(--ng)}
+.seg{display:flex;gap:6px;margin:16px 0 4px;flex-wrap:wrap}.seg button{font:inherit;padding:6px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}.seg button[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:#fff}
+.only-ng .rv.ok{display:none}
+.rv{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:12px;padding:12px 14px;margin-top:12px;scroll-margin-top:16px}.rv.ng{border-left-color:var(--ng)}
+.rvh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}.tag{font-size:13px;color:var(--muted);background:var(--soft);padding:1px 8px;border-radius:99px}.rv.ok .st{color:var(--ok)}.rv.ng .st{color:var(--ng)}.st{margin-left:auto;font-size:14px;font-weight:500}
+.ch{padding:5px 10px;border-radius:8px;margin-top:4px;border:1px solid transparent}.ch.right{background:var(--ok-bg);border-color:var(--ok)}.ch.wrong{background:var(--ng-bg);border-color:var(--ng)}.mk{font-size:13px;font-weight:600;white-space:nowrap}.ch.right .mk{color:var(--ok)}.ch.wrong .mk{color:var(--ng)}
+.why,.learn{margin-top:10px;padding:10px 12px;border-radius:10px;white-space:pre-wrap;line-height:1.65}.why{background:var(--soft)}.learn{background:color-mix(in srgb,var(--primary) 8%,var(--card));border:1px solid color-mix(in srgb,var(--primary) 25%,transparent)}.why b,.learn b{display:block;margin-bottom:2px}
 .take.one{grid-template-columns:minmax(0,820px);justify-content:center}
 .qform{display:grid;gap:0}.qcard{margin-bottom:12px}.qcard.missing{outline:2px solid var(--ng)}
 .qt{white-space:pre-wrap;margin-bottom:8px;font-size:16.5px}
@@ -177,14 +183,34 @@ function result(who, r) {
     const p = Math.round(t.ok / t.total * 100);
     return `<div class="hist"><span>${h(t.topic)}</span><progress class="${p >= 50 ? '' : 'fail'}" max="100" value="${p}"></progress><b>${t.ok}/${t.total}</b></div>`;
   }).join('')}${r.strong.length ? `<p>👍 <b>ทำได้ดี:</b> ${h(r.strong.join(', '))}</p>` : ''}${r.weak.length ? `<p>📌 <b>ควรทบทวน:</b> ${h(r.weak.join(', '))}</p>` : ''}</div>` : '';
-  const items = r.showKey && r.items ? `<div class="card"><h2>ตรวจคำตอบรายข้อ</h2><div class="res">${r.items.map((q) => `
-      <div class="${q.ok ? 'ok' : 'ng'}"><b>${q.no}.</b> ${q.ok ? '✓' : '✗'} ตอบ ${q.chosen >= 0 ? L[q.chosen] : '–'}${q.ok ? '' : ` · เฉลย <b>${L[q.answer]}</b>`}</div>
-      ${!q.ok && (q.explain || q.text) ? `<div class="exp"><b>ข้อ ${q.no}.</b> ${h(q.text)}${q.explain ? `<br><b>อธิบาย:</b> ${h(q.explain)}` : ''}</div>` : ''}`).join('')}</div></div>`
+  const ng = r.items ? r.items.filter((q) => !q.ok).length : 0;
+  const items = r.showKey && r.items ? `<div class="card"><h2>เฉลยและคำอธิบาย</h2>
+      <div class="res">${r.items.map((q) => `<a href="#rv${q.no}" class="${q.ok ? 'ok' : 'ng'}"><b>${q.no}.</b> ${q.ok ? '✓' : '✗'} ตอบ ${q.chosen >= 0 ? L[q.chosen] : '–'}${q.ok ? '' : ` · เฉลย <b>${L[q.answer]}</b>`}</a>`).join('')}</div>
+      <div class="seg" role="group" aria-label="เลือกข้อที่จะแสดง"><button type="button" data-f="ng" aria-pressed="${ng ? 'true' : 'false'}">เฉพาะข้อที่ผิด (${ng})</button><button type="button" data-f="all" aria-pressed="${ng ? 'false' : 'true'}">ดูทุกข้อ (${r.items.length})</button></div>
+      <div id="rvs" class="${ng ? 'only-ng' : ''}">${r.items.map(review).join('')}</div></div>`
     : `<div class="card">${r.wrong.length ? `ข้อที่ผิด/ไม่ได้ตอบ: <b>${r.wrong.join(', ')}</b>` : '🎉 ถูกทุกข้อ'}<p class="muted">ครูจะเฉลยภายหลัง</p></div>`;
   app.innerHTML = `<div class="card score"><p class="muted">${h(r.title || info.title)}</p><h1>${h(who.name)}</h1>
       <p class="big">${r.score}<small>/${r.total}</small></p>
       <p><progress class="${r.pct >= 50 ? '' : 'fail'}" max="100" value="${r.pct}"></progress> <b>${r.pct}%</b> · ${h(r.level)}</p>
       <p class="muted">บันทึกคำตอบเรียบร้อยแล้ว ✓</p></div>${topics}${items}`;
+  const filter = (f) => {
+    app.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.f === f)));
+    $('#rvs').classList.toggle('only-ng', f === 'ng');
+  };
+  app.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => filter(b.dataset.f)));
+  // กดข้อที่ตอบถูกจากตาราง → สลับเป็น "ดูทุกข้อ" ก่อน ไม่อย่างนั้นการ์ดถูกซ่อนอยู่
+  app.querySelectorAll('.res a.ok').forEach((a) => a.addEventListener('click', () => filter('all')));
+}
+
+function review(q) {
+  const opts = (q.choices || []).map((c, i) => c ? `<div class="ch${i === q.answer ? ' right' : ''}${i === q.chosen && i !== q.answer ? ' wrong' : ''}"><b>${L[i]}.</b> ${h(c)}${i === q.answer ? ' <span class="mk">✓ เฉลย</span>' : ''}${i === q.chosen && i !== q.answer ? ' <span class="mk">✗ ที่ตอบ</span>' : ''}</div>` : '').join('');
+  return `<div class="rv ${q.ok ? 'ok' : 'ng'}" id="rv${q.no}">
+      <div class="rvh"><b>ข้อ ${q.no}</b><span class="tag">${h(q.topic)}</span><span class="st">${q.ok ? '✓ ตอบถูก' : q.chosen >= 0 ? '✗ ตอบผิด' : '– ไม่ได้ตอบ'}</span></div>
+      ${q.text ? `<div class="qt">${h(q.text)}</div>` : ''}
+      ${opts || `<p>ตอบ <b>${q.chosen >= 0 ? L[q.chosen] : '–'}</b> · เฉลย <b>${L[q.answer]}</b></p>`}
+      ${q.explain ? `<div class="why"><b>คำอธิบาย</b>${h(q.explain)}</div>` : ''}
+      ${q.content ? `<div class="learn"><b>📖 เนื้อหาที่ควรรู้</b>${h(q.content)}</div>` : ''}
+    </div>`;
 }
 </script>
 </body>

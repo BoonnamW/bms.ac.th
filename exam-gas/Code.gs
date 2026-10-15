@@ -124,14 +124,14 @@ function setup() {
   let key = ss.getSheetByName(SH.KEY);
   if (!key) {
     key = ss.insertSheet(SH.KEY, 1);
-    key.getRange(1, 1, 1, 10).setValues([['ข้อ', 'เฉลย', 'เรื่อง (ไม่บังคับ)', 'คำอธิบาย (ไม่บังคับ)', 'โจทย์ (เว้นว่างถ้าใช้รูป)', 'ก', 'ข', 'ค', 'ง', 'จ']]).setFontWeight('bold').setBackground('#e8eef8');
+    key.getRange(1, 1, 1, 11).setValues([['ข้อ', 'เฉลย', 'เรื่อง (ไม่บังคับ)', 'คำอธิบาย (ไม่บังคับ)', 'โจทย์ (เว้นว่างถ้าใช้รูป)', 'ก', 'ข', 'ค', 'ง', 'จ', 'เนื้อหาที่ควรรู้ (ไม่บังคับ)']]).setFontWeight('bold').setBackground('#e8eef8');
     const nums = [];
     for (let i = 1; i <= 20; i++) nums.push([i]);
     key.getRange(2, 1, 20, 1).setValues(nums);
     key.getRange('B2:B201').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(L, true).setAllowInvalid(false).build());
     key.setFrozenRows(1);
     key.setColumnWidth(3, 160); key.setColumnWidth(4, 320); key.setColumnWidth(5, 420);
-    key.getRange('L1').setValue('ใส่เฉลยในคอลัมน์ B ทีละข้อ — ข้อสอบแบบรูป: เว้นคอลัมน์ E–J ว่าง · ข้อสอบแบบพิมพ์: ใส่โจทย์ในคอลัมน์ E และตัวเลือกใน F–J').setFontColor('#64708a');
+    key.getRange('M1').setValue('ใส่เฉลยในคอลัมน์ B ทีละข้อ — ข้อสอบแบบรูป: เว้นคอลัมน์ E–J ว่าง · ข้อสอบแบบพิมพ์: ใส่โจทย์ในคอลัมน์ E และตัวเลือกใน F–J · คอลัมน์ D และ K แสดงในหน้าเฉลย').setFontColor('#64708a');
   }
   ['Sheet1', 'แผ่น1', 'ชีต1'].forEach(function (n) { const x = ss.getSheetByName(n); if (x && ss.getSheets().length > 2 && x.getLastRow() === 0) ss.deleteSheet(x); });
   ss.setActiveSheet(key);
@@ -321,11 +321,12 @@ function questions_(key) {
   if (!key || key.getLastRow() < 2) return [];
   const nc = settings_().nc;
   const out = [];
-  key.getRange(2, 1, key.getLastRow() - 1, 5 + nc).getValues().forEach(function (r) {
+  key.getRange(2, 1, key.getLastRow() - 1, Math.max(5 + nc, Math.min(key.getLastColumn(), 11))).getValues().forEach(function (r) {
     const a = letter_(r[1]);
     if (a < 0 || a >= nc) return;
     out.push({ no: out.length + 1, answer: a, topic: String(r[2] || '').trim() || 'ทั่วไป', explain: String(r[3] || '').trim(),
-      text: String(r[4] || '').trim(), choices: r.slice(5, 5 + nc).map(function (c) { return String(c).trim(); }) });
+      text: String(r[4] || '').trim(), choices: r.slice(5, 5 + nc).map(function (c) { return String(c).trim(); }),
+      content: String(r[10] || '').trim() });
   });
   return out;
 }
@@ -367,7 +368,7 @@ function grade_(qs, ans) {
     const ok = ans[i] === q.answer;
     const t = topics[q.topic] || (topics[q.topic] = { topic: q.topic, ok: 0, total: 0 });
     t.total++; if (ok) t.ok++;
-    return { no: q.no, chosen: ans[i], answer: q.answer, ok: ok, explain: q.explain, topic: q.topic, text: q.text };
+    return { no: q.no, chosen: ans[i], answer: q.answer, ok: ok, explain: q.explain, content: q.content, topic: q.topic, text: q.text, choices: q.text ? q.choices : [] };
   });
   const score = items.filter(function (x) { return x.ok; }).length;
   const list = Object.keys(topics).map(function (k) { return topics[k]; });
