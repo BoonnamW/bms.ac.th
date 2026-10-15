@@ -150,20 +150,32 @@ function importExams() {
   }
   if (!files.length) { ui.alert('ไม่พบไฟล์ข้อสอบใน Drive (ชื่อไฟล์ต้องขึ้นต้นด้วย "' + EXAM_PREFIX + '")'); return; }
   files.sort(function (a, b) { return a.getName().localeCompare(b.getName(), undefined, { numeric: true }); });
-  const names = files.map(function (f) { return '• ' + f.getName(); }).join('\n');
-  if (ui.alert('นำเข้าข้อสอบ ' + files.length + ' ชุด?', names + '\n\n(แผ่นงานชื่อเดียวกันจะถูกแทนที่ · ผลสอบเดิมไม่หาย)', ui.ButtonSet.YES_NO) !== ui.Button.YES) return;
+  // ไฟล์ใหญ่แบ่งอัปโหลดเป็น "ข้อสอบ X (ส่วนที่ 1)", "(ส่วนที่ 2)" … → รวมเป็นแผ่นงาน "ข้อสอบ X" เดียว
+  const groups = {};
   files.forEach(function (f) {
-    const src = SpreadsheetApp.openById(f.getId()).getSheets()[0];
-    const values = src.getDataRange().getDisplayValues();
-    const name = f.getName().slice(0, 99);
+    const base = f.getName().replace(/\s*\(ส่วนที่\s*\d+\)\s*$/, '').trim().slice(0, 99);
+    (groups[base] = groups[base] || []).push(f);
+  });
+  const bases = Object.keys(groups);
+  const names = bases.map(function (b) { return '• ' + b + (groups[b].length > 1 ? ' (' + groups[b].length + ' ส่วน)' : ''); }).join('\n');
+  if (ui.alert('นำเข้าข้อสอบ ' + bases.length + ' ชุด?', names + '\n\n(แผ่นงานชื่อเดียวกันจะถูกแทนที่ · ผลสอบเดิมไม่หาย)', ui.ButtonSet.YES_NO) !== ui.Button.YES) return;
+  bases.forEach(function (name) {
+    let values = [];
+    groups[name].forEach(function (f) {
+      const v = SpreadsheetApp.openById(f.getId()).getSheets()[0].getDataRange().getDisplayValues();
+      values = values.concat(values.length ? v.slice(1) : v); // หัวตารางเอาจากส่วนแรกเท่านั้น
+    });
+    const width = Math.max.apply(null, values.map(function (r) { return r.length; }));
+    values = values.map(function (r) { return r.concat(Array(width - r.length).fill('')); });
     const sh = ss.getSheetByName(name) || ss.insertSheet(name);
     sh.clear();
-    sh.getRange(1, 1, values.length, values[0].length).setNumberFormat('@').setValues(values);
-    sh.getRange(1, 1, 1, values[0].length).setFontWeight('bold').setBackground('#e8eef8');
+    sh.getRange(1, 1, values.length, width).setNumberFormat('@').setValues(values);
+    sh.getRange(1, 1, 1, width).setFontWeight('bold').setBackground('#e8eef8');
     sh.setFrozenRows(1);
     sh.setColumnWidth(4, 280); sh.setColumnWidth(5, 420);
+    if (width >= 11) sh.setColumnWidth(11, 320);
   });
-  ui.alert('นำเข้าเรียบร้อย ' + files.length + ' ชุด\nผู้สอบจะเห็นรายชื่อชุดให้เลือกในหน้าเว็บทันที (ไม่ต้อง Deploy ใหม่)');
+  ui.alert('นำเข้าเรียบร้อย ' + bases.length + ' ชุด\nผู้สอบจะเห็นรายชื่อชุดให้เลือกในหน้าเว็บทันที (ไม่ต้อง Deploy ใหม่)');
 }
 
 function toggleOpen() {
