@@ -31,10 +31,12 @@ function getExam(code) {
   const qs = questions_();
   if (!qs.length) throw new Error('ครูยังไม่ได้ใส่เฉลยในแผ่นงาน "เฉลย"');
   const typed = qs.every(function (q) { return q.text; }); // ข้อสอบแบบพิมพ์ทุกข้อ
-  const pages = s.folder ? images_(s).length : 0;
-  if (!pages && !typed) throw new Error('ยังไม่มีรูปข้อสอบในโฟลเดอร์ Google Drive');
+  const files = s.folder ? images_(s) : [];
+  const pages = files.length;
+  if (!pages && !typed) throw new Error('ยังไม่มีไฟล์ข้อสอบ (รูปหรือ PDF) ในโฟลเดอร์ Google Drive');
   return {
     title: s.title, intro: s.intro, nq: qs.length, nc: s.nc, pages: pages,
+    pdf: files.map(function (f) { return isPdf_(f) ? f.getId() : null; }), // PDF แสดงผ่านตัวดูของ Google Drive
     questions: typed ? qs.map(function (q) { return { text: q.text, choices: q.choices }; }) : null, // ไม่ส่งเฉลย
   };
 }
@@ -44,7 +46,7 @@ function getPage(code, i) {
   const s = checkAccess_(code);
   const files = images_(s);
   const f = files[Number(i)];
-  if (!f) throw new Error('ไม่พบรูปหน้านี้');
+  if (!f || isPdf_(f)) throw new Error('ไม่พบรูปหน้านี้');
   const blob = f.getBlob();
   return { mime: blob.getContentType(), data: Utilities.base64Encode(blob.getBytes()) };
 }
@@ -84,6 +86,7 @@ function submit(code, p) {
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('ห้องสอบ')
     .addItem('1) ตั้งค่าครั้งแรก', 'setup')
+    .addItem('2) ให้ผู้สอบเปิดดู PDF ได้ (ถ้าใช้ PDF)', 'sharePdfs')
     .addItem('คำนวณผลวิเคราะห์ใหม่', 'analyze')
     .addItem('เปิด/ปิดรับคำตอบ', 'toggleOpen')
     .addSeparator()
@@ -104,7 +107,7 @@ function setup() {
       ['แสดงเฉลยหลังส่ง', true, 'ผู้สอบเห็นข้อที่ผิดและคำตอบที่ถูกทันทีหลังส่ง'],
       ['จำนวนตัวเลือก', 4, '2–5 ตัว (ก ข ค ง จ)'],
       ['คำชี้แจง', 'อ่านโจทย์แล้วเลือกคำตอบที่ถูกที่สุดเพียงข้อเดียว', ''],
-      ['โฟลเดอร์รูปข้อสอบ', folder.getUrl(), 'อัปโหลดรูปข้อสอบลงโฟลเดอร์นี้ (เรียงตามชื่อไฟล์ เช่น 01.jpg, 02.jpg)'],
+      ['โฟลเดอร์รูปข้อสอบ', folder.getUrl(), 'อัปโหลดรูปหรือ PDF ข้อสอบลงโฟลเดอร์นี้ (เรียงตามชื่อไฟล์ เช่น 01.jpg, 02.jpg)'],
       ['ลิงก์เว็บสอบ', 'ยังไม่ได้ Deploy', 'ได้หลังจาก Deploy → New deployment → Web app'],
     ]);
     set.getRange('B3:B4').insertCheckboxes();
@@ -285,10 +288,19 @@ function images_(s) {
   if (hit) return JSON.parse(hit).map(function (id) { return DriveApp.getFileById(id); });
   const files = [];
   const it = DriveApp.getFolderById(m[0]).getFiles();
-  while (it.hasNext()) { const f = it.next(); if (/^image\//.test(f.getMimeType())) files.push(f); }
+  while (it.hasNext()) { const f = it.next(); if (/^image\//.test(f.getMimeType()) || isPdf_(f)) files.push(f); }
   files.sort(function (a, b) { return a.getName().localeCompare(b.getName(), undefined, { numeric: true }); });
   cache.put('img:' + m[0], JSON.stringify(files.map(function (f) { return f.getId(); })), 120);
   return files;
+}
+
+function isPdf_(f) { return f.getMimeType() === 'application/pdf'; }
+
+/** PDF ต้องเปิดสิทธิ์ "ทุกคนที่มีลิงก์ดูได้" ผู้สอบจึงจะเห็นในหน้าเว็บ (รูปภาพไม่ต้อง) */
+function sharePdfs() {
+  const pdfs = images_(settings_()).filter(isPdf_);
+  pdfs.forEach(function (f) { f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); });
+  SpreadsheetApp.getUi().alert(pdfs.length ? 'เปิดสิทธิ์ดูแบบมีลิงก์ให้ PDF ' + pdfs.length + ' ไฟล์แล้ว\n(คนที่ไม่มีลิงก์ไฟล์จะหาไม่เจอ — ลิงก์ไฟล์ไม่ได้แสดงที่ใด)' : 'ไม่พบไฟล์ PDF ในโฟลเดอร์ข้อสอบ');
 }
 
 function grade_(qs, ans) {

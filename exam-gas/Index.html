@@ -31,6 +31,7 @@ input.code{font:600 22px/1.3 ui-monospace,monospace;letter-spacing:.15em;text-al
 .take{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
 .pages figure{background:var(--card);border-radius:14px;padding:10px;margin-bottom:14px;box-shadow:0 2px 10px rgba(20,50,94,.07)}
 .pages img{width:100%;height:auto;display:block;border-radius:8px;background:#fff}
+.pages iframe.pdf{width:100%;height:calc(100vh - 80px);min-height:520px;border:0;border-radius:8px;background:#fff;display:block}
 .pages figcaption{color:var(--muted);font-size:13px;text-align:center;padding-top:6px}
 .sheet-card{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;display:grid;gap:10px}
 .sheet{display:grid;gap:4px}
@@ -129,6 +130,10 @@ function take(code, who, ex) {
   const figs = ex.pages ? [...$('#pages').children] : [];
   (async () => {
     for (let i = 0; i < figs.length; i++) {
+      if (ex.pdf && ex.pdf[i]) {
+        figs[i].innerHTML = `<iframe class="pdf" title="ข้อสอบ ${i + 1}" src="https://drive.google.com/file/d/${encodeURIComponent(ex.pdf[i])}/preview" allow="autoplay"></iframe><figcaption>ไฟล์ ${i + 1}/${figs.length} · เลื่อนในกรอบเพื่อดูหน้าถัดไป</figcaption>`;
+        continue;
+      }
       try {
         const p = await call('getPage', code, i);
         figs[i].innerHTML = `<img alt="ข้อสอบหน้า ${i + 1}" src="data:${h(p.mime)};base64,${p.data}"><figcaption>หน้า ${i + 1}/${figs.length}</figcaption>`;
