@@ -7,279 +7,612 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600&family=Prompt:wght@500;600&display=swap" rel="stylesheet">
 <style>
 :root{--primary:#14325e;--accent:#c9a227;--ink:#1c2433;--muted:#64708a;--line:#e3e8f0;--bg:#f3f6fa;--card:#fff;
-  --ok:#15803d;--ng:#b91c1c;--ok-bg:#e7f6ec;--ng-bg:#fdecec;--soft:#f5f8fc;--track:#eef1f6;--warn-bg:#fff8e1}
+  --ok:#15803d;--ng:#b91c1c;--ok-bg:#e7f6ec;--ng-bg:#fdecec;--soft:#f5f8fc;--track:#eef1f6;--warn-bg:#fff8e1;--flag:#d97706}
 @media (prefers-color-scheme:dark){:root{--primary:#8fb3ec;--ink:#e6ebf3;--muted:#9aa6bb;--line:#2c3647;--bg:#11161f;--card:#1a212d;
-  --ok:#4ade80;--ng:#f87171;--ok-bg:#16301f;--ng-bg:#3a1a1a;--soft:#212a38;--track:#2a3342;--warn-bg:#2d2715}}
+  --ok:#4ade80;--ng:#f87171;--ok-bg:#16301f;--ng-bg:#3a1a1a;--soft:#212a38;--track:#2a3342;--warn-bg:#2d2715;--flag:#fbbf24}}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font:16px/1.7 'Noto Sans Thai','Prompt',sans-serif;color:var(--ink);background:var(--bg)}
-h1,h2{font-family:'Prompt','Noto Sans Thai',sans-serif;font-weight:600;color:var(--primary)}
-h1{font-size:23px}h2{font-size:18px;margin-bottom:8px}
-.top{background:#14325e;color:#fff;padding:12px 16px;font-weight:600}
-.wrap{max-width:1200px;margin:0 auto;padding:18px 16px 40px}
-.card{background:var(--card);border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(20,50,94,.07);margin-bottom:16px}
-.enter{max-width:440px;margin:30px auto;display:grid;gap:12px}
-.muted{color:var(--muted)}.center{text-align:center}
+html{-webkit-text-size-adjust:100%}
+body{font:16px/1.7 'Noto Sans Thai','Prompt',sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
+button{font:inherit;color:inherit}
+h1,h2{font-family:'Prompt','Noto Sans Thai',sans-serif;font-weight:600;color:var(--primary);line-height:1.35}
+h1{font-size:22px}h2{font-size:18px;margin-bottom:8px}h2.sec{margin:22px 4px 10px}
+.top{background:#14325e;color:#fff;padding:10px 16px;font-weight:600;position:sticky;top:0;z-index:5}
+.top button{background:none;border:0;color:#fff;font-weight:600;cursor:pointer;font-family:'Prompt',sans-serif;font-size:16.5px}
+body.playing .top,body.playing .foot{display:none}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px 40px}
+.card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 2px 10px rgba(20,50,94,.07);margin-bottom:14px}
+.narrow{max-width:440px;margin:24px auto 14px;display:grid;gap:12px}
+.muted{color:var(--muted)}.center{text-align:center}.small{font-size:13.5px}.mono{font-family:ui-monospace,Menlo,monospace;letter-spacing:.08em}
 label{display:grid;gap:4px;font-weight:500;font-size:15px}
-select{font:inherit;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;width:100%;background:var(--card);color:var(--ink)}
-input[type=text]{font:inherit;padding:10px 14px;border:1.5px solid var(--line);border-radius:10px;width:100%;background:var(--card);color:var(--ink)}
+input[type=text]{font:inherit;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;width:100%;background:var(--card);color:var(--ink)}
 input[type=text]:focus{border-color:var(--primary);outline:0}
-input.code{font:600 22px/1.3 ui-monospace,monospace;letter-spacing:.15em;text-align:center;text-transform:uppercase}
-.btn{background:#14325e;color:#fff;border:0;border-radius:10px;padding:12px 24px;font:500 16px 'Prompt',sans-serif;cursor:pointer}
-.btn:disabled{opacity:.6;cursor:wait}.btn.ghost{background:var(--card);color:var(--primary);border:1.5px solid var(--line)}
-.alert{padding:10px 14px;border-radius:10px;background:var(--ng-bg);color:var(--ng);margin-bottom:10px}
+input.code{font:600 24px/1.3 ui-monospace,monospace;letter-spacing:.2em;text-align:center;text-transform:uppercase}
+.btn{background:#14325e;color:#fff;border:0;border-radius:11px;padding:12px 22px;font:500 16px 'Prompt',sans-serif;cursor:pointer;min-height:46px}
+.btn:disabled{opacity:.55;cursor:default}.btn.ghost{background:var(--card);color:var(--primary);border:1.5px solid var(--line)}
+.btn.block{width:100%}.btn.sm{padding:7px 14px;font-size:14.5px;min-height:38px;white-space:nowrap}
+.link{background:none;border:0;color:var(--primary);text-decoration:underline;cursor:pointer;padding:4px}
+.alert{padding:10px 14px;border-radius:10px;background:var(--ng-bg);color:var(--ng)}
+.note{padding:10px 14px;border-radius:10px;background:var(--warn-bg);border-left:4px solid var(--accent)}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.intro{white-space:pre-wrap;background:var(--warn-bg);border-left:4px solid var(--accent);padding:10px 14px;border-radius:0 10px 10px 0;margin-top:8px}
-.take{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
-.pages figure{background:var(--card);border-radius:14px;padding:10px;margin-bottom:14px;box-shadow:0 2px 10px rgba(20,50,94,.07)}
-.pages img{width:100%;height:auto;display:block;border-radius:8px;background:#fff}
-.pages iframe.pdf{width:100%;height:calc(100vh - 80px);min-height:520px;border:0;border-radius:8px;background:#fff;display:block}
-.pages figcaption{color:var(--muted);font-size:13px;text-align:center;padding-top:6px}
-.sheet-card{position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;display:grid;gap:10px}
-.sheet{display:grid;gap:4px}
-.srow{display:flex;align-items:center;gap:6px;padding:3px 6px;border-radius:10px}
-.srow:nth-child(odd){background:var(--soft)}
-.srow.missing{outline:2px solid var(--ng)}
-.sn{width:34px;text-align:right;padding-right:6px;font-weight:600;color:var(--primary)}
-.bub input{position:absolute;opacity:0;pointer-events:none}
-.bub span{display:inline-grid;place-items:center;width:38px;height:38px;border:1.5px solid var(--line);border-radius:50%;cursor:pointer;font-weight:500;background:var(--card)}
-.bub input:checked+span{background:var(--primary);border-color:var(--primary);color:#fff}
-.bub input:focus-visible+span{outline:3px solid var(--accent)}
-.submitbar{display:flex;justify-content:space-between;align-items:center;gap:10px;position:sticky;bottom:-20px;background:var(--card);padding:10px 0;border-top:1px solid var(--line)}
-.score{text-align:center}
-.big{font:600 56px/1.2 'Prompt',sans-serif;color:var(--primary)}.big small{font-size:24px;color:var(--muted)}
+.back{background:none;border:0;color:var(--primary);font-weight:500;cursor:pointer;padding:6px 2px;margin-bottom:6px}
+.bigcode{font:600 38px/1.2 ui-monospace,monospace;letter-spacing:.2em;color:var(--primary);background:var(--soft);border-radius:12px;padding:14px;text-align:center;user-select:all}
+/* หน้าหลัก */
+.hello{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.resume{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center;border-left:5px solid var(--accent)}
+.resume .acts{display:flex;gap:8px;grid-column:1/-1}.resume .acts .btn{flex:1}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.qa{background:var(--card);border:0;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(20,50,94,.07);text-align:left;cursor:pointer;display:grid;gap:2px;min-height:96px}
+.qa .ico{font-size:24px;line-height:1.2}.qa b{font-family:'Prompt',sans-serif;color:var(--primary);font-weight:600}.qa small{color:var(--muted);font-size:13.5px}
+.qa:disabled{opacity:.55;cursor:default}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:10px 0 14px}
+.tile{background:var(--soft);border-radius:12px;padding:10px 12px;display:grid}.tile b{font:600 26px/1.2 'Prompt',sans-serif;color:var(--primary)}.tile b small{font-size:15px;color:var(--muted)}.tile span{font-size:13px;color:var(--muted)}
+@media (min-width:640px){.tiles{grid-template-columns:repeat(4,1fr)}}
+.trend{display:flex;gap:5px;align-items:flex-end;height:110px;padding:16px 0 0;border-bottom:1px solid var(--line)}
+.bar{flex:1;max-width:40px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}
+.bar span{width:100%;background:var(--ok);border-radius:5px 5px 0 0;display:block}.bar.low span{background:var(--ng)}
+.bar em{font-style:normal;font-size:11.5px;color:var(--muted);position:absolute;margin-bottom:1px}
+.cats{display:grid;gap:10px}@media (min-width:640px){.cats{grid-template-columns:1fr 1fr}}
+.catbtn{background:var(--card);border:0;border-radius:14px;padding:14px 16px;box-shadow:0 2px 10px rgba(20,50,94,.07);text-align:left;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center}
+.catbtn .cname{font:600 16.5px/1.4 'Prompt',sans-serif;color:var(--primary)}.catbtn .cmeta{color:var(--muted);font-size:13.5px}
+.catbtn .cstat{grid-row:1/3;grid-column:2;text-align:right;font:600 22px 'Prompt',sans-serif;display:grid;line-height:1.2}.catbtn .cstat small{font:400 12px 'Noto Sans Thai',sans-serif;color:var(--muted)}
+.catbtn progress{grid-column:1/-1;width:100%;height:7px;margin-top:6px}
 progress{width:min(260px,60vw);height:12px;vertical-align:middle;appearance:none;border:0;border-radius:99px;background:var(--track);overflow:hidden}
 progress::-webkit-progress-bar{background:var(--track)}progress::-webkit-progress-value{background:var(--ok)}progress::-moz-progress-bar{background:var(--ok)}
 progress.fail::-webkit-progress-value{background:var(--ng)}progress.fail::-moz-progress-bar{background:var(--ng)}
-.hist{display:grid;grid-template-columns:minmax(110px,1fr) 2fr 56px;gap:10px;align-items:center;margin:4px 0}.hist progress{width:100%}.hist b{text-align:right;font-weight:500}
-.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
-.res div{padding:6px 10px;border-radius:10px;font-size:14.5px}.res .ok{background:var(--ok-bg);color:var(--ok)}.res .ng{background:var(--ng-bg);color:var(--ng)}
-.res a{padding:6px 10px;border-radius:10px;font-size:14.5px;text-decoration:none}.res a.ok{background:var(--ok-bg);color:var(--ok)}.res a.ng{background:var(--ng-bg);color:var(--ng)}
-.seg{display:flex;gap:6px;margin:16px 0 4px;flex-wrap:wrap}.seg button{font:inherit;padding:6px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}.seg button[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:#fff}
+.list{padding:0;overflow:hidden}
+.set{width:100%;background:none;border:0;border-top:1px solid var(--line);border-left:4px solid transparent;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 16px;text-align:left;cursor:pointer}
+.set:first-child{border-top:0}.set:hover{background:var(--soft)}
+.set.pass{border-left-color:var(--ok)}.set.low{border-left-color:var(--ng)}
+.sname{display:grid}.sname .muted{font-size:13.5px}.sbest{display:grid;text-align:right;min-width:64px}.sbest b{font:600 18px 'Prompt',sans-serif}.set.pass .sbest b{color:var(--ok)}.set.low .sbest b{color:var(--ng)}.sbest span{font-size:12px;color:var(--muted)}
+/* หน้าต่างลอย */
+.modal{position:fixed;inset:0;background:rgba(10,20,40,.45);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.panel{background:var(--card);width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:18px 18px 0 0;padding:20px 18px calc(18px + env(safe-area-inset-bottom));display:grid;gap:10px}
+@media (min-width:640px){.modal{align-items:center}.panel{border-radius:18px}}
+.mode{background:var(--soft);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;display:grid;gap:2px}
+.mode b{font-family:'Prompt',sans-serif;color:var(--primary);font-weight:600}.mode span{font-size:14px;color:var(--muted)}.mode:hover{border-color:var(--primary)}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#1c2433;color:#fff;padding:10px 18px;border-radius:12px;z-index:30;max-width:90vw;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+/* ทำข้อสอบ */
+.player{max-width:760px;margin:0 auto;padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+.pbar{position:sticky;top:0;z-index:5;background:#14325e;color:#fff;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 12px}
+.pbar .icon{background:rgba(255,255,255,.12);border:0;color:#fff;width:40px;height:40px;border-radius:10px;font-size:18px;cursor:pointer}
+.ptitle{display:grid;min-width:0}.ptitle b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:15px}.ptitle small{opacity:.8;font-size:12.5px}
+.clock{font:600 17px ui-monospace,monospace;background:rgba(255,255,255,.12);padding:6px 10px;border-radius:10px}
+.ptrack{height:5px;background:var(--track)}.ptrack span{display:block;height:100%;background:var(--accent);transition:width .2s}
+.qbox{margin:14px 12px}
+.qhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}.qhead>b{font:600 18px 'Prompt',sans-serif;color:var(--primary)}.qhead>b small{color:var(--muted);font-size:14px}
+.tag{font-size:12.5px;color:var(--muted);background:var(--soft);padding:2px 9px;border-radius:99px}
+.flag{margin-left:auto;background:var(--card);border:1.5px solid var(--line);border-radius:99px;padding:4px 12px;cursor:pointer;font-size:14px}
+.flag.on{border-color:var(--flag);background:color-mix(in srgb,var(--flag) 14%,var(--card));color:var(--flag);font-weight:600}
+.qt{white-space:pre-wrap;font-size:17px;line-height:1.75;margin-bottom:12px}
+.opts{display:grid;gap:9px}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;min-height:52px;font-size:16px;line-height:1.6}
+.opt .lt{flex:none;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--soft);font-weight:600;color:var(--primary)}
+.opt span{flex:1;padding-top:2px;white-space:pre-wrap}.opt .mk{font-style:normal;font-weight:700;padding-top:2px}
+.opt:hover{border-color:color-mix(in srgb,var(--primary) 50%,var(--line))}
+.opt.sel{border-color:var(--primary);background:color-mix(in srgb,var(--primary) 10%,var(--card))}.opt.sel .lt{background:var(--primary);color:#fff}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}.opt.right .lt{background:var(--ok);color:#fff}.opt.right .mk{color:var(--ok)}
+.opt.wrong{border-color:var(--ng);background:var(--ng-bg)}.opt.wrong .lt{background:var(--ng);color:#fff}.opt.wrong .mk{color:var(--ng)}
+.opt.dim{opacity:.6;cursor:default}
+.verdict{margin-top:14px;padding:10px 14px;border-radius:10px;font-weight:600}.verdict.ok{background:var(--ok-bg);color:var(--ok)}.verdict.ng{background:var(--ng-bg);color:var(--ng)}
+.from{margin-top:12px;font-size:13px;color:var(--muted)}
+.pnav{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--card);border-top:1px solid var(--line);padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+.pnav div{max-width:736px;margin:0 auto;display:grid;grid-template-columns:64px 1fr 1.4fr;gap:10px}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px}
+.ngrid button{height:44px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);cursor:pointer;font-weight:500;position:relative}
+.ngrid .ans{background:var(--primary);border-color:var(--primary);color:#fff}
+.ngrid .ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}.ngrid .ng{background:var(--ng-bg);border-color:var(--ng);color:var(--ng)}
+.ngrid .fl::after{content:'';position:absolute;top:-4px;right:-4px;width:12px;height:12px;border-radius:50%;background:var(--flag);border:2px solid var(--card)}
+.ngrid .cur{outline:3px solid var(--accent);outline-offset:1px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}.legend i{display:inline-block;width:14px;height:14px;border-radius:4px;vertical-align:-2px;margin-right:4px;border:1.5px solid var(--line)}
+.legend .a{background:var(--primary);border-color:var(--primary)}.legend .f{background:var(--flag);border-color:var(--flag);border-radius:50%}.legend .o{background:var(--ok-bg);border-color:var(--ok)}.legend .n{background:var(--ng-bg);border-color:var(--ng)}
+/* ผลสอบ */
+.score{text-align:center}
+.big{font:600 54px/1.2 'Prompt',sans-serif;color:var(--primary)}.big small{font-size:24px;color:var(--muted)}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.hist{display:grid;grid-template-columns:minmax(100px,1.2fr) 2fr 56px;gap:10px;align-items:center;margin:6px 0;font-size:15px}.hist progress{width:100%}.hist b{text-align:right;font-weight:500}
+.res{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px}
+.res a{height:40px;display:grid;place-items:center;border-radius:9px;text-decoration:none;font-weight:500}.res a.ok{background:var(--ok-bg);color:var(--ok)}.res a.ng{background:var(--ng-bg);color:var(--ng)}
+.seg{display:flex;gap:6px;margin:16px 0 4px;flex-wrap:wrap}.seg button{padding:6px 14px;border-radius:99px;border:1.5px solid var(--line);background:var(--card);cursor:pointer}.seg button[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:#fff}
 .only-ng .rv.ok{display:none}
 .rv{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:12px;padding:12px 14px;margin-top:12px;scroll-margin-top:16px}.rv.ng{border-left-color:var(--ng)}
-.rvh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}.tag{font-size:13px;color:var(--muted);background:var(--soft);padding:1px 8px;border-radius:99px}.rv.ok .st{color:var(--ok)}.rv.ng .st{color:var(--ng)}.st{margin-left:auto;font-size:14px;font-weight:500}
-.ch{padding:5px 10px;border-radius:8px;margin-top:4px;border:1px solid transparent}.ch.right{background:var(--ok-bg);border-color:var(--ok)}.ch.wrong{background:var(--ng-bg);border-color:var(--ng)}.mk{font-size:13px;font-weight:600;white-space:nowrap}.ch.right .mk{color:var(--ok)}.ch.wrong .mk{color:var(--ng)}
+.rvh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}.rv.ok .st{color:var(--ok)}.rv.ng .st{color:var(--ng)}.st{margin-left:auto;font-size:14px;font-weight:500}
+.ch{padding:6px 10px;border-radius:8px;margin-top:4px;border:1px solid transparent}.ch.right{background:var(--ok-bg);border-color:var(--ok)}.ch.wrong{background:var(--ng-bg);border-color:var(--ng)}.ch .mk{font-size:13px;font-weight:600;white-space:nowrap}.ch.right .mk{color:var(--ok)}.ch.wrong .mk{color:var(--ng)}
 .why,.learn{margin-top:10px;padding:10px 12px;border-radius:10px;white-space:pre-wrap;line-height:1.65}.why{background:var(--soft)}.learn{background:color-mix(in srgb,var(--primary) 8%,var(--card));border:1px solid color-mix(in srgb,var(--primary) 25%,transparent)}.why b,.learn b{display:block;margin-bottom:2px}
-.take.one{grid-template-columns:minmax(0,820px);justify-content:center}
-.qform{display:grid;gap:0}.qcard{margin-bottom:12px}.qcard.missing{outline:2px solid var(--ng)}
-.qt{white-space:pre-wrap;margin-bottom:8px;font-size:16.5px}
-.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;margin-top:7px;cursor:pointer;font-weight:400}
-.opt input{margin-top:6px;width:18px;height:18px;accent-color:var(--primary);flex:none}
-.opt:has(input:checked){border-color:var(--primary);background:color-mix(in srgb,var(--primary) 9%,var(--card))}
-.qform .submitbar{position:sticky;bottom:0;padding:12px 18px;margin:0}
-.hello{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
-.btn.sm{padding:7px 14px;font-size:14.5px;white-space:nowrap}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
-.tile{background:var(--soft);border-radius:12px;padding:12px 14px;display:grid}.tile b{font:600 28px/1.2 'Prompt',sans-serif;color:var(--primary)}.tile b small{font-size:16px;color:var(--muted)}.tile span{font-size:13.5px;color:var(--muted)}
-.overall{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-bottom:14px}.overall progress{width:100%}
-.trend{display:flex;gap:6px;align-items:flex-end;height:130px;padding:6px 0;border-bottom:1px solid var(--line)}
-.bar{flex:1;max-width:44px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}
-.bar span{width:100%;background:var(--ok);border-radius:6px 6px 0 0;display:block}.bar.low span{background:var(--ng)}
-.bar em{font-style:normal;font-size:12px;color:var(--muted);position:absolute;top:-2px}
-.small{font-size:13px;margin-top:4px}
-.grp{padding:0}.grp summary{cursor:pointer;padding:14px 20px;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;list-style:none}
-.grp summary::-webkit-details-marker{display:none}.grp summary::before{content:'▸';position:absolute;margin-left:-14px;color:var(--muted)}.grp[open] summary::before{content:'▾'}
-.gname{font:600 16.5px 'Prompt',sans-serif;color:var(--primary)}.gmeta{color:var(--muted);font-size:14px}.grp summary progress{grid-column:1/-1;width:100%;height:8px}
-.set{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid var(--line);border-left:4px solid transparent}
-.set.pass{border-left-color:var(--ok)}.set.low{border-left-color:var(--ng)}
-.sname{display:grid}.sname .muted{font-size:13.5px}.sbest{display:grid;text-align:right;min-width:64px}.sbest b{font:600 18px 'Prompt',sans-serif}.set.pass .sbest b{color:var(--ok)}.set.low .sbest b{color:var(--ng)}.sbest .muted{font-size:12px}
-@media (max-width:560px){.set{grid-template-columns:1fr auto}.set .btn{grid-column:1/-1}}
-.foot{color:var(--muted);font-size:13px;text-align:center;padding:20px}
-@media (max-width:820px){.take{grid-template-columns:1fr}.sheet-card{position:static;max-height:none}.submitbar{bottom:0;padding:12px 16px;margin:0 -20px -20px;border-radius:0 0 14px 14px}}
+/* ผู้ดูแล */
+.urow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}.urow:first-child{border-top:0}.urow>div{display:grid}
+.uhead,.user summary{display:grid;grid-template-columns:minmax(0,2fr) repeat(5,minmax(0,1fr));gap:8px;align-items:center;padding:10px 16px}
+.uhead{font-size:13px;color:var(--muted);border-bottom:1px solid var(--line)}
+.user{border-top:1px solid var(--line)}.user:first-of-type{border-top:0}.user summary{cursor:pointer;list-style:none}.user summary::-webkit-details-marker{display:none}
+.user summary .nm{display:grid}.user summary .nm small{color:var(--muted);font-size:12.5px}
+.user summary span[data-l]{text-align:right}
+.udet{padding:4px 16px 16px;background:var(--soft)}.udet .hist{font-size:14px;grid-template-columns:minmax(0,1.5fr) 1fr 44px}
+@media (max-width:640px){.uhead{display:none}.user summary{grid-template-columns:repeat(3,1fr)}.user summary .nm{grid-column:1/-1}
+  .user summary span[data-l]{text-align:left;font-size:14px}.user summary span[data-l]::before{content:attr(data-l);display:block;font-size:11.5px;color:var(--muted)}}
+.foot{color:var(--muted);font-size:13px;text-align:center;padding:10px 16px 28px}
 </style>
 </head>
 <body>
-<div class="top" id="top">ห้องสอบออนไลน์</div>
-<div class="wrap" id="app"><p class="muted center">กำลังโหลด…</p></div>
-<div class="foot">สำหรับผู้สอบที่ได้รับลิงก์เท่านั้น · กรุณาไม่เผยแพร่ข้อสอบ</div>
+<header class="top"><button id="brand" type="button">คลังข้อสอบ</button></header>
+<main class="wrap" id="app"><p class="muted center">กำลังโหลด…</p></main>
+<footer class="foot">สำหรับสมาชิกกลุ่มเท่านั้น · กรุณาไม่เผยแพร่ข้อสอบ · <button type="button" class="link small" id="admLink">สำหรับผู้ดูแล</button></footer>
 <script>
 const L = ['ก', 'ข', 'ค', 'ง', 'จ'];
 const app = document.getElementById('app');
-const $ = (s) => document.querySelector(s);
+const $ = (s, el) => (el || document).querySelector(s);
+const $$ = (s, el) => [...(el || document).querySelectorAll(s)];
 const h = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const call = (fn, ...args) => new Promise((ok, no) => google.script.run.withSuccessHandler(ok).withFailureHandler(no)[fn](...args));
 const errMsg = (e) => String(e && e.message || e).replace(/^Exception:\s*/, '').replace(/^Error:\s*/, '');
 const store = {
-  get(k) { try { return JSON.parse(localStorage.getItem(k)) || {}; } catch (e) { return {}; } },
-  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* โหมดส่วนตัว */ } },
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* โหมดส่วนตัว/เต็ม */ } },
   del(k) { try { localStorage.removeItem(k); } catch (e) { /* */ } },
 };
-let info;
+const MODE_LABEL = { exam: 'โหมดสอบ', practice: 'โหมดฝึก', review: 'ทบทวนข้อที่ผิด' };
+const S = { code: '', b: null, title: 'คลังข้อสอบ', screen: '', s: null, modal: null };
+let timer = null;
+const sessKey = () => 'sess:' + S.code;
+const loading = (t) => `<p class="muted center" style="padding:30px 0">${h(t || 'กำลังโหลด…')}</p>`;
+const fmtDate = (t) => (t ? new Date(t).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '–');
+const clockStr = (x) => { x = Math.floor(x || 0); const hh = Math.floor(x / 3600), mm = Math.floor(x / 60) % 60, ss = x % 60; return (hh ? hh + ':' + String(mm).padStart(2, '0') : String(mm).padStart(2, '0')) + ':' + String(ss).padStart(2, '0'); };
+const durStr = (x) => { x = Math.round(x || 0); const m = Math.floor(x / 60); return m >= 60 ? `${Math.floor(m / 60)} ชม. ${m % 60} นาที` : m ? `${m} นาที ${x % 60} วินาที` : `${x} วินาที`; };
+const pctOf = (a, b) => (b ? Math.round(a / b * 100) : null);
+const shuffle = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 
-call('getInfo').then((i) => { info = i; $('#top').textContent = i.title; document.title = i.title; enter(); })
-  .catch((e) => { app.innerHTML = `<div class="card"><h1>ยังเปิดสอบไม่ได้</h1><p>${h(errMsg(e))}</p></div>`; });
+function setTitle(t) { S.title = t || S.title; $('#brand').textContent = S.title; document.title = S.title; }
+function setScreen(name) {
+  S.screen = name;
+  if (name !== 'play') { clearInterval(timer); timer = null; document.onvisibilitychange = null; }
+  document.body.classList.toggle('playing', name === 'play');
+  closeModal();
+  window.scrollTo(0, 0);
+}
+function toast(msg) {
+  const t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg;
+  document.body.appendChild(t); setTimeout(() => t.remove(), 3800);
+}
+function modal(html) {
+  closeModal();
+  const m = document.createElement('div'); m.className = 'modal';
+  m.innerHTML = `<div class="panel" role="dialog" aria-modal="true">${html}</div>`;
+  m.addEventListener('click', (e) => { if (e.target === m) closeModal(); });
+  document.body.appendChild(m); S.modal = m;
+  const f = $('button, input', m); if (f) f.focus({ preventScroll: true });
+  return m.firstChild;
+}
+function closeModal() { if (S.modal) { S.modal.remove(); S.modal = null; } }
 
-function enter(error) {
-  if (!info.exams.length) { app.innerHTML = `<div class="card enter"><h1>${h(info.title)}</h1><p>ยังไม่มีชุดข้อสอบ</p></div>`; return; }
-  if (!info.open) { app.innerHTML = `<div class="card enter"><h1>${h(info.title)}</h1><p>ข้อสอบชุดนี้ปิดรับคำตอบแล้ว</p></div>`; return; }
-  const d = store.get('who');
-  app.innerHTML = `<form class="card enter" id="f" autocomplete="off">
-      <h1>${h(info.title)}</h1>
-      <p class="muted">${info.exams.length} ชุดข้อสอบ · กรอกชื่อเดิมทุกครั้งเพื่อดูความก้าวหน้าของตัวเอง</p>
-      ${error ? `<div class="alert" role="alert">${h(error)}</div>` : ''}
-      ${info.needCode ? `<label>รหัสเข้าสอบ<input type="text" name="code" class="code" required maxlength="40" autocapitalize="characters" spellcheck="false" value="${h(d.code)}"></label>` : ''}
+// ---------------- เริ่มต้น: แสดงข้อมูลที่จำไว้ในเครื่องทันที แล้วค่อยอัปเดตจากเซิร์ฟเวอร์ ----------------
+function apply(b, code) { S.b = b; S.code = code; setTitle(b.title); store.set('code', code); store.set('boot:' + code, b); }
+function refresh() { return call('boot', S.code).then((b) => { apply(b, S.code); return b; }); }
+
+(function start() {
+  const code = store.get('code');
+  const cached = code && store.get('boot:' + code);
+  if (cached && cached.me) { apply(cached, code); home(); }
+  call('boot', code || '').then((b) => {
+    if (!b.me) { setTitle(b.title); S.intro = b.intro; return login(); }
+    apply(b, code);
+    if (!cached || S.screen === 'home') home();
+  }).catch((e) => {
+    if (cached && S.screen !== 'home') return; // ใช้งานอยู่ ไม่ขัดจังหวะ
+    if (code) { store.del('boot:' + code); login(errMsg(e), code); } else app.innerHTML = `<div class="card narrow"><h1>ยังเปิดใช้งานไม่ได้</h1><p>${h(errMsg(e))}</p></div>`;
+  });
+})();
+
+$('#brand').addEventListener('click', () => { if (S.screen !== 'play' && S.b && S.b.me) home(); });
+$('#admLink').addEventListener('click', () => adminLogin());
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && S.modal) { closeModal(); return; }
+  if (S.screen === 'play' && !S.modal) playKey(e);
+});
+
+// ---------------- เข้าสู่ระบบ / สมัคร ----------------
+function login(err, code) {
+  setScreen('login');
+  app.innerHTML = `<form class="card narrow" id="f" autocomplete="off">
+      <h1>${h(S.title)}</h1>
+      ${S.intro ? `<p class="muted">${h(S.intro)}</p>` : ''}
+      ${err ? `<div class="alert" role="alert">${h(err)}</div>` : ''}
+      <label>รหัสส่วนตัว<input type="text" name="code" class="code" required maxlength="12" autocapitalize="characters" spellcheck="false" value="${h(code || '')}"></label>
+      <button class="btn block">เข้าสู่ระบบ</button>
+      <p class="center">ยังไม่มีรหัส? <button type="button" class="link" id="reg">สมัครใช้งาน</button></p>
+      <p class="muted center small">ลืมรหัส? ติดต่อผู้ดูแลกลุ่มให้ดูให้</p></form>`;
+  $('#reg').addEventListener('click', () => register());
+  $('#f').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const c = String(new FormData(e.target).get('code')).trim().toUpperCase();
+    if (!c) return;
+    const btn = $('.btn', e.target); btn.disabled = true; btn.textContent = 'กำลังเข้าสู่ระบบ…';
+    call('boot', c).then((b) => { apply(b, c); home(); }).catch((x) => login(errMsg(x), c));
+  });
+}
+
+function register(err, d) {
+  setScreen('register');
+  d = d || {};
+  app.innerHTML = `<form class="card narrow" id="f" autocomplete="off">
+      <button type="button" class="back" id="back">‹ กลับ</button>
+      <h1>สมัครใช้งาน</h1>
+      <p class="muted">กรอกชื่อจริง แล้วจะได้รหัสส่วนตัวทันที — ใช้ได้เมื่อผู้ดูแลอนุมัติ</p>
+      ${err ? `<div class="alert" role="alert">${h(err)}</div>` : ''}
       <label>ชื่อ-นามสกุล *<input type="text" name="name" required maxlength="100" value="${h(d.name)}"></label>
       <div class="row2"><label>เลขที่/รหัส<input type="text" name="studentNo" maxlength="20" value="${h(d.studentNo)}"></label>
-      <label>ห้อง/ชั้น<input type="text" name="room" maxlength="20" value="${h(d.room)}"></label></div>
-      <button class="btn">เข้าสู่ระบบ</button></form>`;
+      <label>กลุ่ม/ห้อง<input type="text" name="room" maxlength="20" value="${h(d.room)}"></label></div>
+      <button class="btn block">สมัคร</button></form>`;
+  $('#back').addEventListener('click', () => login());
   $('#f').addEventListener('submit', (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const who = { name: String(fd.get('name')).trim(), studentNo: String(fd.get('studentNo')).trim(), room: String(fd.get('room')).trim() };
-    if (!who.name) return;
-    const code = String(fd.get('code') || '').trim();
-    store.set('who', Object.assign({ code: code }, who));
-    const btn = e.target.querySelector('.btn'); btn.disabled = true; btn.textContent = 'กำลังโหลด…';
-    home(code, who);
+    const p = { name: String(fd.get('name')).trim(), studentNo: String(fd.get('studentNo')).trim(), room: String(fd.get('room')).trim() };
+    if (!p.name) return;
+    const btn = $('.btn', e.target); btn.disabled = true; btn.textContent = 'กำลังสมัคร…';
+    call('register', p).then((r) => {
+      store.set('code', r.code);
+      app.innerHTML = `<div class="card narrow">
+          <h1>สมัครเรียบร้อย</h1><p>${h(r.name)} — รหัสส่วนตัวของคุณคือ</p>
+          <div class="bigcode">${h(r.code)}</div>
+          <p class="note">📌 จดหรือแคปหน้าจอรหัสนี้ไว้ ใช้เข้าระบบทุกครั้ง (เครื่องนี้จำไว้ให้แล้ว)<br>แจ้งผู้ดูแลให้อนุมัติ แล้วกดเข้าสู่ระบบได้เลย</p>
+          <button class="btn block" id="go">เข้าสู่ระบบ</button></div>`;
+      $('#go').addEventListener('click', () => login('', r.code));
+    }).catch((x) => register(errMsg(x), p));
   });
 }
 
-// กลุ่มของชุดข้อสอบ: "จิตวิทยาและการแนะแนว 2" → "จิตวิทยาและการแนะแนว" · ชุดพิเศษรวมกลุ่มเดียว
-const groupOf = (t) => (/^ชุดพิเศษ/.test(t) ? 'ชุดพิเศษ' : t.replace(/\s*\d+$/, '').trim() || t);
-const fmtDate = (t) => (t ? new Date(t).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '');
-
-function home(code, who) {
-  app.innerHTML = '<p class="muted center">กำลังโหลดความก้าวหน้า…</p>';
-  call('myProgress', code, who).then((prog) => {
-    const byId = {};
-    prog.forEach((p) => { byId[p.id] = p.att.sort((a, b) => a.t - b.t); });
-    const sets = info.exams.map((x) => {
-      const att = byId[x.id] || [];
-      const best = att.length ? Math.max(...att.map((a) => a.pct)) : null;
-      return Object.assign({ att, best, last: att[att.length - 1] }, x);
-    });
-    const done = sets.filter((x) => x.att.length);
-    const allAtt = done.flatMap((x) => x.att.map((a) => Object.assign({ title: x.title }, a))).sort((a, b) => a.t - b.t);
-    const avg = done.length ? Math.round(done.reduce((s, x) => s + x.best, 0) / done.length) : 0;
-    const qDone = done.reduce((s, x) => s + x.nq, 0), qAll = sets.reduce((s, x) => s + x.nq, 0);
-    const pctDone = Math.round(done.length / sets.length * 100);
-    const recent = allAtt.slice(-12);
-    const groups = {};
-    sets.forEach((x) => { (groups[groupOf(x.title)] = groups[groupOf(x.title)] || []).push(x); });
-    const row = (x) => `<div class="set ${x.att.length ? (x.best >= 50 ? 'pass' : 'low') : ''}">
-        <div class="sname"><b>${h(x.title.replace(/^ชุดพิเศษ\s*/, ''))}</b><span class="muted">${x.nq} ข้อ${x.att.length ? ` · ทำ ${x.att.length} ครั้ง · ล่าสุด ${fmtDate(x.last.t)} (${x.last.pct}%)` : ''}</span></div>
-        <div class="sbest">${x.att.length ? `<b>${x.best}%</b><span class="muted">ดีที่สุด</span>` : '<span class="muted">ยังไม่ทำ</span>'}</div>
-        <button class="btn sm ${x.att.length ? 'ghost' : ''}" data-id="${h(x.id)}">${x.att.length ? 'ทำอีกครั้ง' : 'เริ่มทำ'}</button></div>`;
-    const grp = Object.keys(groups).map((g) => {
-      const list = groups[g], d = list.filter((x) => x.att.length);
-      const gavg = d.length ? Math.round(d.reduce((s, x) => s + x.best, 0) / d.length) : null;
-      return `<details class="card grp" ${d.length && d.length < list.length ? 'open' : ''}><summary>
-          <span class="gname">${h(g)}</span><span class="gmeta">${d.length}/${list.length} ชุด${gavg != null ? ` · เฉลี่ย ${gavg}%` : ''}</span>
-          <progress max="${list.length}" value="${d.length}"></progress></summary>${list.map(row).join('')}</details>`;
-    }).join('');
-    app.innerHTML = `<div class="card">
-        <div class="hello"><div><p class="muted">สวัสดี</p><h1>${h(who.name)}</h1></div><button class="btn ghost sm" id="out">เปลี่ยนผู้ใช้</button></div>
-        <div class="tiles">
-          <div class="tile"><b>${done.length}<small>/${sets.length}</small></b><span>ชุดที่ทำแล้ว</span></div>
-          <div class="tile"><b>${done.length ? avg + '%' : '–'}</b><span>คะแนนเฉลี่ย (ครั้งที่ดีที่สุด)</span></div>
-          <div class="tile"><b>${allAtt.length}</b><span>ครั้งที่ทำทั้งหมด</span></div>
-          <div class="tile"><b>${qDone.toLocaleString()}</b><span>ข้อที่ฝึกแล้ว จาก ${qAll.toLocaleString()}</span></div>
-        </div>
-        <p class="overall"><span>ความคืบหน้ารวม</span><progress max="100" value="${pctDone}"></progress><b>${pctDone}%</b></p>
-        ${recent.length ? `<h2>ผลล่าสุด ${recent.length} ครั้ง</h2><div class="trend" role="img" aria-label="กราฟคะแนนล่าสุด">${recent.map((a) => `<div class="bar ${a.pct >= 50 ? '' : 'low'}" title="${h(a.title)} · ${fmtDate(a.t)} · ${a.pct}%"><span style="height:${Math.max(4, a.pct)}%"></span><em>${a.pct}</em></div>`).join('')}</div><p class="muted small">แท่งสีเขียว = ผ่าน 50% ขึ้นไป · ชี้ที่แท่งเพื่อดูชื่อชุด</p>` : '<p class="muted">ยังไม่มีผลสอบ — เลือกชุดด้านล่างเพื่อเริ่มทำ</p>'}
-      </div>${grp}`;
-    $('#out').addEventListener('click', () => enter());
-    app.querySelectorAll('.set .btn').forEach((b) => b.addEventListener('click', () => {
-      b.disabled = true; b.textContent = 'กำลังเปิด…';
-      call('getExam', code, b.dataset.id).then((ex) => take(code, who, ex)).catch((x) => { alert(errMsg(x)); b.disabled = false; b.textContent = 'เริ่มทำ'; });
-    }));
-    window.scrollTo(0, 0);
-  }).catch((e) => enter(errMsg(e)));
-}
-
-function take(code, who, ex) {
-  const dk = 'draft:' + ex.title;
-  const draft = store.get(dk);
-  const bubbles = (i) => L.slice(0, ex.nc).map((c, k) => `<label class="bub"><input type="radio" name="q${i}" value="${k}" ${draft.a && draft.a[i] === k ? 'checked' : ''}><span>${c}</span></label>`).join('');
-  // ข้อสอบแบบพิมพ์: แสดงโจทย์+ตัวเลือก · แบบรูป: กระดาษคำตอบ (วงกลม ก ข ค ง)
-  const body = ex.questions
-    ? ex.questions.map((q, i) => `<div class="card qcard" id="q${i}" role="radiogroup" aria-labelledby="qt${i}">
-        <p class="qt" id="qt${i}"><b>${i + 1}.</b> ${h(q.text)}</p>
-        ${q.choices.map((c, k) => `<label class="opt"><input type="radio" name="q${i}" value="${k}" ${draft.a && draft.a[i] === k ? 'checked' : ''}><b>${L[k]}.</b> <span>${h(c)}</span></label>`).join('')}</div>`).join('')
-    : `<div class="sheet">${Array.from({ length: ex.nq }, (_, i) => `<div class="srow" id="q${i}" role="radiogroup" aria-label="ข้อ ${i + 1}"><b class="sn">${i + 1}</b>${bubbles(i)}</div>`).join('')}</div>`;
-  app.innerHTML = `<div class="card"><h1>${h(ex.title)}</h1><p class="muted">${h(who.name)} · ${ex.nq} ข้อ</p>${ex.intro ? `<p class="intro">${h(ex.intro)}</p>` : ''}</div>
-    <div class="${ex.pages ? 'take' : 'take one'}">
-      ${ex.pages ? `<div class="pages" id="pages">${Array.from({ length: ex.pages }, (_, i) => `<figure><p class="muted center">กำลังโหลดหน้า ${i + 1}/${ex.pages}…</p></figure>`).join('')}</div>` : ''}
-      <form class="${ex.questions ? 'qform' : 'card sheet-card'}" id="sheet">
-        ${ex.questions ? '' : '<h2>กระดาษคำตอบ</h2>'}<div id="err"></div>
-        ${body}
-        <div class="submitbar ${ex.questions ? 'card' : ''}"><span id="prog"></span><button class="btn">ส่งคำตอบ</button></div>
-      </form></div>`;
-  // โหลดรูปทีละหน้า
-  const figs = ex.pages ? [...$('#pages').children] : [];
-  (async () => {
-    for (let i = 0; i < figs.length; i++) {
-      if (ex.pdf && ex.pdf[i]) {
-        figs[i].innerHTML = `<iframe class="pdf" title="ข้อสอบ ${i + 1}" src="https://drive.google.com/file/d/${encodeURIComponent(ex.pdf[i])}/preview" allow="autoplay"></iframe><figcaption>ไฟล์ ${i + 1}/${figs.length} · เลื่อนในกรอบเพื่อดูหน้าถัดไป</figcaption>`;
-        continue;
-      }
-      try {
-        const p = await call('getPage', code, i);
-        figs[i].innerHTML = `<img alt="ข้อสอบหน้า ${i + 1}" src="data:${h(p.mime)};base64,${p.data}"><figcaption>หน้า ${i + 1}/${figs.length}</figcaption>`;
-      } catch (e) { figs[i].innerHTML = `<p class="muted center">โหลดหน้า ${i + 1} ไม่สำเร็จ — รีเฟรชหน้าเว็บ (${h(errMsg(e))})</p>`; }
-    }
-  })();
-  const form = $('#sheet');
-  const read = () => Array.from({ length: ex.nq }, (_, i) => { const c = form.querySelector(`input[name=q${i}]:checked`); return c ? Number(c.value) : -1; });
-  const prog = () => { $('#prog').textContent = `ตอบแล้ว ${read().filter((x) => x >= 0).length}/${ex.nq}`; };
-  prog();
-  let sending = false;
-  form.addEventListener('change', (e) => { store.set(dk, { a: read() }); prog(); const r = e.target.closest('[role=radiogroup]'); if (r) r.classList.remove('missing'); });
-  window.onbeforeunload = (e) => { if (!sending) { e.preventDefault(); e.returnValue = ''; } };
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    if (sending) return;
-    const a = read();
-    const miss = a.map((x, i) => (x < 0 ? i : -1)).filter((i) => i >= 0);
-    miss.forEach((i) => $('#q' + i).classList.add('missing'));
-    if (miss.length) {
-      if (!confirm(`ยังไม่ได้ตอบ ${miss.length} ข้อ (ข้อ ${miss.slice(0, 10).map((i) => i + 1).join(', ')}${miss.length > 10 ? ' …' : ''})\nต้องการส่งคำตอบเลยหรือไม่?`)) { $('#q' + miss[0]).scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
-    } else if (!confirm('ยืนยันการส่งคำตอบ? ส่งแล้วแก้ไขไม่ได้')) return;
-    sending = true;
-    const btn = form.querySelector('.submitbar .btn'); btn.disabled = true; btn.textContent = 'กำลังส่ง…';
-    call('submit', code, ex.id, Object.assign({ answers: a }, who)).then((r) => {
-      store.del(dk); window.onbeforeunload = null; result(who, r, code); window.scrollTo(0, 0);
-    }).catch((x) => {
-      sending = false; btn.disabled = false; btn.textContent = 'ส่งคำตอบ';
-      $('#err').innerHTML = `<div class="alert" role="alert">ส่งไม่สำเร็จ: ${h(errMsg(x))} — คำตอบยังอยู่ กดส่งอีกครั้งได้</div>`;
-    });
+// ---------------- หน้าหลัก ----------------
+function setStats() {
+  const m = {};
+  S.b.log.forEach((r) => {
+    if (r.kind !== 'set') return;
+    const x = m[r.set] || (m[r.set] = { best: null, n: 0, last: null, pn: 0 });
+    if (r.mode === 'exam') { x.best = Math.max(x.best || 0, r.pct); x.n++; x.last = r; } else x.pn++;
   });
+  return m;
+}
+function catStats() {
+  const out = {}, order = [], st = setStats();
+  S.b.catalog.forEach((e) => {
+    if (!out[e.c]) { out[e.c] = { name: e.c, sets: [], n: 0, done: 0, ok: 0, total: 0 }; order.push(e.c); }
+    const c = out[e.c]; c.sets.push(e); c.n += e.n; if (st[e.t] && st[e.t].n) c.done++;
+  });
+  S.b.log.forEach((r) => {
+    if (r.mode !== 'exam') return;
+    Object.keys(r.cats || {}).forEach((k) => { if (out[k]) { out[k].ok += r.cats[k][0]; out[k].total += r.cats[k][1]; } });
+  });
+  return order.map((k) => out[k]);
 }
 
-function result(who, r, code) {
-  const topics = r.topics.length > 1 ? `<div class="card"><h2>ผลรายเรื่อง</h2>${r.topics.map((t) => {
-    const p = Math.round(t.ok / t.total * 100);
-    return `<div class="hist"><span>${h(t.topic)}</span><progress class="${p >= 50 ? '' : 'fail'}" max="100" value="${p}"></progress><b>${t.ok}/${t.total}</b></div>`;
-  }).join('')}${r.strong.length ? `<p>👍 <b>ทำได้ดี:</b> ${h(r.strong.join(', '))}</p>` : ''}${r.weak.length ? `<p>📌 <b>ควรทบทวน:</b> ${h(r.weak.join(', '))}</p>` : ''}</div>` : '';
-  const ng = r.items ? r.items.filter((q) => !q.ok).length : 0;
-  const items = r.showKey && r.items ? `<div class="card"><h2>เฉลยและคำอธิบาย</h2>
-      <div class="res">${r.items.map((q) => `<a href="#rv${q.no}" class="${q.ok ? 'ok' : 'ng'}"><b>${q.no}.</b> ${q.ok ? '✓' : '✗'} ตอบ ${q.chosen >= 0 ? L[q.chosen] : '–'}${q.ok ? '' : ` · เฉลย <b>${L[q.answer]}</b>`}</a>`).join('')}</div>
-      <div class="seg" role="group" aria-label="เลือกข้อที่จะแสดง"><button type="button" data-f="ng" aria-pressed="${ng ? 'true' : 'false'}">เฉพาะข้อที่ผิด (${ng})</button><button type="button" data-f="all" aria-pressed="${ng ? 'false' : 'true'}">ดูทุกข้อ (${r.items.length})</button></div>
-      <div id="rvs" class="${ng ? 'only-ng' : ''}">${r.items.map(review).join('')}</div></div>`
-    : `<div class="card">${r.wrong.length ? `ข้อที่ผิด/ไม่ได้ตอบ: <b>${r.wrong.join(', ')}</b>` : '🎉 ถูกทุกข้อ'}<p class="muted">ครูจะเฉลยภายหลัง</p></div>`;
-  app.innerHTML = `<div class="card score"><p class="muted">${h(r.title || info.title)}</p><h1>${h(who.name)}</h1>
+function home() {
+  setScreen('home');
+  const { me, catalog, log } = S.b;
+  const exam = log.filter((r) => r.mode === 'exam');
+  const practiced = log.filter((r) => r.mode !== 'exam').reduce((a, r) => a + r.total, 0);
+  const st = setStats();
+  const setsDone = catalog.filter((e) => st[e.t] && st[e.t].n).length;
+  const avg = exam.length ? Math.round(exam.reduce((a, r) => a + r.pct, 0) / exam.length) : null;
+  const recent = exam.slice(-12);
+  const sess = store.get(sessKey());
+  const cats = catStats();
+  app.innerHTML = `
+    <section class="card hello"><div><p class="muted">สวัสดี</p><h1>${h(me.name)}</h1><p class="muted small">รหัสของฉัน <b class="mono">${h(me.code)}</b></p></div>
+      <button class="btn ghost sm" id="out">ออกจากระบบ</button></section>
+    ${S.b.open ? '' : '<p class="note" style="margin-bottom:14px">ผู้ดูแลปิดการทำข้อสอบชั่วคราว — ดูความก้าวหน้าได้ตามปกติ</p>'}
+    ${sess && sess.qs ? `<section class="card resume"><div><b>ทำต่อ: ${h(sess.title)}</b><p class="muted small">${MODE_LABEL[sess.mode]} · ตอบแล้ว ${sess.ans.filter((x) => x >= 0).length}/${sess.qs.length} ข้อ · ⏱ ${clockStr(sess.secs)}</p></div>
+      <div class="acts"><button class="btn" id="resume">▶ ทำต่อ</button><button class="btn ghost" id="drop">ลบทิ้ง</button></div></section>` : ''}
+    <div class="quick">
+      <button class="qa" id="rnd"><span class="ico">🎲</span><b>สุ่ม 20 ข้อ</b><small>รวมทุกหมวด</small></button>
+      <button class="qa" id="rev" ${me.wrong ? '' : 'disabled'}><span class="ico">🔁</span><b>ทบทวนข้อที่ผิด</b><small>${me.wrong ? `ค้างอยู่ ${me.wrong} ข้อ` : 'ยังไม่มีข้อที่ผิด'}</small></button>
+    </div>
+    <section class="card"><h2>ความก้าวหน้าของฉัน</h2>
+      <div class="tiles">
+        <div class="tile"><b>${setsDone}<small>/${catalog.length}</small></b><span>ชุดที่สอบแล้ว</span></div>
+        <div class="tile"><b>${avg != null ? avg + '%' : '–'}</b><span>คะแนนเฉลี่ย (โหมดสอบ)</span></div>
+        <div class="tile"><b>${exam.length}</b><span>ครั้งที่สอบ</span></div>
+        <div class="tile"><b>${practiced.toLocaleString()}</b><span>ข้อที่ฝึก/ทบทวน</span></div>
+      </div>
+      ${recent.length ? `<p class="muted small">ผลสอบล่าสุด ${recent.length} ครั้ง (ร้อยละ)</p><div class="trend" role="img" aria-label="กราฟคะแนนโหมดสอบล่าสุด">${recent.map((r) => `<div class="bar ${r.pct >= 50 ? '' : 'low'}" title="${h(r.set)} · ${fmtDate(r.t)} · ${r.pct}%"><span style="height:${Math.max(4, r.pct)}%"></span><em style="bottom:${Math.max(4, r.pct)}%">${r.pct}</em></div>`).join('')}</div>` : '<p class="muted">ยังไม่มีผลโหมดสอบ — เลือกหมวดด้านล่างหรือสุ่ม 20 ข้อเพื่อเริ่ม</p>'}
+    </section>
+    <h2 class="sec">หมวดข้อสอบ</h2>
+    <div class="cats">${cats.map((c) => {
+      const acc = pctOf(c.ok, c.total);
+      return `<button class="catbtn" data-c="${h(c.name)}"><span class="cname">${h(c.name)}</span>
+        <span class="cstat" style="color:${acc == null ? 'var(--muted)' : acc >= 50 ? 'var(--ok)' : 'var(--ng)'}">${acc != null ? acc + '%' : '–'}<small>${acc != null ? 'ตอบถูก' : 'ยังไม่สอบ'}</small></span>
+        <span class="cmeta">${c.sets.length} ชุด · ${c.n.toLocaleString()} ข้อ · สอบแล้ว ${c.done} ชุด</span>
+        <progress max="${c.sets.length}" value="${c.done}"></progress></button>`;
+    }).join('')}</div>`;
+  $('#out').addEventListener('click', () => { if (confirm('ออกจากระบบในเครื่องนี้?')) { store.del('code'); S.b = null; login(); } });
+  $('#rnd').addEventListener('click', () => chooser({ kind: 'random', cat: '', title: 'สุ่ม 20 ข้อ · รวมทุกหมวด', n: 20 }));
+  $('#rev').addEventListener('click', () => begin({ kind: 'review' }, 'review'));
+  if ($('#resume')) {
+    $('#resume').addEventListener('click', () => play(sess));
+    $('#drop').addEventListener('click', () => { if (confirm('ลบชุดที่ทำค้างไว้? คำตอบที่ทำไปจะหายและไม่บันทึกผล')) { store.del(sessKey()); home(); } });
+  }
+  $$('.catbtn').forEach((b) => b.addEventListener('click', () => category(b.dataset.c)));
+}
+
+function category(name) {
+  setScreen('cat');
+  const c = catStats().filter((x) => x.name === name)[0];
+  if (!c) return home();
+  const st = setStats();
+  const acc = pctOf(c.ok, c.total);
+  const row = (e) => {
+    const x = st[e.t];
+    const cls = x && x.n ? (x.best >= 50 ? 'pass' : 'low') : '';
+    const meta = [e.n + ' ข้อ'];
+    if (x && x.n) meta.push(`สอบ ${x.n} ครั้ง · ล่าสุด ${x.last.pct}%`);
+    if (x && x.pn) meta.push(`ฝึก ${x.pn} ครั้ง`);
+    return `<button class="set ${cls}" data-id="${h(e.id)}"><div class="sname"><b>${h(e.t.replace(/^ชุดพิเศษ\s*/, ''))}</b><span class="muted">${meta.join(' · ')}</span></div>
+      <div class="sbest">${x && x.n ? `<b>${x.best}%</b><span>ดีที่สุด</span>` : '<span>ยังไม่สอบ</span>'}</div></button>`;
+  };
+  const normal = c.sets.filter((e) => !e.sp), special = c.sets.filter((e) => e.sp);
+  app.innerHTML = `<button class="back" id="back">‹ หน้าหลัก</button>
+    <section class="card"><h1>${h(name)}</h1>
+      <p class="muted">${c.sets.length} ชุด · ${c.n.toLocaleString()} ข้อ · สอบแล้ว ${c.done} ชุด${acc != null ? ` · ตอบถูก ${acc}% (โหมดสอบ)` : ''}</p>
+      <button class="btn block" id="rndc" style="margin-top:10px">🎲 สุ่ม 20 ข้อจากหมวดนี้</button></section>
+    ${normal.length ? `<section class="card list">${normal.map(row).join('')}</section>` : ''}
+    ${special.length ? `<h2 class="sec">ชุดพิเศษ</h2><section class="card list">${special.map(row).join('')}</section>` : ''}`;
+  $('#back').addEventListener('click', () => home());
+  $('#rndc').addEventListener('click', () => chooser({ kind: 'random', cat: name, title: 'สุ่ม 20 ข้อ · ' + name, n: 20 }));
+  $$('.set').forEach((b) => b.addEventListener('click', () => {
+    const e = S.b.catalog.filter((x) => x.id === b.dataset.id)[0];
+    chooser({ kind: 'set', id: e.id, title: e.t, n: e.n });
+  }));
+}
+
+function chooser(spec) {
+  const p = modal(`<h2>${h(spec.title)}</h2><p class="muted">${spec.n} ข้อ · สลับลำดับข้อและตัวเลือกทุกครั้ง</p>
+    <button class="mode" data-m="exam"><b>📝 โหมดสอบ</b><span>จับเวลา · ย้อนกลับ/ข้ามข้อ/ทำเครื่องหมายได้ · ส่งแล้วเห็นคะแนนและเฉลย · นับในกราฟคะแนน</span></button>
+    <button class="mode" data-m="practice"><b>💡 โหมดฝึก</b><span>ตอบแล้วเห็นเฉลยและคำอธิบายทันที · บันทึกแยก ไม่นับในกราฟคะแนน</span></button>
+    <button class="btn ghost block" id="mc">ยกเลิก</button>`);
+  $$('.mode', p).forEach((b) => b.addEventListener('click', () => begin(spec, b.dataset.m)));
+  $('#mc', p).addEventListener('click', closeModal);
+}
+
+function begin(spec, mode) {
+  const old = store.get(sessKey());
+  if (old && old.qs && !confirm(`มีชุดที่ทำค้างอยู่: ${old.title}\nเริ่มชุดใหม่จะลบความคืบหน้าของชุดเดิม — ต้องการเริ่มใหม่หรือไม่?`)) return;
+  modal(loading('กำลังเตรียมข้อสอบ…'));
+  const req = spec.kind === 'set' ? call('getSet', S.code, spec.id, mode)
+    : spec.kind === 'random' ? call('getRandom', S.code, spec.cat || '', mode) : call('getReview', S.code);
+  req.then((d) => play(newSession(d, mode))).catch((e) => { closeModal(); toast(errMsg(e)); });
+}
+
+// ตัวเลือกที่อ้างถึงตัวเลือกอื่น (เช่น "ถูกทุกข้อ", "ข้อ ก และ ข") ไม่สลับ
+const FIXED_RE = /ทุกข้อ|ถูกทั้ง|ผิดทั้ง|ไม่มีข้อใด|ข้อ\s*[กขคงจ](?![฀-๿])|(^|\s)[กขคงจ]\s*(และ|หรือ|,)\s*[กขคงจ](?![฀-๿])|all of the|none of the|both [a-e] and|neither/i;
+function newSession(d, mode) {
+  const qs = shuffle(d.qs.map((q) => {
+    const m = q.ch.map((_, i) => i);
+    if (!q.ch.some((c) => FIXED_RE.test(c))) shuffle(m);
+    return Object.assign({}, q, { m }); // m[ตำแหน่งที่แสดง] = ตัวเลือกเดิม
+  }));
+  return { v: 2, mode, kind: d.kind, set: d.set || '', cat: d.cat || '', title: d.title, qs,
+    ans: qs.map(() => -1), flag: qs.map(() => 0), i: 0, secs: 0 };
+}
+// คำอธิบายอ้างตัวอักษรตัวเลือกเดิม ("ตอบ ข.") → เปลี่ยนให้ตรงกับลำดับที่สลับแล้ว
+const remap = (text, q) => String(text || '').replace(/(ตอบ|ข้อ|ตัวเลือก)(\s*\(?)([กขคงจ])(?![฀-๿])/g, (all, w, sp, lt) => {
+  const d = q.m.indexOf(L.indexOf(lt));
+  return d >= 0 ? w + sp + L[d] : all;
+});
+const saveSess = () => { if (S.s) store.set(sessKey(), S.s); };
+
+// ---------------- ทำข้อสอบ (ทีละข้อ) ----------------
+function play(s) {
+  setScreen('play');
+  S.s = s; saveSess();
+  app.innerHTML = `<div class="player">
+      <div class="pbar"><button class="icon" id="pexit" aria-label="ออก (เก็บไว้ทำต่อได้)" title="ออก — เก็บไว้ทำต่อได้">✕</button>
+        <div class="ptitle"><b>${h(s.title)}</b><small>${MODE_LABEL[s.mode]}</small></div>
+        <span class="clock" id="clock" title="เวลาที่ใช้ไป"></span></div>
+      <div class="ptrack"><span id="fill"></span></div>
+      <div id="qbox" class="card qbox"></div>
+      <nav class="pnav"><div><button class="btn ghost" id="prev" aria-label="ข้อก่อนหน้า">‹</button>
+        <button class="btn ghost" id="gbtn">☰ <span id="cnt"></span></button>
+        <button class="btn" id="next">ถัดไป ›</button></div></nav></div>`;
+  $('#pexit').addEventListener('click', () => { saveSess(); S.s = null; home(); toast('เก็บไว้แล้ว กด "ทำต่อ" ที่หน้าหลักได้'); });
+  $('#prev').addEventListener('click', () => go(s.i - 1));
+  $('#next').addEventListener('click', () => (s.i === s.qs.length - 1 ? grid() : go(s.i + 1)));
+  $('#gbtn').addEventListener('click', grid);
+  let last = Date.now(), tick = 0;
+  timer = setInterval(() => {
+    const now = Date.now();
+    if (!document.hidden) s.secs += Math.min(now - last, 5000) / 1000;
+    last = now;
+    $('#clock').textContent = clockStr(s.secs);
+    if (++tick % 10 === 0) saveSess();
+  }, 1000);
+  document.onvisibilitychange = () => { last = Date.now(); if (document.hidden) saveSess(); };
+  show();
+}
+
+function show() {
+  const s = S.s, i = s.i, q = s.qs[i], n = s.qs.length, c = s.ans[i];
+  const exam = s.mode === 'exam';
+  const reveal = !exam && c >= 0;
+  const right = exam ? -1 : q.m.indexOf(q.a);
+  const opts = q.m.map((orig, k) => {
+    const cls = reveal ? (k === right ? 'right' : k === c ? 'wrong' : 'dim') : k === c ? 'sel' : '';
+    const mk = reveal && k === right ? '<em class="mk">✓</em>' : reveal && k === c ? '<em class="mk">✗</em>' : '';
+    return `<button type="button" class="opt ${cls}" data-k="${k}" role="radio" aria-checked="${k === c}"><b class="lt">${L[k]}</b><span>${h(q.ch[orig])}</span>${mk}</button>`;
+  }).join('');
+  $('#qbox').innerHTML = `<div class="qhead"><b>ข้อ ${i + 1}<small>/${n}</small></b><span class="tag">${h(q.tp)}</span>
+      ${exam ? `<button type="button" class="flag ${s.flag[i] ? 'on' : ''}" id="flag" aria-pressed="${!!s.flag[i]}">🚩 ${s.flag[i] ? 'ทำเครื่องหมายแล้ว' : 'ทำเครื่องหมาย'}</button>` : ''}</div>
+    <p class="qt">${h(q.tx)}</p>
+    <div class="opts" role="radiogroup" aria-label="ตัวเลือกข้อ ${i + 1}">${opts}</div>
+    ${reveal ? `<div class="verdict ${c === right ? 'ok' : 'ng'}" id="verdict">${c === right ? '✓ ถูกต้อง' : `✗ ยังไม่ถูก — เฉลยคือ ${L[right]}`}</div>
+      ${q.ex ? `<div class="why"><b>คำอธิบาย</b>${h(remap(q.ex, q))}</div>` : ''}
+      ${q.ct ? `<div class="learn"><b>📖 เนื้อหาที่ควรรู้</b>${h(remap(q.ct, q))}</div>` : ''}` : ''}
+    ${s.kind !== 'set' ? `<p class="from">จากชุด: ${h(q.set)}</p>` : ''}`;
+  $$('.opt', $('#qbox')).forEach((b) => b.addEventListener('click', () => pick(Number(b.dataset.k))));
+  if ($('#flag')) $('#flag').addEventListener('click', () => { s.flag[i] = s.flag[i] ? 0 : 1; saveSess(); show(); });
+  const done = s.ans.filter((x) => x >= 0).length;
+  $('#fill').style.width = (done / n * 100) + '%';
+  $('#cnt').textContent = `${done}/${n}`;
+  $('#prev').disabled = i === 0;
+  $('#next').textContent = i === n - 1 ? (exam ? 'ส่งคำตอบ' : 'จบ') : 'ถัดไป ›';
+  $('#clock').textContent = clockStr(s.secs);
+}
+
+function pick(k) {
+  const s = S.s;
+  if (s.mode !== 'exam' && s.ans[s.i] >= 0) return; // โหมดฝึก: ตอบแล้วล็อก
+  s.ans[s.i] = k; saveSess(); show();
+  const v = $('#verdict');
+  if (v) v.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function go(i) {
+  const s = S.s;
+  if (i < 0 || i >= s.qs.length) return;
+  s.i = i; saveSess(); closeModal(); show(); window.scrollTo(0, 0);
+}
+function playKey(e) {
+  if (e.target.closest('input, textarea') || e.ctrlKey || e.metaKey || e.altKey) return;
+  const s = S.s, k = '12345'.indexOf(e.key) >= 0 ? '12345'.indexOf(e.key) : L.indexOf(e.key);
+  if (k >= 0 && k < s.qs[s.i].m.length) { e.preventDefault(); pick(k); }
+  else if (e.key === 'ArrowRight') go(s.i + 1);
+  else if (e.key === 'ArrowLeft') go(s.i - 1);
+  else if ((e.key === 'f' || e.key === 'F') && s.mode === 'exam') { s.flag[s.i] = s.flag[s.i] ? 0 : 1; saveSess(); show(); }
+}
+
+function grid() {
+  const s = S.s, n = s.qs.length, exam = s.mode === 'exam';
+  const done = s.ans.filter((x) => x >= 0).length, flagged = s.flag.filter(Boolean).length;
+  const cls = (i) => {
+    const a = s.ans[i], q = s.qs[i];
+    const c = a < 0 ? '' : exam ? 'ans' : q.m[a] === q.a ? 'ok' : 'ng';
+    return [c, s.flag[i] ? 'fl' : '', i === s.i ? 'cur' : ''].join(' ');
+  };
+  const p = modal(`<h2>ข้อทั้งหมด</h2>
+    <p class="muted">ตอบแล้ว ${done}/${n}${exam && flagged ? ` · ทำเครื่องหมาย ${flagged}` : ''} · ⏱ ${clockStr(s.secs)}</p>
+    <div class="legend">${exam ? '<span><i class="a"></i>ตอบแล้ว</span><span><i></i>ยังไม่ตอบ</span><span><i class="f"></i>ทำเครื่องหมาย</span>' : '<span><i class="o"></i>ถูก</span><span><i class="n"></i>ผิด</span><span><i></i>ยังไม่ทำ</span>'}</div>
+    <div class="ngrid">${s.qs.map((_, i) => `<button type="button" class="${cls(i)}" data-i="${i}" aria-label="ข้อ ${i + 1}">${i + 1}</button>`).join('')}</div>
+    <div id="merr"></div>
+    <button class="btn block" id="fin">${exam ? 'ส่งคำตอบ' : 'จบและบันทึกผล'}</button>
+    <button class="btn ghost block" id="mc">กลับไปทำต่อ</button>`);
+  $$('.ngrid button', p).forEach((b) => b.addEventListener('click', () => go(Number(b.dataset.i))));
+  $('#mc', p).addEventListener('click', closeModal);
+  $('#fin', p).addEventListener('click', finish);
+  const cur = $('.ngrid .cur', p); if (cur) cur.scrollIntoView({ block: 'nearest' });
+}
+
+function finish() {
+  const s = S.s, n = s.qs.length, exam = s.mode === 'exam';
+  const done = s.ans.filter((x) => x >= 0).length;
+  if (exam) {
+    const miss = s.ans.map((x, i) => (x < 0 ? i + 1 : 0)).filter(Boolean);
+    const fl = s.flag.filter(Boolean).length;
+    const msg = (miss.length ? `ยังไม่ได้ตอบ ${miss.length} ข้อ (ข้อ ${miss.slice(0, 10).join(', ')}${miss.length > 10 ? ' …' : ''}) — นับเป็นข้อผิด\n` : '')
+      + (fl ? `มีข้อที่ทำเครื่องหมายไว้ ${fl} ข้อ\n` : '');
+    if (!confirm(msg + 'ยืนยันส่งคำตอบ? ส่งแล้วแก้ไขไม่ได้')) return;
+  } else {
+    if (!done) { $('#merr').innerHTML = '<div class="alert">ยังไม่ได้ตอบข้อใดเลย</div>'; return; }
+    if (done < n && !confirm(`บันทึกผลเฉพาะ ${done} ข้อที่ทำแล้ว?`)) return;
+  }
+  const btn = $('#fin'); btn.disabled = true; btn.textContent = 'กำลังส่ง…';
+  call('submit', S.code, { mode: s.mode, kind: s.kind, set: s.set, cat: s.cat, secs: Math.round(s.secs),
+    ids: s.qs.map((q) => q.id), ans: s.qs.map((q, i) => (s.ans[i] >= 0 ? q.m[s.ans[i]] : -1)) })
+    .then((r) => {
+      store.del(sessKey()); S.s = null;
+      if (S.b) S.b.me.wrong = r.wrongLeft;
+      S.ready = refresh().catch(() => null);
+      result(r, s);
+    }).catch((e) => {
+      btn.disabled = false; btn.textContent = exam ? 'ส่งคำตอบ' : 'จบและบันทึกผล';
+      $('#merr').innerHTML = `<div class="alert" role="alert">ส่งไม่สำเร็จ: ${h(errMsg(e))}<br>คำตอบยังเก็บไว้ในเครื่อง กดส่งอีกครั้งได้</div>`;
+    });
+}
+
+// ---------------- ผลสอบ ----------------
+function result(r, s) {
+  setScreen('result');
+  const bars = (list) => list.map((t) => {
+    const p = pctOf(t.ok, t.total);
+    return `<div class="hist"><span>${h(t.name)}</span><progress class="${p >= 50 ? '' : 'fail'}" max="100" value="${p}"></progress><b>${t.ok}/${t.total}</b></div>`;
+  }).join('');
+  const cats = Object.keys(r.cats).map((k) => ({ name: k, ok: r.cats[k][0], total: r.cats[k][1] }));
+  const parts = cats.length > 1 ? cats : r.topics.map((t) => ({ name: t.topic, ok: t.ok, total: t.total }));
+  const byId = {};
+  (r.items || []).forEach((x) => { byId[x.id] = x; });
+  const rows = s.qs.map((q, i) => ({ q, i, x: byId[q.id] })).filter((o) => o.x);
+  const ng = rows.filter((o) => !o.x.ok).length;
+  const review = ({ q, i, x }) => {
+    const c = s.ans[i], right = q.m.indexOf(x.a);
+    const q2 = Object.assign({}, q);
+    return `<div class="rv ${x.ok ? 'ok' : 'ng'}" id="rv${i}">
+      <div class="rvh"><b>ข้อ ${i + 1}</b><span class="tag">${h(q.tp)}</span><span class="st">${x.ok ? '✓ ตอบถูก' : c >= 0 ? '✗ ตอบผิด' : '– ไม่ได้ตอบ'}</span></div>
+      <div class="qt">${h(q.tx)}</div>
+      ${q.m.map((orig, k) => `<div class="ch${k === right ? ' right' : ''}${k === c && k !== right ? ' wrong' : ''}"><b>${L[k]}.</b> ${h(q.ch[orig])}${k === right ? ' <span class="mk">✓ เฉลย</span>' : ''}${k === c && k !== right ? ' <span class="mk">✗ ที่ตอบ</span>' : ''}</div>`).join('')}
+      ${x.ex ? `<div class="why"><b>คำอธิบาย</b>${h(remap(x.ex, q2))}</div>` : ''}
+      ${x.ct ? `<div class="learn"><b>📖 เนื้อหาที่ควรรู้</b>${h(remap(x.ct, q2))}</div>` : ''}
+      ${s.kind !== 'set' ? `<p class="from">จากชุด: ${h(q.set)}</p>` : ''}</div>`;
+  };
+  app.innerHTML = `<section class="card score"><p class="muted">${h(s.title)} · ${MODE_LABEL[s.mode]}</p>
       <p class="big">${r.score}<small>/${r.total}</small></p>
       <p><progress class="${r.pct >= 50 ? '' : 'fail'}" max="100" value="${r.pct}"></progress> <b>${r.pct}%</b> · ${h(r.level)}</p>
-      <p class="muted">บันทึกคำตอบเรียบร้อยแล้ว ✓</p><p><button class="btn" id="back">กลับหน้าความก้าวหน้าของฉัน</button></p></div>${topics}${items}`;
-  $('#back').addEventListener('click', () => home(code, who));
-  const filter = (f) => {
-    app.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.f === f)));
-    $('#rvs').classList.toggle('only-ng', f === 'ng');
-  };
-  app.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => filter(b.dataset.f)));
-  // กดข้อที่ตอบถูกจากตาราง → สลับเป็น "ดูทุกข้อ" ก่อน ไม่อย่างนั้นการ์ดถูกซ่อนอยู่
-  app.querySelectorAll('.res a.ok').forEach((a) => a.addEventListener('click', () => filter('all')));
+      <p class="muted">⏱ ใช้เวลา ${durStr(r.secs)} · บันทึกผลแล้ว ✓${s.mode === 'exam' ? '' : ' (บันทึกแยก ไม่นับในกราฟคะแนน)'}</p>
+      ${s.mode === 'review' ? `<p>${r.wrongLeft ? `ยังเหลือข้อที่ผิดค้าง ${r.wrongLeft} ข้อ` : '🎉 ทบทวนครบทุกข้อแล้ว'}</p>` : ''}
+      <div class="btns"><button class="btn" id="gohome">กลับหน้าหลัก</button>${r.wrongLeft ? `<button class="btn ghost" id="gorev">🔁 ทบทวนข้อที่ผิด (${r.wrongLeft})</button>` : ''}</div></section>
+    ${parts.length > 1 ? `<section class="card"><h2>${cats.length > 1 ? 'ผลรายหมวด' : 'ผลรายเรื่อง'}</h2>${bars(parts)}</section>` : ''}
+    ${rows.length ? `<section class="card"><h2>เฉลยและคำอธิบาย</h2>
+      <div class="res">${rows.map(({ i, x }) => `<a href="#rv${i}" class="${x.ok ? 'ok' : 'ng'}" data-ok="${x.ok}">${i + 1}</a>`).join('')}</div>
+      <div class="seg" role="group" aria-label="เลือกข้อที่จะแสดง"><button type="button" data-f="ng" aria-pressed="${ng ? 'true' : 'false'}">เฉพาะข้อที่ผิด (${ng})</button><button type="button" data-f="all" aria-pressed="${ng ? 'false' : 'true'}">ดูทุกข้อ (${rows.length})</button></div>
+      <div id="rvs" class="${ng ? 'only-ng' : ''}">${rows.map(review).join('')}</div></section>` : ''}`;
+  $('#gohome').addEventListener('click', () => { app.innerHTML = loading(); (S.ready || Promise.resolve()).then(home); });
+  if ($('#gorev')) $('#gorev').addEventListener('click', () => begin({ kind: 'review' }, 'review'));
+  const filter = (f) => { $$('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.f === f))); $('#rvs').classList.toggle('only-ng', f === 'ng'); };
+  $$('.seg button').forEach((b) => b.addEventListener('click', () => filter(b.dataset.f)));
+  $$('.res a').forEach((a) => a.addEventListener('click', () => { if (a.dataset.ok === 'true') filter('all'); }));
 }
 
-function review(q) {
-  const opts = (q.choices || []).map((c, i) => c ? `<div class="ch${i === q.answer ? ' right' : ''}${i === q.chosen && i !== q.answer ? ' wrong' : ''}"><b>${L[i]}.</b> ${h(c)}${i === q.answer ? ' <span class="mk">✓ เฉลย</span>' : ''}${i === q.chosen && i !== q.answer ? ' <span class="mk">✗ ที่ตอบ</span>' : ''}</div>` : '').join('');
-  return `<div class="rv ${q.ok ? 'ok' : 'ng'}" id="rv${q.no}">
-      <div class="rvh"><b>ข้อ ${q.no}</b><span class="tag">${h(q.topic)}</span><span class="st">${q.ok ? '✓ ตอบถูก' : q.chosen >= 0 ? '✗ ตอบผิด' : '– ไม่ได้ตอบ'}</span></div>
-      ${q.text ? `<div class="qt">${h(q.text)}</div>` : ''}
-      ${opts || `<p>ตอบ <b>${q.chosen >= 0 ? L[q.chosen] : '–'}</b> · เฉลย <b>${L[q.answer]}</b></p>`}
-      ${q.explain ? `<div class="why"><b>คำอธิบาย</b>${h(q.explain)}</div>` : ''}
-      ${q.content ? `<div class="learn"><b>📖 เนื้อหาที่ควรรู้</b>${h(q.content)}</div>` : ''}
-    </div>`;
+// ---------------- ผู้ดูแล ----------------
+function adminLogin(err) {
+  let saved = '';
+  try { saved = sessionStorage.getItem('acode') || ''; } catch (e) { /* */ }
+  if (saved && !err) { adminLoad(saved); return; }
+  setScreen('admin');
+  app.innerHTML = `<form class="card narrow" id="f" autocomplete="off">
+      <button type="button" class="back" id="back">‹ กลับ</button>
+      <h1>สำหรับผู้ดูแล</h1>${err ? `<div class="alert" role="alert">${h(err)}</div>` : ''}
+      <label>รหัสผู้ดูแล<input type="password" name="code" class="code" required maxlength="20" style="font:600 22px ui-monospace,monospace;padding:10px;border:1.5px solid var(--line);border-radius:10px;text-align:center;background:var(--card);color:var(--ink)"></label>
+      <button class="btn block">เข้าหน้าผู้ดูแล</button></form>`;
+  $('#back').addEventListener('click', () => (S.b && S.b.me ? home() : login()));
+  $('#f').addEventListener('submit', (e) => { e.preventDefault(); adminLoad(String(new FormData(e.target).get('code')).trim().toUpperCase()); });
+}
+function adminLoad(ac) {
+  setScreen('admin');
+  app.innerHTML = loading();
+  call('adminData', ac).then((d) => { try { sessionStorage.setItem('acode', ac); } catch (e) { /* */ } adminPage(ac, d); })
+    .catch((e) => { try { sessionStorage.removeItem('acode'); } catch (x) { /* */ } adminLogin(errMsg(e)); });
+}
+function adminPage(ac, d) {
+  setScreen('admin');
+  const pending = d.users.filter((u) => !u.ok);
+  const active = d.users.filter((u) => u.ok).sort((a, b) => b.last - a.last);
+  const catBars = (u) => d.cats.map((c) => {
+    const t = u.cats[c];
+    if (!t) return `<div class="hist"><span>${h(c)}</span><span class="muted small">ยังไม่สอบ</span><b></b></div>`;
+    const p = pctOf(t[0], t[1]);
+    return `<div class="hist"><span>${h(c)}</span><progress class="${p >= 50 ? '' : 'fail'}" max="100" value="${p}"></progress><b>${p}%</b></div>`;
+  }).join('');
+  app.innerHTML = `<button class="back" id="back">‹ ออกจากหน้าผู้ดูแล</button>
+    <section class="card hello"><div><h1>ผู้ดูแล</h1><p class="muted">ผู้ใช้ ${active.length} คน · รออนุมัติ ${pending.length} คน · ข้อสอบ ${d.nsets} ชุด</p></div>
+      <button class="btn ghost sm" id="reload">↻ รีเฟรช</button></section>
+    ${pending.length ? `<h2 class="sec">รออนุมัติ</h2><section class="card list">${pending.map((u) => `<div class="urow"><div><b>${h(u.name)}</b>
+        <span class="muted small">${h([u.studentNo, u.room].filter(Boolean).join(' · '))}${u.studentNo || u.room ? ' · ' : ''}สมัคร ${fmtDate(u.created)} · รหัส <b class="mono">${h(u.code)}</b></span></div>
+        <button class="btn sm" data-ap="${h(u.code)}">อนุมัติ</button></div>`).join('')}</section>` : ''}
+    <h2 class="sec">ผู้ใช้ทั้งหมด</h2>
+    <section class="card list">${active.length ? `<div class="uhead"><span>ชื่อ (กดดูรายหมวด)</span><span style="text-align:right">ชุดที่สอบ</span><span style="text-align:right">เฉลี่ย</span><span style="text-align:right">ฝึก (ข้อ)</span><span style="text-align:right">ผิดค้าง</span><span style="text-align:right">ล่าสุด</span></div>
+      ${active.map((u) => `<details class="user"><summary><span class="nm"><b>${h(u.name)}</b><small>รหัส ${h(u.code)}${u.room ? ' · ' + h(u.room) : ''}</small></span>
+          <span data-l="ชุดที่สอบ">${u.sets}/${d.nsets}</span><span data-l="เฉลี่ย">${u.avg != null ? u.avg + '%' : '–'}</span>
+          <span data-l="ฝึก (ข้อ)">${u.practiced.toLocaleString()}</span><span data-l="ผิดค้าง">${u.wrong}</span><span data-l="ล่าสุด">${fmtDate(u.last)}</span></summary>
+        <div class="udet"><p class="muted small" style="padding:8px 0">สอบทั้งหมด ${u.exams} ครั้ง · ร้อยละตอบถูกรายหมวด (โหมดสอบ)</p>${catBars(u)}
+          <p style="margin-top:10px"><button class="btn ghost sm" data-ban="${h(u.code)}">ระงับการใช้งาน</button></p></div></details>`).join('')}`
+      : '<p class="muted" style="padding:16px">ยังไม่มีผู้ใช้ที่อนุมัติแล้ว</p>'}</section>`;
+  $('#back').addEventListener('click', () => { try { sessionStorage.removeItem('acode'); } catch (e) { /* */ } if (S.b && S.b.me) home(); else login(); });
+  $('#reload').addEventListener('click', () => adminLoad(ac));
+  const act = (code, ok, b) => { b.disabled = true; call('adminApprove', ac, code, ok).then((x) => adminPage(ac, x)).catch((e) => { b.disabled = false; toast(errMsg(e)); }); };
+  $$('[data-ap]').forEach((b) => b.addEventListener('click', () => act(b.dataset.ap, true, b)));
+  $$('[data-ban]').forEach((b) => b.addEventListener('click', () => { if (confirm('ระงับผู้ใช้นี้? (อนุมัติใหม่ได้ภายหลัง)')) act(b.dataset.ban, false, b); }));
 }
 </script>
 </body>
