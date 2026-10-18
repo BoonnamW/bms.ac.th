@@ -22,8 +22,7 @@ const CACHE_SEC = 21600; // 6 ชม. (สูงสุดของ CacheService)
 function doGet() {
   return HtmlService.createTemplateFromFile('Index').evaluate()
     .setTitle(settings_().title)
-    .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .addMetaTag('robots', 'noindex, nofollow');
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
 }
 
 /** เปิดเว็บ: ไม่มีรหัส → ชื่อเว็บอย่างเดียว · มีรหัส → ข้อมูลผู้ใช้ รายการชุดข้อสอบ และประวัติของตัวเอง */
