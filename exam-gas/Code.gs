@@ -87,6 +87,29 @@ function submit(code, id, p) {
   return out;
 }
 
+/** ความก้าวหน้าของผู้สอบ: ประวัติคะแนนทุกชุด ค้นจากชื่อ (และเลขที่ ถ้ากรอก) */
+function myProgress(code, p) {
+  const s = settings_();
+  if (s.code && normCode_(code) !== s.code) throw new Error('รหัสเข้าสอบไม่ถูกต้อง');
+  const norm = function (v) { return String(v || '').replace(/^'/, '').trim().replace(/\s+/g, ' ').toLowerCase(); };
+  const name = norm(p && p.name);
+  if (!name) throw new Error('กรุณากรอกชื่อ-นามสกุล');
+  const no = norm(p.studentNo);
+  const ss = SpreadsheetApp.getActive();
+  return examSheets_().map(function (sh) {
+    const a = ss.getSheetByName(ansName_(examTitle_(sh)));
+    const att = [];
+    if (a && a.getLastRow() > 1) {
+      a.getRange(2, 1, a.getLastRow() - 1, 7).getValues().forEach(function (r) {
+        if (norm(r[1]) !== name) return;
+        if (no && norm(r[2]) && norm(r[2]) !== no) return; // ชื่อซ้ำกันแต่คนละเลขที่
+        att.push({ t: r[0] instanceof Date ? r[0].getTime() : 0, score: Number(r[4]) || 0, total: Number(r[5]) || 0, pct: Number(r[6]) || 0 });
+      });
+    }
+    return { id: sh.getName(), att: att };
+  }).filter(function (e) { return e.att.length; });
+}
+
 // ---------------- เมนูในชีต ----------------
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('ห้องสอบ')

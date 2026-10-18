@@ -67,6 +67,23 @@ progress.fail::-webkit-progress-value{background:var(--ng)}progress.fail::-moz-p
 .opt input{margin-top:6px;width:18px;height:18px;accent-color:var(--primary);flex:none}
 .opt:has(input:checked){border-color:var(--primary);background:color-mix(in srgb,var(--primary) 9%,var(--card))}
 .qform .submitbar{position:sticky;bottom:0;padding:12px 18px;margin:0}
+.hello{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.btn.sm{padding:7px 14px;font-size:14.5px;white-space:nowrap}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.tile{background:var(--soft);border-radius:12px;padding:12px 14px;display:grid}.tile b{font:600 28px/1.2 'Prompt',sans-serif;color:var(--primary)}.tile b small{font-size:16px;color:var(--muted)}.tile span{font-size:13.5px;color:var(--muted)}
+.overall{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-bottom:14px}.overall progress{width:100%}
+.trend{display:flex;gap:6px;align-items:flex-end;height:130px;padding:6px 0;border-bottom:1px solid var(--line)}
+.bar{flex:1;max-width:44px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;position:relative}
+.bar span{width:100%;background:var(--ok);border-radius:6px 6px 0 0;display:block}.bar.low span{background:var(--ng)}
+.bar em{font-style:normal;font-size:12px;color:var(--muted);position:absolute;top:-2px}
+.small{font-size:13px;margin-top:4px}
+.grp{padding:0}.grp summary{cursor:pointer;padding:14px 20px;display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:center;list-style:none}
+.grp summary::-webkit-details-marker{display:none}.grp summary::before{content:'▸';position:absolute;margin-left:-14px;color:var(--muted)}.grp[open] summary::before{content:'▾'}
+.gname{font:600 16.5px 'Prompt',sans-serif;color:var(--primary)}.gmeta{color:var(--muted);font-size:14px}.grp summary progress{grid-column:1/-1;width:100%;height:8px}
+.set{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:10px 20px;border-top:1px solid var(--line);border-left:4px solid transparent}
+.set.pass{border-left-color:var(--ok)}.set.low{border-left-color:var(--ng)}
+.sname{display:grid}.sname .muted{font-size:13.5px}.sbest{display:grid;text-align:right;min-width:64px}.sbest b{font:600 18px 'Prompt',sans-serif}.set.pass .sbest b{color:var(--ok)}.set.low .sbest b{color:var(--ng)}.sbest .muted{font-size:12px}
+@media (max-width:560px){.set{grid-template-columns:1fr auto}.set .btn{grid-column:1/-1}}
 .foot{color:var(--muted);font-size:13px;text-align:center;padding:20px}
 @media (max-width:820px){.take{grid-template-columns:1fr}.sheet-card{position:static;max-height:none}.submitbar{bottom:0;padding:12px 16px;margin:0 -20px -20px;border-radius:0 0 14px 14px}}
 </style>
@@ -98,25 +115,76 @@ function enter(error) {
   const d = store.get('who');
   app.innerHTML = `<form class="card enter" id="f" autocomplete="off">
       <h1>${h(info.title)}</h1>
+      <p class="muted">${info.exams.length} ชุดข้อสอบ · กรอกชื่อเดิมทุกครั้งเพื่อดูความก้าวหน้าของตัวเอง</p>
       ${error ? `<div class="alert" role="alert">${h(error)}</div>` : ''}
-      ${info.exams.length > 1 ? `<label>เลือกชุดข้อสอบ<select name="exam" required>${info.exams.map((x) => `<option value="${h(x.id)}" ${d.exam === x.id ? 'selected' : ''}>${h(x.title)} (${x.nq} ข้อ)</option>`).join('')}</select></label>` : ''}
-      ${info.needCode ? '<label>รหัสเข้าสอบ<input type="text" name="code" class="code" required maxlength="40" autocapitalize="characters" spellcheck="false"></label>' : ''}
+      ${info.needCode ? `<label>รหัสเข้าสอบ<input type="text" name="code" class="code" required maxlength="40" autocapitalize="characters" spellcheck="false" value="${h(d.code)}"></label>` : ''}
       <label>ชื่อ-นามสกุล *<input type="text" name="name" required maxlength="100" value="${h(d.name)}"></label>
       <div class="row2"><label>เลขที่/รหัส<input type="text" name="studentNo" maxlength="20" value="${h(d.studentNo)}"></label>
       <label>ห้อง/ชั้น<input type="text" name="room" maxlength="20" value="${h(d.room)}"></label></div>
-      <button class="btn">เริ่มทำข้อสอบ</button></form>`;
+      <button class="btn">เข้าสู่ระบบ</button></form>`;
   $('#f').addEventListener('submit', (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const who = { name: String(fd.get('name')).trim(), studentNo: String(fd.get('studentNo')).trim(), room: String(fd.get('room')).trim() };
     if (!who.name) return;
-    store.set('who', who);
     const code = String(fd.get('code') || '').trim();
-    const exam = String(fd.get('exam') || (info.exams[0] && info.exams[0].id) || '');
-    store.set('who', Object.assign({ exam: exam }, who));
-    const btn = e.target.querySelector('.btn'); btn.disabled = true; btn.textContent = 'กำลังเปิดข้อสอบ…';
-    call('getExam', code, exam).then((ex) => take(code, who, ex)).catch((x) => enter(errMsg(x)));
+    store.set('who', Object.assign({ code: code }, who));
+    const btn = e.target.querySelector('.btn'); btn.disabled = true; btn.textContent = 'กำลังโหลด…';
+    home(code, who);
   });
+}
+
+// กลุ่มของชุดข้อสอบ: "จิตวิทยาและการแนะแนว 2" → "จิตวิทยาและการแนะแนว" · ชุดพิเศษรวมกลุ่มเดียว
+const groupOf = (t) => (/^ชุดพิเศษ/.test(t) ? 'ชุดพิเศษ' : t.replace(/\s*\d+$/, '').trim() || t);
+const fmtDate = (t) => (t ? new Date(t).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : '');
+
+function home(code, who) {
+  app.innerHTML = '<p class="muted center">กำลังโหลดความก้าวหน้า…</p>';
+  call('myProgress', code, who).then((prog) => {
+    const byId = {};
+    prog.forEach((p) => { byId[p.id] = p.att.sort((a, b) => a.t - b.t); });
+    const sets = info.exams.map((x) => {
+      const att = byId[x.id] || [];
+      const best = att.length ? Math.max(...att.map((a) => a.pct)) : null;
+      return Object.assign({ att, best, last: att[att.length - 1] }, x);
+    });
+    const done = sets.filter((x) => x.att.length);
+    const allAtt = done.flatMap((x) => x.att.map((a) => Object.assign({ title: x.title }, a))).sort((a, b) => a.t - b.t);
+    const avg = done.length ? Math.round(done.reduce((s, x) => s + x.best, 0) / done.length) : 0;
+    const qDone = done.reduce((s, x) => s + x.nq, 0), qAll = sets.reduce((s, x) => s + x.nq, 0);
+    const pctDone = Math.round(done.length / sets.length * 100);
+    const recent = allAtt.slice(-12);
+    const groups = {};
+    sets.forEach((x) => { (groups[groupOf(x.title)] = groups[groupOf(x.title)] || []).push(x); });
+    const row = (x) => `<div class="set ${x.att.length ? (x.best >= 50 ? 'pass' : 'low') : ''}">
+        <div class="sname"><b>${h(x.title.replace(/^ชุดพิเศษ\s*/, ''))}</b><span class="muted">${x.nq} ข้อ${x.att.length ? ` · ทำ ${x.att.length} ครั้ง · ล่าสุด ${fmtDate(x.last.t)} (${x.last.pct}%)` : ''}</span></div>
+        <div class="sbest">${x.att.length ? `<b>${x.best}%</b><span class="muted">ดีที่สุด</span>` : '<span class="muted">ยังไม่ทำ</span>'}</div>
+        <button class="btn sm ${x.att.length ? 'ghost' : ''}" data-id="${h(x.id)}">${x.att.length ? 'ทำอีกครั้ง' : 'เริ่มทำ'}</button></div>`;
+    const grp = Object.keys(groups).map((g) => {
+      const list = groups[g], d = list.filter((x) => x.att.length);
+      const gavg = d.length ? Math.round(d.reduce((s, x) => s + x.best, 0) / d.length) : null;
+      return `<details class="card grp" ${d.length && d.length < list.length ? 'open' : ''}><summary>
+          <span class="gname">${h(g)}</span><span class="gmeta">${d.length}/${list.length} ชุด${gavg != null ? ` · เฉลี่ย ${gavg}%` : ''}</span>
+          <progress max="${list.length}" value="${d.length}"></progress></summary>${list.map(row).join('')}</details>`;
+    }).join('');
+    app.innerHTML = `<div class="card">
+        <div class="hello"><div><p class="muted">สวัสดี</p><h1>${h(who.name)}</h1></div><button class="btn ghost sm" id="out">เปลี่ยนผู้ใช้</button></div>
+        <div class="tiles">
+          <div class="tile"><b>${done.length}<small>/${sets.length}</small></b><span>ชุดที่ทำแล้ว</span></div>
+          <div class="tile"><b>${done.length ? avg + '%' : '–'}</b><span>คะแนนเฉลี่ย (ครั้งที่ดีที่สุด)</span></div>
+          <div class="tile"><b>${allAtt.length}</b><span>ครั้งที่ทำทั้งหมด</span></div>
+          <div class="tile"><b>${qDone.toLocaleString()}</b><span>ข้อที่ฝึกแล้ว จาก ${qAll.toLocaleString()}</span></div>
+        </div>
+        <p class="overall"><span>ความคืบหน้ารวม</span><progress max="100" value="${pctDone}"></progress><b>${pctDone}%</b></p>
+        ${recent.length ? `<h2>ผลล่าสุด ${recent.length} ครั้ง</h2><div class="trend" role="img" aria-label="กราฟคะแนนล่าสุด">${recent.map((a) => `<div class="bar ${a.pct >= 50 ? '' : 'low'}" title="${h(a.title)} · ${fmtDate(a.t)} · ${a.pct}%"><span style="height:${Math.max(4, a.pct)}%"></span><em>${a.pct}</em></div>`).join('')}</div><p class="muted small">แท่งสีเขียว = ผ่าน 50% ขึ้นไป · ชี้ที่แท่งเพื่อดูชื่อชุด</p>` : '<p class="muted">ยังไม่มีผลสอบ — เลือกชุดด้านล่างเพื่อเริ่มทำ</p>'}
+      </div>${grp}`;
+    $('#out').addEventListener('click', () => enter());
+    app.querySelectorAll('.set .btn').forEach((b) => b.addEventListener('click', () => {
+      b.disabled = true; b.textContent = 'กำลังเปิด…';
+      call('getExam', code, b.dataset.id).then((ex) => take(code, who, ex)).catch((x) => { alert(errMsg(x)); b.disabled = false; b.textContent = 'เริ่มทำ'; });
+    }));
+    window.scrollTo(0, 0);
+  }).catch((e) => enter(errMsg(e)));
 }
 
 function take(code, who, ex) {
@@ -170,7 +238,7 @@ function take(code, who, ex) {
     sending = true;
     const btn = form.querySelector('.submitbar .btn'); btn.disabled = true; btn.textContent = 'กำลังส่ง…';
     call('submit', code, ex.id, Object.assign({ answers: a }, who)).then((r) => {
-      store.del(dk); window.onbeforeunload = null; result(who, r); window.scrollTo(0, 0);
+      store.del(dk); window.onbeforeunload = null; result(who, r, code); window.scrollTo(0, 0);
     }).catch((x) => {
       sending = false; btn.disabled = false; btn.textContent = 'ส่งคำตอบ';
       $('#err').innerHTML = `<div class="alert" role="alert">ส่งไม่สำเร็จ: ${h(errMsg(x))} — คำตอบยังอยู่ กดส่งอีกครั้งได้</div>`;
@@ -178,7 +246,7 @@ function take(code, who, ex) {
   });
 }
 
-function result(who, r) {
+function result(who, r, code) {
   const topics = r.topics.length > 1 ? `<div class="card"><h2>ผลรายเรื่อง</h2>${r.topics.map((t) => {
     const p = Math.round(t.ok / t.total * 100);
     return `<div class="hist"><span>${h(t.topic)}</span><progress class="${p >= 50 ? '' : 'fail'}" max="100" value="${p}"></progress><b>${t.ok}/${t.total}</b></div>`;
@@ -192,7 +260,8 @@ function result(who, r) {
   app.innerHTML = `<div class="card score"><p class="muted">${h(r.title || info.title)}</p><h1>${h(who.name)}</h1>
       <p class="big">${r.score}<small>/${r.total}</small></p>
       <p><progress class="${r.pct >= 50 ? '' : 'fail'}" max="100" value="${r.pct}"></progress> <b>${r.pct}%</b> · ${h(r.level)}</p>
-      <p class="muted">บันทึกคำตอบเรียบร้อยแล้ว ✓</p></div>${topics}${items}`;
+      <p class="muted">บันทึกคำตอบเรียบร้อยแล้ว ✓</p><p><button class="btn" id="back">กลับหน้าความก้าวหน้าของฉัน</button></p></div>${topics}${items}`;
+  $('#back').addEventListener('click', () => home(code, who));
   const filter = (f) => {
     app.querySelectorAll('.seg button').forEach((x) => x.setAttribute('aria-pressed', String(x.dataset.f === f)));
     $('#rvs').classList.toggle('only-ng', f === 'ng');
