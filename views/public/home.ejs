@@ -10,7 +10,7 @@
 <section class="hero" id="hero" aria-roledescription="carousel" aria-label="ภาพประชาสัมพันธ์">
   <% slides.forEach(function (s, i) { %>
   <div class="slide <%= i === 0 ? 'on' : '' %>" role="group" aria-roledescription="slide" aria-label="<%= i + 1 %> จาก <%= slides.length %>">
-    <img class="slide-img" src="<%= s.image ? '/uploads/' + s.image : '/img/hero.jpg' %>" alt="" <%= i ? 'loading=lazy' : 'fetchpriority=high' %>>
+    <img class="slide-img" src="<%= s.image ? '/uploads/' + s.image : '/img/hero.jpg' %>" alt="" data-fallback="/img/hero.jpg" <%= i ? 'loading=lazy' : 'fetchpriority=high' %>>
     <div class="slide-shade"></div>
     <div class="wrap slide-in">
       <span class="eyebrow"><%= S.school_name_en %></span>

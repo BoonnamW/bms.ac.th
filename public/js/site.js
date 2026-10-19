@@ -56,6 +56,17 @@
     sync();
   });
 
+  // ---------- รูปที่โหลดไม่ได้ (เช่น รูปที่ยังอยู่บนเว็บเดิม): ใช้รูปสำรอง หรือเอารูปที่เสียออก ----------
+  part('images', () => {
+    const fix = (img) => {
+      const alt = img.dataset.fallback;
+      if (alt && img.getAttribute('src') !== alt) { img.src = alt; return; }
+      if (!img.closest('.prose')) img.remove(); // รูปในเนื้อหาข่าว/หน้าเว็บคงไว้ ให้ผู้ดูแลเห็นว่ารูปหาย
+    };
+    document.addEventListener('error', (e) => { if (e.target.tagName === 'IMG') fix(e.target); }, true);
+    $$('img').forEach((img) => { if (img.complete && img.getAttribute('src') && !img.naturalWidth) fix(img); });
+  });
+
   // ---------- ประกาศสำคัญ (ปิดแล้วไม่แสดงซ้ำจนกว่าจะมีประกาศใหม่) ----------
   part('announce', () => {
     const a = $('#announce');

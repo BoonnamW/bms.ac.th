@@ -8,7 +8,7 @@
   <div class="wrap foot-grid">
     <div class="f-brand">
       <a class="f-logo" href="/">
-        <img src="<%= S.logo ? '/uploads/' + S.logo : '/img/icon-192.png' %>" alt="" width="56" height="56" loading="lazy">
+        <img src="<%= S.logo ? '/uploads/' + S.logo : '/img/icon-192.png' %>" alt="" width="56" height="56" loading="lazy" data-fallback="/img/icon-192.png">
         <span><strong><%= S.school_name %></strong><small><%= S.school_name_en %></small></span>
       </a>
       <% if (S.agency) { %><p class="muted"><%= S.agency %></p><% } %>

@@ -35,6 +35,7 @@ if (exportTo) {
 const { db } = await import('../lib/db.js');
 const { cleanHtml } = await import('../lib/helpers.js');
 const { OIT_GROUP, OIT_SORT, oitSort } = await import('../lib/oit.js');
+const { SCHOOL_COLORS } = await import('../lib/seed.js');
 
 if (args.includes('--once') && db.prepare("SELECT 1 FROM settings WHERE key='wp_imported'").get()) {
   console.log('นำเข้าข้อมูลจาก WordPress ไปแล้ว — ข้าม');
@@ -128,7 +129,7 @@ try {
     school_name: 'โรงเรียนเบญจมานุสรณ์',
     school_name_en: 'Benjamanusorn School, Chanthaburi',
     tagline: 'บัณฑิตย่อมฝึกตน',
-    primary: '#1e6b4b', accent: '#c73670', // สีประจำโรงเรียน: เขียว–ชมพู
+    ...SCHOOL_COLORS, // โทนเขียว–ชมพู
     about_title: 'บัณฑิตย่อมฝึกตน — อตฺตานํ ทมยนฺติ ปณฺฑิตา',
     about_text: 'โรงเรียนเบญจมานุสรณ์ จังหวัดจันทบุรี เป็นโรงเรียนสหศึกษาขนาดใหญ่พิเศษ เปิดสอนระดับมัธยมศึกษาตอนต้นและตอนปลาย ' +
       'ก่อตั้งเมื่อ พ.ศ. 2535 มุ่งพัฒนาคุณภาพของผู้เรียนสู่มาตรฐานสากลบนพื้นฐานความเป็นไทย',

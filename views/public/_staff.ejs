@@ -1,30 +1,35 @@
 <%
+  // part: top = แถบเลือกหน้า (จอเล็ก) + ปุ่มของผู้ดูแล, list = รายชื่อ/การ์ด
   // รูปเก็บเป็นชื่อไฟล์ใต้ uploads/ หรือเป็นลิงก์รูปบนเว็บเดิม
   var photo = function (v) { return /^https:\/\//.test(v) ? v : '/uploads/' + v; };
   var back = '/p/' + page.slug;
+  var headLabel = page.head_label || 'หัวหน้า';
 %>
-<% if (siblings.length > 1) { %>
-<nav class="tabs dept-chips" aria-label="<%= page.menu_group %>">
-  <% siblings.forEach(function (s) { %><a href="/p/<%= s.slug %>" class="<%= s.slug === page.slug ? 'on' : '' %>" <%= s.slug === page.slug ? 'aria-current=page' : '' %>><%= s.title %></a><% }) %>
-</nav>
-<% } %>
-<% if (editor) { %>
-<div class="staff-tools">
-  <a class="btn btn-primary btn-sm" href="/admin/staff/new?<%= staff ? 'page_id=' + page.id + '&' : '' %>back=<%= encodeURIComponent(back) %>"><%- icon('plus', 16) %> เพิ่มบุคลากร<%= staff ? 'ในกลุ่มนี้' : '' %></a>
-  <a class="btn btn-ghost btn-sm" href="/admin/staff">จัดการรายชื่อทั้งหมด</a>
-  <span class="muted small"><%- icon('lock', 14) %> ปุ่มนี้แสดงเฉพาะผู้ดูแลที่เข้าสู่ระบบอยู่</span>
-</div>
-<% } %>
+<% if (part === 'top') { %>
+  <% if (siblings.length > 1) { %>
+  <nav class="tabs dept-chips" aria-label="<%= page.menu_group %>">
+    <% siblings.forEach(function (s) { %><a href="/p/<%= s.slug %>" class="<%= s.slug === page.slug ? 'on' : '' %>" <%= s.slug === page.slug ? 'aria-current=page' : '' %>><%= s.title %></a><% }) %>
+  </nav>
+  <% } %>
+  <% if (editor) { %>
+  <div class="staff-tools">
+    <a class="btn btn-primary btn-sm" href="/admin/staff/new?<%= staff ? 'page_id=' + page.id + '&' : '' %>back=<%= encodeURIComponent(back) %>"><%- icon('plus', 16) %> เพิ่มรายชื่อ<%= staff ? 'ในหน้านี้' : '' %></a>
+    <a class="btn btn-ghost btn-sm" href="/admin/pages/<%= page.id %>?back=<%= encodeURIComponent(back) %>"><%- icon('edit', 15) %> ตั้งค่าหน้านี้</a>
+    <a class="btn btn-ghost btn-sm" href="/admin/staff">รายชื่อทั้งหมด</a>
+    <span class="muted small"><%- icon('lock', 14) %> แสดงเฉพาะผู้ดูแลที่เข้าสู่ระบบอยู่</span>
+  </div>
+  <% } %>
+<% } else { %>
 
 <% if (depts) { var total = depts.reduce(function (s, d) { return s + d.n; }, 0); %>
-  <% if (total) { %><p class="staff-sum"><%- icon('users', 18) %> บุคลากรทั้งหมด <b><%= total.toLocaleString('th-TH') %></b> คน ใน <b><%= depts.length %></b> กลุ่มสาระ / ฝ่าย</p><% } %>
+  <% if (total) { %><p class="staff-sum"><%- icon('users', 18) %> <%= page.title %>ทั้งหมด <b><%= total.toLocaleString('th-TH') %></b> คน ใน <b><%= depts.length %></b> กลุ่ม</p><% } %>
   <ul class="dept-grid">
     <% depts.forEach(function (d) { %>
     <li><a class="dept reveal" href="/p/<%= d.slug %>">
-      <span class="dept-img"><% if (d.lead && d.lead.image) { %><img src="<%= photo(d.lead.image) %>" alt="" loading="lazy"><% } else { %><%- icon('users', 28) %><% } %></span>
+      <span class="dept-img"><% if (d.lead && d.lead.image) { %><img src="<%= photo(d.lead.image) %>" alt="" loading="lazy"><% } %><%- icon('users', 28) %></span>
       <span class="dept-b">
         <b><%= d.title %></b>
-        <% if (d.lead && d.lead.is_head) { %><small>หัวหน้ากลุ่ม: <%= d.lead.name %></small><% } %>
+        <% if (d.lead && d.lead.is_head) { %><small><%= d.head_label || 'หัวหน้า' %>: <%= d.lead.name %></small><% } %>
         <span class="dept-n"><%- icon('users', 14) %> <%= d.n ? d.n + ' คน' : 'ยังไม่มีรายชื่อ' %></span>
       </span>
       <%- icon('right', 18) %>
@@ -35,9 +40,9 @@
 
 <% if (staff) { %>
   <% var card = function (s, head) { %>
-    <span class="person-img"><% if (s.image) { %><img src="<%= photo(s.image) %>" alt="" loading="lazy"><% } else { %><%- icon('user', head ? 72 : 56) %><% } %></span>
+    <span class="person-img"><% if (s.image) { %><img src="<%= photo(s.image) %>" alt="" loading="lazy"><% } %><%- icon('user', head ? 72 : 56) %></span>
     <span class="person-t">
-      <% if (head) { %><span class="badge-head"><%- icon('award', 14) %> หัวหน้ากลุ่มสาระ</span><% } %>
+      <% if (head) { %><span class="badge-head"><%- icon('award', 14) %> <%= headLabel %></span><% } %>
       <b><%= s.name %></b>
       <% if (s.duty) { %><span class="duty"><%= s.duty %></span><% } %>
       <% if (s.position) { %><small><%= s.position %></small><% } %>
@@ -46,11 +51,12 @@
   <% }; %>
   <% if (staff.head) { %><div class="person person-head" id="staff-<%= staff.head.id %>"><% card(staff.head, true) %></div><% } %>
   <% if (staff.members.length) { %>
-  <ul class="staff-grid" aria-label="บุคลากรในกลุ่ม">
+  <ul class="staff-grid" aria-label="รายชื่อ">
     <% staff.members.forEach(function (m) { %><li class="person reveal" id="staff-<%= m.id %>"><% card(m, false) %></li><% }) %>
   </ul>
   <% } %>
   <% if (!staff.head && !staff.members.length) { %>
-  <div class="panel ev-empty"><%- icon('users', 40) %><p>ยังไม่มีรายชื่อบุคลากรในกลุ่มนี้</p></div>
+  <div class="panel ev-empty"><%- icon('users', 40) %><p>ยังไม่มีรายชื่อในหน้านี้</p><% if (editor) { %><small>กดปุ่ม “เพิ่มรายชื่อในหน้านี้” ด้านบนเพื่อเริ่มเพิ่ม</small><% } %></div>
   <% } %>
+<% } %>
 <% } %>

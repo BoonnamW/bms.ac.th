@@ -1,14 +1,23 @@
 <%- include('_head') %>
 <%
-  var staffCount = staff ? (staff.head ? 1 : 0) + staff.members.length : 0;
-  var lead = depts ? 'ทำเนียบบุคลากรตามกลุ่มสาระการเรียนรู้และฝ่าย' : staffCount ? 'บุคลากร ' + staffCount + ' คน' : '';
+  var people = staff || depts;
+  var count = staff ? (staff.head ? 1 : 0) + staff.members.length : 0;
+  // หน้าทำเนียบ: เนื้อหาก่อนเส้นคั่น (<hr>) แสดงเหนือรายชื่อ ส่วนหลังเส้นคั่นแสดงใต้รายชื่อ
+  var parts = people ? String(page.body || '').split(/<hr\s*\/?>/i) : [];
+  var intro = (parts[0] || '').trim(), outro = parts.slice(1).join('<hr />').trim();
 %>
-<%- include('_pagehead', { heading: page.title, lead: lead, crumbs: page.menu_group ? [[page.menu_group], [page.title]] : [[page.title]] }) %>
+<%- include('_pagehead', { heading: page.title, lead: count ? 'ทั้งหมด ' + count + ' คน' : '', crumbs: page.menu_group ? [[page.menu_group], [page.title]] : [[page.title]] }) %>
 <section class="sec">
   <div class="wrap <%= siblings.length > 1 ? 'two' : 'one' %>">
     <div class="main-col">
-      <% if (staff || depts) { %><%- include('_staff') %><% } %>
-      <% if (page.body || !(staff || depts)) { %><article class="prose <%= staff || depts ? 'mt' : '' %>"><%- page.body %></article><% } %>
+      <% if (people) { %>
+        <%- include('_staff', { part: 'top' }) %>
+        <% if (intro) { %><article class="prose people-intro"><%- intro %></article><% } %>
+        <%- include('_staff', { part: 'list' }) %>
+        <% if (outro) { %><article class="prose people-outro"><%- outro %></article><% } %>
+      <% } else { %>
+        <article class="prose"><%- page.body %></article>
+      <% } %>
     </div>
     <% if (siblings.length > 1) { %>
     <aside class="side">

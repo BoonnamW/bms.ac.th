@@ -7,6 +7,7 @@ import { parseCookies, icon, thDate, thDateTime, thTime, dateParts, token, IFRAM
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import { seedDefaults } from './lib/seed.js';
+import { wpMedia } from './lib/wpmedia.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 
@@ -73,7 +74,7 @@ app.use('/uploads', express.static(UPLOAD_DIR, {
   maxAge: '30d', index: false, dotfiles: 'deny',
   setHeaders: (res) => res.setHeader('Content-Disposition', 'inline'),
 }));
-app.use('/uploads/wp', (req, res, next) => (WP_MEDIA_URL ? res.redirect(302, WP_MEDIA_URL + req.path.slice(1)) : next()));
+app.use('/uploads/wp', wpMedia(WP_MEDIA_URL)); // ไฟล์ที่ยังไม่มีในเครื่อง → ดึงจากเว็บเดิมมาเก็บไว้
 
 // สีตัวอักษรบนพื้นสีหลัก/สีเน้น: เลือกสีขาวหรือสีเข้มที่อ่านง่ายกว่า (คำนวณค่าความต่างของสีตาม WCAG)
 const INK = '#16202e';
@@ -82,19 +83,29 @@ const luminance = (hex) => {
   const [r, g, b] = channels(hex).map((v) => v / 255).map((v) => (v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 };
-const onColor = (hex) => {
-  const l = luminance(hex) + 0.05;
-  return 1.05 / l >= l / (luminance(INK) + 0.05) ? '#fff' : INK;
+const contrast = (a, b) => {
+  const [x, y] = [luminance(a) + 0.05, luminance(b) + 0.05];
+  return Math.max(x, y) / Math.min(x, y);
 };
+const onColor = (hex) => (contrast(hex, '#ffffff') >= contrast(hex, INK) ? '#fff' : INK);
 const darken = (hex, k) => `#${channels(hex).map((v) => Math.round(v * k).toString(16).padStart(2, '0')).join('')}`; // = color-mix(... k, #000) ใน site.css
+// สีที่มีตัวอักษรวางอยู่ (ปุ่ม แท็บ ป้าย): สีโทนกลางถึงเข้ม → ตัวอักษรขาว และเข้มขึ้นทีละนิดจนอ่านง่าย (≥ 4.5:1 ตาม WCAG AA)
+// สีอ่อน เช่น ทอง → ตัวอักษรสีเข้ม
+const uiColor = (hex) => {
+  if (contrast(hex, '#ffffff') < 3) return [hex, INK];
+  let c = hex;
+  for (let k = 0.99; contrast(c, '#ffffff') < 4.5 && k > 0.6; k -= 0.01) c = darken(hex, k);
+  return [c, '#fff'];
+};
 
 app.get('/theme.css', (req, res) => {
   const s = getSettings();
-  const hex = (v, d) => (/^#[0-9a-f]{6}$/i.test(v) ? v : d);
-  const primary = hex(s.primary, '#14325e'), accent = hex(s.accent, '#c9a227');
+  const hex = (v, d) => (/^#[0-9a-f]{6}$/i.test(v) ? v.toLowerCase() : d);
+  const [primary, onPrimary] = uiColor(hex(s.primary, '#14325e'));
+  const [accent, onAccent] = uiColor(hex(s.accent, '#c9a227'));
   res.type('text/css').set('Cache-Control', 'no-cache').send(`:root{--primary:${primary};--accent:${accent};`
-    + `--on-primary:${onColor(primary)};--on-primary-d:${onColor(darken(primary, 0.72))};`
-    + `--on-accent:${onColor(accent)};--on-accent-d:${onColor(darken(accent, 0.8))}}`);
+    + `--on-primary:${onPrimary};--on-primary-d:${onColor(darken(primary, 0.72))};`
+    + `--on-accent:${onAccent};--on-accent-d:${onColor(darken(accent, 0.8))}}`);
 });
 
 // ---------- ตัวแปรที่ใช้ร่วมกันทุกหน้า ----------
