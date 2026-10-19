@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { db, getSettings } from '../lib/db.js';
 import { entities, settingsFields } from '../lib/entities.js';
+import { sessionOf } from '../lib/session.js';
 import {
   token, sha256, safeEqual, cookieOpts, cleanHtml, saveImage, removeImage, safeUrl,
 } from '../lib/helpers.js';
@@ -21,18 +22,9 @@ r.use((req, res, next) => {
 
 // ---------- เซสชัน ----------
 function loadSession(req, res, next) {
-  req.user = null;
-  const sid = req.cookies.sid;
-  if (sid && /^[\w-]{40,}$/.test(sid)) {
-    const row = db.prepare(
-      'SELECT s.id, s.csrf, s.expires, u.id uid, u.username, u.must_change FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.id=?')
-      .get(sha256(sid));
-    if (row && row.expires > Date.now()) {
-      req.user = { id: row.uid, username: row.username, must_change: row.must_change };
-      req.csrf = row.csrf;
-      req.sidHash = row.id;
-    } else if (row) db.prepare('DELETE FROM sessions WHERE id=?').run(row.id);
-  }
+  const row = sessionOf(req);
+  req.user = row ? { id: row.uid, username: row.username, must_change: row.must_change } : null;
+  if (row) { req.csrf = row.csrf; req.sidHash = row.id; }
   res.locals.user = req.user;
   res.locals.csrf = req.csrf || '';
   next();
@@ -208,19 +200,26 @@ r.get('/:e', requireAuth, getEntity, (req, res) => {
   res.render('admin/list', { title: req.ent.title, rows, saved: req.query.saved, deleted: req.query.deleted });
 });
 
+// ปุ่มเพิ่ม/แก้ไขบนหน้าเว็บส่งหน้าเดิมมาเป็น back → บันทึกแล้วกลับไปหน้านั้น (รับเฉพาะหน้าในเว็บนี้)
+const backUrl = (v) => (/^\/p\/[a-z0-9-]+$/.test(String(v || '')) ? String(v) : '');
+
 r.get('/:e/new', requireAuth, getEntity, (req, res) => {
   if (req.ent.readonly) return res.redirect(`/admin/${req.table}`);
   const item = {};
-  for (const f of req.ent.fields) if (f.def !== undefined) item[f.n] = f.def;
+  for (const f of req.ent.fields) {
+    if (f.def !== undefined) item[f.n] = f.def;
+    const q = req.query[f.n]; // เช่น ?page_id=17 จากปุ่ม "เพิ่มบุคลากร" ของหน้ากลุ่มสาระ
+    if (f.type === 'select' && typeof q === 'string' && f.options.includes(q)) item[f.n] = q;
+  }
   item.created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
-  res.render('admin/form', { title: `เพิ่ม${req.ent.singular}`, item, errors: [] });
+  res.render('admin/form', { title: `เพิ่ม${req.ent.singular}`, item, errors: [], back: backUrl(req.query.back) });
 });
 
 r.get('/:e/:id', requireAuth, getEntity, (req, res, next) => {
   if (!/^\d+$/.test(req.params.id)) return next();
   const item = db.prepare(`SELECT * FROM ${req.table} WHERE id=?`).get(req.params.id);
   if (!item) return res.status(404).render('admin/message', { title: 'ไม่พบรายการ', msg: 'ไม่พบรายการที่ต้องการ' });
-  res.render('admin/form', { title: req.ent.readonly ? `ดู${req.ent.singular}` : `แก้ไข${req.ent.singular}`, item, errors: [] });
+  res.render('admin/form', { title: req.ent.readonly ? `ดู${req.ent.singular}` : `แก้ไข${req.ent.singular}`, item, errors: [], back: backUrl(req.query.back) });
 });
 
 r.post('/:e/save', requireAuth, getEntity, upload.single('image'), csrfCheck, (req, res) => {
@@ -237,7 +236,8 @@ r.post('/:e/save', requireAuth, getEntity, upload.single('image'), csrfCheck, (r
 
   const rerender = (status = 400) => {
     removeImage(newImg);
-    return res.status(status).render('admin/form', { title: id ? `แก้ไข${req.ent.singular}` : `เพิ่ม${req.ent.singular}`, item: { ...(existing || {}), ...values, id }, errors });
+    return res.status(status).render('admin/form', {
+      title: id ? `แก้ไข${req.ent.singular}` : `เพิ่ม${req.ent.singular}`, item: { ...(existing || {}), ...values, id }, errors, back: backUrl(req.body.back) });
   };
   if (errors.length) return rerender();
 
@@ -246,14 +246,17 @@ r.post('/:e/save', requireAuth, getEntity, upload.single('image'), csrfCheck, (r
     else if (req.body.remove_image) { removeImage(existing?.image); values.image = null; }
   }
   const cols = Object.keys(values);
+  let rowId = id;
   try {
     if (id) db.prepare(`UPDATE ${req.table} SET ${cols.map((c) => `${c}=?`).join(',')} WHERE id=?`).run(...cols.map((c) => values[c]), id);
-    else db.prepare(`INSERT INTO ${req.table} (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`).run(...cols.map((c) => values[c]));
+    else rowId = Number(db.prepare(`INSERT INTO ${req.table} (${cols.join(',')}) VALUES (${cols.map(() => '?').join(',')})`).run(...cols.map((c) => values[c])).lastInsertRowid);
   } catch (e) {
     if (String(e.message).includes('UNIQUE')) { errors.push('ชื่อในลิงก์ (slug) นี้ถูกใช้แล้ว'); return rerender(); }
     throw e;
   }
-  res.redirect(`/admin/${req.table}?saved=1`);
+  req.ent.afterSave?.(rowId, values);
+  const back = backUrl(req.body.back);
+  res.redirect(back ? `${back}${req.ent.anchor ? `#${req.ent.anchor}-${rowId}` : ''}` : `/admin/${req.table}?saved=1`);
 });
 
 r.post('/:e/:id/delete', requireAuth, getEntity, csrfCheck, (req, res) => {
@@ -264,7 +267,7 @@ r.post('/:e/:id/delete', requireAuth, getEntity, csrfCheck, (req, res) => {
     req.ent.onDelete?.(item);
     removeImage(item.image);
   }
-  res.redirect(`/admin/${req.table}?deleted=1`);
+  res.redirect(backUrl(req.body.back) || `/admin/${req.table}?deleted=1`);
 });
 
 // จัดการข้อผิดพลาดจาก multer (ไฟล์ใหญ่เกิน ฯลฯ)

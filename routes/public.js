@@ -6,6 +6,8 @@ import { CATEGORIES } from '../lib/entities.js';
 import { formToken, checkFormToken, thDate, parseUtc } from '../lib/helpers.js';
 import { OIT_GROUP } from '../lib/oit.js';
 import { EVENT_END_SQL, nowUtc, eventView, icsCalendar } from '../lib/events.js';
+import { STAFF_GROUP } from '../lib/staff.js';
+import { sessionOf } from '../lib/session.js';
 
 const r = Router();
 const PAGE_SIZE = 9;
@@ -58,6 +60,8 @@ r.use((req, res, next) => {
 });
 
 // ---------- ข้อมูลที่ใช้ร่วมกัน ----------
+const staffLike = (like, limit) => all(`SELECT s.id, s.name, p.slug, p.title dept FROM staff s JOIN pages p ON p.id=s.page_id
+  WHERE s.active=1 AND p.published=1 AND s.name LIKE ? ESCAPE '\\' ORDER BY s.name LIMIT ?`, like, limit);
 const newsCats = () => CATEGORIES.filter((c) => one('SELECT 1 FROM news WHERE published=1 AND category=? LIMIT 1', c));
 const upcomingEvents = (limit) =>
   all(`SELECT * FROM events WHERE published=1 AND ${EVENT_END_SQL} >= ? ORDER BY start_at LIMIT ?`, nowUtc(), limit).map(eventView);
@@ -160,6 +164,7 @@ r.get('/api/search', (req, res) => {
       .map((s) => ({ title: s.title, url: s.url, type: 'บริการออนไลน์' })),
     ...all("SELECT title, slug FROM pages WHERE published=1 AND title LIKE ? ESCAPE '\\' LIMIT 4", like)
       .map((p) => ({ title: p.title, url: `/p/${p.slug}`, type: 'หน้าเว็บ' })),
+    ...staffLike(like, 4).map((s) => ({ title: s.name, url: `/p/${s.slug}#staff-${s.id}`, type: `บุคลากร · ${s.dept}` })),
     ...all("SELECT id, title, created_at FROM news WHERE published=1 AND title LIKE ? ESCAPE '\\' ORDER BY created_at DESC LIMIT 5", like)
       .map((n) => ({ title: n.title, url: `/news/${n.id}`, type: `ข่าว · ${thDate(n.created_at)}` })),
   ];
@@ -219,7 +224,21 @@ r.get('/p/:slug', (req, res, next) => {
   if (!page) return next();
   const siblings = page.menu_group
     ? all('SELECT title, slug FROM pages WHERE published=1 AND menu_group=? ORDER BY sort, id', page.menu_group) : [];
-  res.render('public/page', { title: page.title, page, siblings });
+  // ทำเนียบบุคลากร: หน้ารวม = การ์ดกลุ่มสาระ, หน้ากลุ่มสาระ = หัวหน้ากลุ่มด้านบน + สมาชิก
+  let staff = null, depts = null;
+  if (page.menu_group === STAFF_GROUP && page.title === STAFF_GROUP) {
+    depts = all('SELECT id, title, slug FROM pages WHERE published=1 AND menu_group=? AND title<>? ORDER BY sort, id', STAFF_GROUP, STAFF_GROUP)
+      .map((d) => ({
+        ...d,
+        n: one('SELECT COUNT(*) c FROM staff WHERE page_id=? AND active=1', d.id).c,
+        lead: one('SELECT name, image, is_head FROM staff WHERE page_id=? AND active=1 ORDER BY is_head DESC, sort, id LIMIT 1', d.id),
+      }));
+  } else if (page.menu_group === STAFF_GROUP) {
+    const rows = all('SELECT * FROM staff WHERE page_id=? AND active=1 ORDER BY is_head DESC, sort, id', page.id);
+    staff = rows[0]?.is_head ? { head: rows[0], members: rows.slice(1) } : { head: null, members: rows };
+  }
+  const editor = !!(staff || depts) && !!sessionOf(req); // ผู้ดูแลที่เข้าสู่ระบบอยู่ เห็นปุ่มเพิ่ม/แก้ไข
+  res.render('public/page', { title: page.title, page, siblings, staff, depts, editor });
 });
 
 // ---------- ปฏิทินกิจกรรม ----------
@@ -318,14 +337,15 @@ r.get('/academics', (req, res) => {
 // ---------- ค้นหา ----------
 r.get('/search', (req, res) => {
   const q = String(req.query.q || '').trim().slice(0, 80);
-  let news = [], pages = [], services = [];
+  let news = [], pages = [], services = [], people = [];
   if (q) {
     const like = `%${q.replace(/[\\%_]/g, '\\$&')}%`;
     news = all("SELECT id, title, excerpt, created_at FROM news WHERE published=1 AND (title LIKE ? ESCAPE '\\' OR excerpt LIKE ? ESCAPE '\\') ORDER BY created_at DESC LIMIT 30", like, like);
     pages = all("SELECT title, slug FROM pages WHERE published=1 AND title LIKE ? ESCAPE '\\' LIMIT 20", like);
     services = all("SELECT title, url FROM services WHERE active=1 AND title LIKE ? ESCAPE '\\' LIMIT 10", like);
+    people = staffLike(like, 20);
   }
-  res.render('public/search', { title: 'ค้นหา', q, news, pages, services });
+  res.render('public/search', { title: 'ค้นหา', q, news, pages, services, people });
 });
 
 // ---------- ติดต่อเรา ----------

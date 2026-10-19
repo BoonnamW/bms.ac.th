@@ -6,8 +6,9 @@
       <input type="search" name="q" value="<%= q %>" placeholder="พิมพ์คำที่ต้องการค้นหา…" aria-label="คำค้นหา" maxlength="80">
       <button class="btn btn-primary"><%- icon('search', 18) %> ค้นหา</button>
     </form>
-    <% if (q && !news.length && !pages.length && !services.length) { %><p class="empty">ไม่พบผลลัพธ์ที่ตรงกับ “<%= q %>” ลองใช้คำที่สั้นลงหรือคำอื่น</p><% } %>
+    <% if (q && !news.length && !pages.length && !services.length && !people.length) { %><p class="empty">ไม่พบผลลัพธ์ที่ตรงกับ “<%= q %>” ลองใช้คำที่สั้นลงหรือคำอื่น</p><% } %>
     <% if (services.length) { %><h2 class="res-h">ระบบบริการออนไลน์</h2><ul class="results"><% services.forEach(function (s) { %><li><a href="<%= s.url %>" target="_blank" rel="noopener"><%= s.title %></a></li><% }) %></ul><% } %>
+    <% if (people.length) { %><h2 class="res-h">บุคลากร</h2><ul class="results"><% people.forEach(function (s) { %><li><a href="/p/<%= s.slug %>#staff-<%= s.id %>"><%= s.name %></a><small><%= s.dept %></small></li><% }) %></ul><% } %>
     <% if (pages.length) { %><h2 class="res-h">หน้าเว็บไซต์</h2><ul class="results"><% pages.forEach(function (p) { %><li><a href="/p/<%= p.slug %>"><%= p.title %></a></li><% }) %></ul><% } %>
     <% if (news.length) { %><h2 class="res-h">ข่าวสาร</h2><ul class="results"><% news.forEach(function (n) { %><li><a href="/news/<%= n.id %>"><%= n.title %></a><small><%= thDate(n.created_at) %></small></li><% }) %></ul><% } %>
   </div>

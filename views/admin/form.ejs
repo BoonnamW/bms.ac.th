@@ -3,10 +3,18 @@
 <form class="form" method="post" action="/admin/<%= table %>/save" enctype="multipart/form-data">
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <% if (item.id) { %><input type="hidden" name="id" value="<%= item.id %>"><% } %>
+  <% if (back) { %><input type="hidden" name="back" value="<%= back %>"><% } %>
   <% ent.fields.forEach(function (f) { %><%- include('_field', { f: f, values: item, readonly: !!ent.readonly }) %><% }) %>
   <div class="formbar">
     <% if (!ent.readonly) { %><button class="btn">บันทึก</button><% } %>
-    <a class="btn ghost" href="/admin/<%= table %>">← กลับ</a>
+    <a class="btn ghost" href="<%= back || '/admin/' + table %>"><%= back ? '← กลับไปหน้าเว็บ' : '← กลับ' %></a>
   </div>
 </form>
+<% if (item.id && !ent.readonly) { %>
+<form class="delbar" method="post" action="/admin/<%= table %>/<%= item.id %>/delete" data-confirm="ยืนยันการลบรายการนี้? การลบไม่สามารถกู้คืนได้">
+  <input type="hidden" name="_csrf" value="<%= csrf %>">
+  <% if (back) { %><input type="hidden" name="back" value="<%= back %>"><% } %>
+  <button class="del">ลบ<%= ent.singular %>นี้</button>
+</form>
+<% } %>
 <%- include('_foot') %>

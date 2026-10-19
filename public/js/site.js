@@ -187,6 +187,15 @@
     });
   });
 
+  // ---------- แถบแท็บที่เลื่อนแนวนอนได้ (จอเล็ก): เลื่อนให้เห็นแท็บที่เลือกอยู่ ----------
+  part('tabs', () => {
+    $$('.tabs .on').forEach((a) => {
+      const bar = a.parentElement;
+      if (bar.scrollWidth <= bar.clientWidth) return;
+      bar.scrollLeft += a.getBoundingClientRect().left - bar.getBoundingClientRect().left - (bar.clientWidth - a.offsetWidth) / 2;
+    });
+  });
+
   // ---------- ภาพสไลด์หน้าแรก ----------
   part('hero', () => {
     const hero = $('#hero');

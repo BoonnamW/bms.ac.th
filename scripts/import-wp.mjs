@@ -148,7 +148,7 @@ try {
   db.prepare('DELETE FROM gallery WHERE image IS NULL').run();
   if (firstImport) {
     // ส่วนที่สร้างอัตโนมัติจากข้อมูลตัวอย่าง (ถ้าเคยเปิดเว็บก่อนนำเข้า) → สร้างใหม่จากข้อมูลจริงหลังนำเข้า
-    for (const t of ['menu_items', 'services', 'programs', 'highlights']) db.prepare(`DELETE FROM ${t}`).run();
+    for (const t of ['menu_items', 'services', 'programs', 'highlights', 'staff']) db.prepare(`DELETE FROM ${t}`).run();
     db.prepare("DELETE FROM settings WHERE key LIKE 'seeded\\_%' ESCAPE '\\'").run();
   }
 

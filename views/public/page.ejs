@@ -1,8 +1,15 @@
 <%- include('_head') %>
-<%- include('_pagehead', { heading: page.title, crumbs: page.menu_group ? [[page.menu_group], [page.title]] : [[page.title]] }) %>
+<%
+  var staffCount = staff ? (staff.head ? 1 : 0) + staff.members.length : 0;
+  var lead = depts ? 'ทำเนียบบุคลากรตามกลุ่มสาระการเรียนรู้และฝ่าย' : staffCount ? 'บุคลากร ' + staffCount + ' คน' : '';
+%>
+<%- include('_pagehead', { heading: page.title, lead: lead, crumbs: page.menu_group ? [[page.menu_group], [page.title]] : [[page.title]] }) %>
 <section class="sec">
   <div class="wrap <%= siblings.length > 1 ? 'two' : 'one' %>">
-    <article class="prose"><%- page.body %></article>
+    <div class="main-col">
+      <% if (staff || depts) { %><%- include('_staff') %><% } %>
+      <% if (page.body || !(staff || depts)) { %><article class="prose <%= staff || depts ? 'mt' : '' %>"><%- page.body %></article><% } %>
+    </div>
     <% if (siblings.length > 1) { %>
     <aside class="side">
       <h3><%= page.menu_group %></h3>
