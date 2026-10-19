@@ -119,7 +119,10 @@ r.post('/password', requireAuth, csrfCheck, async (req, res) => {
 r.get('/', requireAuth, (req, res) => {
   const counts = {};
   for (const k of Object.keys(entities)) counts[k] = db.prepare(`SELECT COUNT(*) c FROM ${k}`).get().c;
-  res.render('admin/dashboard', { title: 'แดชบอร์ด', counts, entities });
+  // ความพร้อมของหน้าเปิดเผยข้อมูล (OIT): หน้าที่ยังเป็นข้อความรอข้อมูล
+  const oit = db.prepare("SELECT id, title, slug, body LIKE '<p>อยู่ระหว่างจัดเตรียมข้อมูล%' AS pending FROM pages WHERE slug LIKE 'oit-o%' ORDER BY sort, id").all();
+  const upcoming = db.prepare("SELECT COUNT(*) c FROM events WHERE published=1 AND COALESCE(NULLIF(end_at,''), start_at) >= datetime('now')").get().c;
+  res.render('admin/dashboard', { title: 'แดชบอร์ด', counts, entities, oit, upcoming });
 });
 
 // ---------- ตั้งค่าเว็บไซต์ ----------
@@ -180,7 +183,12 @@ function validate(fields, body, existing = {}) {
         break;
       case 'datetime': v = String(v ?? '').trim();
         if (v && !/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}$/.test(v)) { errors.push(`"${f.label}" รูปแบบไม่ถูกต้อง`); continue; }
-        if (v) { const d = new Date(v.replace(' ', 'T') + ':00+07:00'); v = d.toISOString().slice(0, 19).replace('T', ' '); }
+        if (v) {
+          const d = new Date(v.replace(' ', 'T') + ':00+07:00'); // เวลาที่กรอกเป็นเวลาไทย เก็บเป็น UTC
+          if (Number.isNaN(d.getTime())) { errors.push(`"${f.label}" รูปแบบไม่ถูกต้อง`); continue; }
+          v = d.toISOString().slice(0, 19).replace('T', ' ');
+        }
+        else if (f.blank) v = '';
         else v = existing[f.n] || new Date().toISOString().slice(0, 19).replace('T', ' ');
         break;
       case 'select': v = String(v ?? '');
@@ -222,6 +230,7 @@ r.post('/:e/save', requireAuth, getEntity, upload.single('image'), csrfCheck, (r
   if (id && !existing) return res.status(404).render('admin/message', { title: 'ไม่พบรายการ', msg: 'ไม่พบรายการที่ต้องการ' });
 
   const { values, errors } = validate(req.ent.fields, req.body, existing || {});
+  if (!errors.length && req.ent.check) errors.push(...req.ent.check(values, existing, id));
   const hasImage = req.ent.fields.some((f) => f.type === 'image');
   let newImg = null;
   try { if (req.file && hasImage) newImg = saveImage(req.file); } catch (e) { errors.push(e.message); }
@@ -252,6 +261,7 @@ r.post('/:e/:id/delete', requireAuth, getEntity, csrfCheck, (req, res) => {
   const item = db.prepare(`SELECT * FROM ${req.table} WHERE id=?`).get(req.params.id);
   if (item) {
     db.prepare(`DELETE FROM ${req.table} WHERE id=?`).run(item.id);
+    req.ent.onDelete?.(item);
     removeImage(item.image);
   }
   res.redirect(`/admin/${req.table}?deleted=1`);

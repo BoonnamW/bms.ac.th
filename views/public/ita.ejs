@@ -1,0 +1,18 @@
+<%- include('_head') %>
+<%- include('_pagehead', { heading: 'เปิดเผยข้อมูลสาธารณะ', eyebrow: 'ITA / OIT', lead: 'ข้อมูลตามแบบตรวจการเปิดเผยข้อมูลสาธารณะ (OIT) ของการประเมินคุณธรรมและความโปร่งใส (ITA)', crumbs: [['ข้อมูลสารสนเทศ', '/data'], ['ITA / OIT']] }) %>
+<section class="sec">
+  <div class="wrap">
+    <% if (!items.length) { %><p class="empty">ยังไม่มีข้อมูล</p><% } %>
+    <ol class="oit-grid">
+      <% items.forEach(function (p) { %>
+      <li><a class="oit reveal" href="/p/<%= p.slug %>"><span class="oit-code"><%= p.code %></span><span class="oit-t"><%= p.title %></span><%- icon('right', 18) %></a></li>
+      <% }) %>
+    </ol>
+    <% if (more.length) { %>
+    <h2 class="res-h">ข้อมูลเพิ่มเติม</h2>
+    <ul class="link-grid"><% more.forEach(function (p) { %><li><a href="/p/<%= p.slug %>"><%- icon('file', 18) %><span><%= p.title %></span></a></li><% }) %></ul>
+    <% } %>
+    <div class="note"><%- icon('shield', 20) %><p>พบเห็นการทุจริตหรือประพฤติมิชอบ แจ้งได้ที่ <a href="/contact">ช่องทางร้องเรียน</a><% if (S.line_url) { %> หรือ <a href="<%= S.line_url %>" target="_blank" rel="noopener">LINE ของโรงเรียน</a><% } %> ข้อมูลของผู้แจ้งจะถูกเก็บเป็นความลับ</p></div>
+  </div>
+</section>
+<%- include('_foot') %>

@@ -18,9 +18,12 @@
   <a class="sb-brand" href="/admin"><%- icon('building', 22) %> <span>หลังบ้าน<small><%= S.school_name %></small></span></a>
   <nav>
     <a href="/admin" class="<%= (path === '/admin' || path === '/admin/') ? 'on' : '' %>">แดชบอร์ด</a>
-    <p>เนื้อหา</p>
-    <% ['news','pages','slides','links','stats','gallery'].forEach(function (k) { %>
-      <a href="/admin/<%= k %>" class="<%= path.startsWith('/admin/' + k) ? 'on' : '' %>"><%= entities[k].title %></a>
+    <% [['เนื้อหา', ['news', 'events', 'pages', 'gallery']], ['หน้าแรก', ['slides', 'links', 'stats', 'programs', 'highlights']],
+        ['เมนูและบริการ', ['menu_items', 'services']]].forEach(function (g) { %>
+    <p><%= g[0] %></p>
+    <% g[1].forEach(function (k) { %>
+      <a href="/admin/<%= k %>" class="<%= path === '/admin/' + k || path.startsWith('/admin/' + k + '/') ? 'on' : '' %>"><%= entities[k].title %></a>
+    <% }) %>
     <% }) %>
     <p>ระบบ</p>
     <a href="/admin/messages" class="<%= path.startsWith('/admin/messages') ? 'on' : '' %>"><%= entities.messages.title %></a>

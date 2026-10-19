@@ -1,0 +1,34 @@
+<%- include('_head') %>
+<%- include('_pagehead', { heading: 'พอร์ทัลและระบบบริการออนไลน์', eyebrow: 'Portal & e-Service', lead: 'รวมระบบออนไลน์สำหรับนักเรียน ผู้ปกครอง ครู และบุคลากร ไว้ในที่เดียว', crumbs: [['ระบบบริการออนไลน์']] }) %>
+<section class="sec">
+  <div class="wrap">
+    <div class="portal-top">
+      <a class="pcard pcard-login" href="/admin/login">
+        <span class="pc-ic"><%- icon('lock', 26) %></span>
+        <span><b>เข้าสู่ระบบจัดการเว็บไซต์</b><small>สำหรับเจ้าหน้าที่ — ลงข่าว ปฏิทิน และข้อมูลโรงเรียน</small></span><%- icon('arrow', 18) %>
+      </a>
+      <div class="pcard pcard-app" data-install-card>
+        <span class="pc-ic"><%- icon('phone2', 26) %></span>
+        <span><b>ติดตั้งเป็นแอปบนโทรศัพท์</b>
+          <small data-install-hint>Android / คอมพิวเตอร์: กดปุ่มติดตั้ง · iPhone: กด <%- icon('external', 12) %> แชร์ แล้วเลือก “เพิ่มไปยังหน้าจอโฮม”</small></span>
+        <button type="button" class="btn btn-accent btn-sm" data-install hidden><%- icon('download', 16) %> ติดตั้ง</button>
+      </div>
+    </div>
+    <% if (!groups.length) { %><p class="empty">ยังไม่มีระบบบริการออนไลน์ — เพิ่มได้ที่หลังบ้าน เมนู “ระบบบริการออนไลน์”</p><% } %>
+    <% groups.forEach(function (g) { %>
+    <section class="svc-group" id="<%= g.id %>" aria-labelledby="g-<%= g.id %>">
+      <h2 id="g-<%= g.id %>"><%- icon(g.icon, 22) %> <%= g.title %> <small><%= g.en %></small></h2>
+      <div class="svc-grid">
+        <% g.items.forEach(function (s, i) { var ext = /^https?:/.test(s.url); %>
+        <a class="svc reveal" href="<%= s.url %>" <%= ext ? 'target=_blank rel=noopener' : '' %>>
+          <span class="svc-ic t<%= i % 6 %>"><%- icon(s.icon || 'monitor', 22) %></span>
+          <span><b><%= s.title %></b><% if (s.subtitle) { %><small><%= s.subtitle %></small><% } %></span>
+          <% if (ext) { %><%- icon('external', 15) %><% } %>
+        </a>
+        <% }) %>
+      </div>
+    </section>
+    <% }) %>
+  </div>
+</section>
+<%- include('_foot') %>

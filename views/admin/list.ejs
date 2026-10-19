@@ -10,10 +10,12 @@
   <% rows.forEach(function (row) { %>
     <tr>
       <% ent.columns.forEach(function (c, i) { var v = row[c[0]]; var f = ent.fields.find(function (x) { return x.n === c[0]; }) || {}; %>
-        <td>
+        <td class="<%= f.type === 'url' ? 'url' : '' %>">
           <% if (f.type === 'checkbox') { %><span class="pill <%= v ? 'yes' : 'no' %>"><%= v ? 'ใช่' : 'ไม่' %></span>
           <% } else if (c[0] === 'created_at') { %><%= thDate(v) %>
-          <% } else if (i === 0) { %><a href="/admin/<%= table %>/<%= row.id %>"><strong><%= v %></strong></a>
+          <% } else if (f.type === 'datetime') { %><%= v ? thDateTime(v) : '' %>
+          <% } else if (i === 0) { %><a href="/admin/<%= table %>/<%= row.id %>" class="<%= ent.indent && ent.indent(row) ? 'sub' : '' %>"><strong><%= v %></strong></a>
+          <% } else if (f.type === 'select' && f.labels) { var lb = f.labels; %><%= lb[v] !== undefined ? lb[v] : v %>
           <% } else { %><%= v %><% } %>
         </td>
       <% }) %>

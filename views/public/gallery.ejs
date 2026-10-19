@@ -1,0 +1,18 @@
+<%- include('_head') %>
+<%- include('_pagehead', { heading: 'ภาพกิจกรรม', eyebrow: 'Photo Gallery', lead: 'อัลบั้มภาพกิจกรรมทั้งหมด ' + total.toLocaleString('th-TH') + ' อัลบั้ม', crumbs: [['ข่าวสาร', '/news'], ['ภาพกิจกรรม']] }) %>
+<section class="sec">
+  <div class="wrap">
+    <% if (!albums.length) { %><p class="empty">ยังไม่มีอัลบั้มภาพ</p><% } %>
+    <div class="album-grid">
+      <% albums.forEach(function (a) { %>
+      <a class="album reveal" href="/news/<%= a.id %>">
+        <span class="album-img"><img src="/uploads/<%= a.image %>" alt="" loading="lazy">
+          <% if (a.photos > 1) { %><span class="album-n"><%- icon('image', 14) %> <%= a.photos %> ภาพ</span><% } %></span>
+        <span class="album-b"><b><%= a.title %></b><time><%= thDate(a.created_at) %></time></span>
+      </a>
+      <% }) %>
+    </div>
+    <%- include('_pager', { page: page, pages: pages, href: function (n) { return '/gallery?page=' + n; } }) %>
+  </div>
+</section>
+<%- include('_foot') %>

@@ -1,0 +1,26 @@
+<%- include('_head') %>
+<%- include('_pagehead', { heading: 'หลักสูตรและการเรียนรู้', eyebrow: 'Academics & Programs', crumbs: [['วิชาการ'], ['หลักสูตรและการเรียนรู้']] }) %>
+<section class="sec">
+  <div class="wrap">
+    <% if (programs.length) { %>
+    <div class="prog-grid wide">
+      <% programs.forEach(function (p, i) { %>
+      <a class="prog reveal" href="<%= p.link || '#' %>">
+        <span class="prog-img"><% if (p.image) { %><img src="/uploads/<%= p.image %>" alt="" loading="lazy"><% } else { %><span class="ph ph-<%= i % 5 %>"><%- icon('book', 36) %></span><% } %></span>
+        <span class="prog-b"><b><%= p.title %></b><% if (p.title_en) { %><small><%= p.title_en %></small><% } %><% if (p.summary) { %><span class="ex"><%= p.summary %></span><% } %></span>
+        <span class="go" aria-hidden="true"><%- icon('right', 16) %></span>
+      </a>
+      <% }) %>
+    </div>
+    <% } %>
+    <% if (depts.length) { %>
+    <h2 class="res-h">กลุ่มสาระการเรียนรู้และงานสนับสนุน</h2>
+    <ul class="link-grid"><% depts.forEach(function (d) { %><li><a href="/p/<%= d.slug %>"><%- icon('book', 18) %><span><%= d.title %></span></a></li><% }) %></ul>
+    <% } %>
+    <% if (news.length) { %>
+    <div class="sec-h mt"><div><h2>ข่าววิชาการ</h2><p class="en">Academic News</p></div><a class="more" href="/news?cat=<%= encodeURIComponent('วิชาการ') %>">ดูทั้งหมด <%- icon('arrow', 16) %></a></div>
+    <div class="grid3"><% news.forEach(function (n) { %><%- include('_card', { n: n }) %><% }) %></div>
+    <% } %>
+  </div>
+</section>
+<%- include('_foot') %>

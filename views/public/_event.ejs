@@ -1,0 +1,18 @@
+<li class="ev" id="event-<%= e.id %>">
+  <span class="ev-date" aria-hidden="true"><b><%= e.start.day %></b><small><%= e.start.month %></small></span>
+  <div class="ev-b">
+    <h3><% if (e.link) { %><a href="<%= e.link %>"><%= e.title %></a><% } else { %><%= e.title %><% } %></h3>
+    <p class="ev-meta"><span class="sr-only"><%= e.range %> · </span><%- icon('clock', 14) %> <%= e.time %><% if (e.location) { %> · <%- icon('pin', 14) %> <%= e.location %><% } %></p>
+    <% if (typeof full !== 'undefined' && full) { %>
+      <% if (e.end && e.end.ymd !== e.start.ymd) { %><p class="ev-range"><%= e.range %></p><% } %>
+      <% if (e.detail) { %><p class="ev-detail"><%= e.detail %></p><% } %>
+    <% } %>
+  </div>
+  <details class="addcal">
+    <summary><%- icon('calplus', 16) %><span>เพิ่มในปฏิทิน</span></summary>
+    <div class="addcal-menu">
+      <a href="<%= e.gcal %>" target="_blank" rel="noopener">Google Calendar</a>
+      <a href="<%= e.ics %>">iPhone / Outlook (.ics)</a>
+    </div>
+  </details>
+</li>

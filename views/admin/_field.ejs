@@ -2,7 +2,7 @@
 <% var v = values[f.n]; if (v === null || v === undefined) v = ''; %>
 <div class="fld <%= f.type === 'checkbox' ? 'chk' : '' %>">
   <% if (f.type === 'checkbox') { %>
-    <label><input type="checkbox" name="<%= f.n %>" value="1" <%= v ? 'checked' : '' %>> <%= f.label %></label>
+    <label><input type="checkbox" name="<%= f.n %>" value="1" <%= (v && v !== '0') ? 'checked' : '' %>> <%= f.label %></label>
   <% } else { %>
     <label for="f_<%= f.n %>"><%= f.label %><%= f.req ? ' *' : '' %></label>
     <% if (readonly) { %>
@@ -31,7 +31,7 @@
     <% } else if (f.type === 'select') { %>
       <select id="f_<%= f.n %>" name="<%= f.n %>">
         <% if (!f.req) { %><option value="">— เลือก —</option><% } %>
-        <% f.options.forEach(function (o) { %><option value="<%= o %>" <%= v === o ? 'selected' : '' %>><%= f.labels ? f.labels[o] : o %></option><% }) %>
+        <% var labels = f.labels; f.options.forEach(function (o) { %><option value="<%= o %>" <%= String(v) === String(o) ? 'selected' : '' %>><%= labels && labels[o] !== undefined ? labels[o] : o %></option><% }) %>
       </select>
     <% } else if (f.type === 'image') { %>
       <% if (v) { %>
@@ -41,7 +41,7 @@
     <% } else if (f.type === 'color') { %>
       <input id="f_<%= f.n %>" type="color" name="<%= f.n %>" value="<%= v %>" class="colorin">
     <% } else if (f.type === 'datetime') { %>
-      <input id="f_<%= f.n %>" type="datetime-local" name="<%= f.n %>" value="<%= v ? new Date(new Date(String(v).replace(' ', 'T') + 'Z').getTime() + 7 * 3600 * 1000).toISOString().slice(0, 16) : '' %>">
+      <input id="f_<%= f.n %>" type="datetime-local" name="<%= f.n %>" value="<%= v ? new Date(new Date(String(v).replace(' ', 'T') + 'Z').getTime() + 7 * 3600 * 1000).toISOString().slice(0, 16) : '' %>" <%= f.req ? 'required' : '' %>>
     <% } else { %>
       <input id="f_<%= f.n %>" name="<%= f.n %>" value="<%= v %>" <%= f.max ? 'maxlength=' + f.max : '' %>
         <%= f.type === 'number' ? 'inputmode=numeric' : '' %> <%= f.req ? 'required' : '' %>>

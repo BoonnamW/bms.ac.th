@@ -14,7 +14,7 @@ ul{list-style:none}
 .sb nav{flex:1}
 .sb nav a{display:block;padding:9px 14px;border-radius:10px;margin-bottom:2px;transition:.15s}
 .sb nav a:hover{background:rgba(255,255,255,.08);color:#fff}
-.sb nav a.on{background:var(--accent);color:#1b1b1b;font-weight:500}
+.sb nav a.on{background:var(--accent);color:var(--on-accent,#1b1b1b);font-weight:500}
 .sb nav p{font:500 12px 'Prompt';letter-spacing:.1em;text-transform:uppercase;color:#7f93b6;padding:16px 14px 6px}
 .sb-foot{border-top:1px solid rgba(255,255,255,.12);padding-top:14px;display:grid;gap:8px}
 .sb-foot a,.sb-foot button{display:block;width:100%;text-align:left;background:none;border:0;color:#cdd9ee;padding:8px 14px;border-radius:10px;cursor:pointer;font:inherit}
@@ -37,6 +37,16 @@ ul{list-style:none}
 .stat strong{display:block;font:600 34px 'Prompt';color:var(--primary)}.stat span{color:var(--muted);font-size:14px}
 .tip{margin-top:24px;background:#fff8e1;border-left:4px solid var(--accent);padding:14px 18px;border-radius:0 12px 12px 0}
 code{background:#eef2f8;padding:1px 6px;border-radius:6px}
+.dash2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;margin-bottom:24px}
+.panel{background:#fff;border-radius:var(--r);padding:22px 24px;box-shadow:0 2px 10px rgba(20,50,94,.06);display:grid;gap:10px;align-content:start}
+.panel h3{font-size:17px;color:var(--primary)}.panel .muted{color:var(--muted);font-size:14px}
+.panel .big{font:600 30px 'Prompt';color:var(--primary);margin-right:6px}.panel .btn{justify-self:start}
+.meter{height:12px;border-radius:99px;background:#eef1f6;overflow:hidden}
+.meter-fill{display:block;height:100%;width:0;border-radius:99px;background:var(--primary);transition:width .6s}
+.todo{margin-top:8px;display:grid;gap:4px;padding-left:18px;list-style:disc}.todo a{color:var(--primary)}
+details summary{cursor:pointer;color:var(--primary);font-weight:500}
+.tbl a.sub{padding-left:22px;position:relative}.tbl a.sub::before{content:"↳";position:absolute;left:2px;color:var(--muted)}
+.tbl td.url{max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:14px}
 .tablewrap{background:#fff;border-radius:var(--r);overflow:auto;box-shadow:0 2px 10px rgba(20,50,94,.06)}
 .tbl{width:100%;border-collapse:collapse}
 .tbl th{text-align:left;font:500 13px 'Prompt';color:var(--muted);background:#f8fafc;padding:12px 16px;white-space:nowrap}

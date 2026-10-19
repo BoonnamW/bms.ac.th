@@ -1,0 +1,106 @@
+<%- include('_head') %>
+<%
+  var fmt = function (n) { return Number(n || 0).toLocaleString('th-TH'); };
+  var first = years[0], last = years[years.length - 1];
+  var catTotal = cats.reduce(function (s, c) { return s + c.n; }, 0);
+%>
+<%- include('_pagehead', { heading: 'ศูนย์ข้อมูลสารสนเทศโรงเรียน', eyebrow: 'School Data Center', lead: 'ข้อมูลสำคัญของโรงเรียน และสถิติเนื้อหาบนเว็บไซต์ที่คำนวณจากระบบโดยอัตโนมัติ', crumbs: [['ข้อมูลสารสนเทศ'], ['School Data Center']] }) %>
+
+<section class="sec">
+  <div class="wrap">
+    <% if (d.stats.length) { %>
+    <h2 class="res-h">ข้อมูลพื้นฐาน</h2>
+    <div class="kpi-row">
+      <% d.stats.forEach(function (s, i) { %>
+      <div class="kpi <%= i === 0 ? 'kpi-hero' : '' %>">
+        <span class="kpi-l"><%= s.label %></span>
+        <strong><%= fmt(s.value) %><%= s.suffix || '' %></strong>
+        <% if (s.label_en) { %><small><%= s.label_en %></small><% } %>
+      </div>
+      <% }) %>
+    </div>
+    <p class="muted small">ข้อมูลพื้นฐานปรับปรุงโดยเจ้าหน้าที่ของโรงเรียน</p>
+    <% } %>
+
+    <div class="grid-2 mt">
+      <% if (years.length) { %>
+      <figure class="chart-card">
+        <figcaption>
+          <h3>ข่าวและประกาศที่เผยแพร่ ต่อปี</h3>
+          <p>พ.ศ. <%= first.year %>–<%= last.year %> · รวม <%= fmt(d.newsTotal) %> เรื่อง</p>
+        </figcaption>
+        <div class="colchart">
+          <div class="cc-plot">
+            <div class="cc-grid" aria-hidden="true">
+              <% yearTicks.slice().reverse().forEach(function (t) { %><span><i><%= fmt(t) %></i></span><% }) %>
+            </div>
+            <div class="cc-bars">
+              <% years.forEach(function (y) { %>
+              <div class="cc-col" tabindex="0" data-tip="พ.ศ. <%= y.year %><%= y.current ? ' (ถึงปัจจุบัน)' : '' %>|<%= fmt(y.n) %> เรื่อง"
+                aria-label="พ.ศ. <%= y.year %> <%= fmt(y.n) %> เรื่อง<%= y.current ? ' ข้อมูลถึงปัจจุบัน' : '' %>">
+                <span class="cc-bar h-<%= y.pct %> <%= y.current ? 'cur' : '' %>"><% if (y.label) { %><span class="cc-val"><%= fmt(y.n) %></span><% } %></span>
+              </div>
+              <% }) %>
+            </div>
+          </div>
+          <div class="cc-x" aria-hidden="true"><% years.forEach(function (y) { %><span><%= y.year %><%= y.current ? '*' : '' %></span><% }) %></div>
+        </div>
+        <% if (last.current) { %><p class="muted small">* ปี <%= last.year %> นับถึงปัจจุบัน</p><% } %>
+        <details class="tblview">
+          <summary>ดูเป็นตาราง</summary>
+          <table><thead><tr><th scope="col">ปี พ.ศ.</th><th scope="col" class="num">จำนวนข่าว (เรื่อง)</th></tr></thead>
+            <tbody><% years.forEach(function (y) { %><tr><td><%= y.year %><%= y.current ? ' (ถึงปัจจุบัน)' : '' %></td><td class="num"><%= fmt(y.n) %></td></tr><% }) %></tbody></table>
+        </details>
+      </figure>
+      <% } %>
+
+      <% if (cats.length) { %>
+      <figure class="chart-card">
+        <figcaption>
+          <h3>ข่าวและประกาศ แยกตามหมวดหมู่</h3>
+          <p>รวม <%= fmt(catTotal) %> เรื่อง</p>
+        </figcaption>
+        <ul class="hbars">
+          <% cats.forEach(function (c) { %>
+          <li tabindex="0" data-tip="<%= c.c %>|<%= fmt(c.n) %> เรื่อง (<%= Math.round(c.n / catTotal * 100) %>%)">
+            <a class="hb-l" href="/news?cat=<%= encodeURIComponent(c.c) %>" tabindex="-1"><%= c.c %></a>
+            <span class="hb-track"><span class="hb-bar w-<%= c.pct %>"></span></span>
+            <span class="hb-v"><%= fmt(c.n) %></span>
+          </li>
+          <% }) %>
+        </ul>
+        <details class="tblview">
+          <summary>ดูเป็นตาราง</summary>
+          <table><thead><tr><th scope="col">หมวดหมู่</th><th scope="col" class="num">จำนวน (เรื่อง)</th><th scope="col" class="num">สัดส่วน</th></tr></thead>
+            <tbody><% cats.forEach(function (c) { %><tr><td><%= c.c %></td><td class="num"><%= fmt(c.n) %></td><td class="num"><%= Math.round(c.n / catTotal * 100) %>%</td></tr><% }) %></tbody></table>
+        </details>
+      </figure>
+      <% } %>
+    </div>
+
+    <div class="grid-2 mt">
+      <section class="panel">
+        <h3>เนื้อหาบนเว็บไซต์</h3>
+        <dl class="inv">
+          <div><dt>ข่าวและประกาศ</dt><dd><%= fmt(d.newsTotal) %></dd></div>
+          <div><dt>หน้าเว็บไซต์</dt><dd><%= fmt(counts.pages) %></dd></div>
+          <div><dt>อัลบั้มภาพกิจกรรม</dt><dd><%= fmt(counts.albums) %></dd></div>
+          <div><dt>กิจกรรมในปฏิทิน</dt><dd><%= fmt(counts.events) %></dd></div>
+          <div><dt>ระบบบริการออนไลน์</dt><dd><%= fmt(counts.services) %></dd></div>
+          <% if (d.oit.total) { %><div><dt>หัวข้อเปิดเผยข้อมูล (ITA / OIT)</dt><dd><a href="/ita"><%= fmt(d.oit.total) %></a></dd></div><% } %>
+        </dl>
+      </section>
+      <section class="panel">
+        <h3>ข้อมูลเปิด (Open Data)</h3>
+        <p class="muted">นำข้อมูลข่าวและปฏิทินของโรงเรียนไปใช้ต่อในรูปแบบมาตรฐาน</p>
+        <ul class="link-grid one-col">
+          <li><a href="/feed.xml"><%- icon('rss', 18) %><span>ข่าวสารล่าสุด (RSS)</span></a></li>
+          <li><a href="/calendar.ics"><%- icon('calendar', 18) %><span>ปฏิทินกิจกรรม (iCalendar)</span></a></li>
+          <li><a href="/api/news?limit=12"><%- icon('database', 18) %><span>ข่าวล่าสุด (JSON)</span></a></li>
+          <li><a href="/sitemap.xml"><%- icon('grid', 18) %><span>แผนผังเว็บไซต์ (XML)</span></a></li>
+        </ul>
+      </section>
+    </div>
+  </div>
+</section>
+<%- include('_foot') %>

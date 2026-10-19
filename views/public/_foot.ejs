@@ -1,33 +1,120 @@
 </main>
-
+<%
+  var mapQuery = S.map_query || S.school_name;
+  var applyUrl = S.admission_link || '/contact';
+  var fmt = function (n) { return Number(n || 0).toLocaleString('th-TH'); };
+%>
 <footer class="footer">
   <div class="wrap foot-grid">
-    <div>
-      <h3><%= S.school_name %></h3>
-      <p class="muted"><%= S.school_name_en %></p>
-      <p><%= S.tagline %></p>
-      <% if (S.facebook) { %><a class="soc" href="<%= S.facebook %>" target="_blank" rel="noopener noreferrer"><%- icon('facebook', 18) %> Facebook</a><% } %>
+    <div class="f-brand">
+      <a class="f-logo" href="/">
+        <img src="<%= S.logo ? '/uploads/' + S.logo : '/img/icon-192.png' %>" alt="" width="56" height="56" loading="lazy">
+        <span><strong><%= S.school_name %></strong><small><%= S.school_name_en %></small></span>
+      </a>
+      <% if (S.agency) { %><p class="muted"><%= S.agency %></p><% } %>
+      <p class="f-motto">“<%= S.tagline %>”</p>
+      <div class="soc">
+        <% if (S.facebook) { %><a href="<%= S.facebook %>" target="_blank" rel="noopener" aria-label="Facebook"><%- icon('facebook', 18) %></a><% } %>
+        <% if (S.youtube) { %><a href="<%= S.youtube %>" target="_blank" rel="noopener" aria-label="YouTube"><%- icon('youtube', 18) %></a><% } %>
+        <% if (S.line_url) { %><a href="<%= S.line_url %>" target="_blank" rel="noopener" aria-label="LINE"><%- icon('chat', 18) %></a><% } %>
+        <a href="/feed.xml" aria-label="RSS ข่าวสาร"><%- icon('rss', 18) %></a>
+      </div>
     </div>
     <div>
-      <h4>ลิงก์ด่วน</h4>
-      <ul class="flinks">
-        <li><a href="/news">ข่าวสารและประกาศ</a></li>
-        <% nav.filter(function (i) { return !i.children; }).slice(0, 4).forEach(function (i) { %><li><a href="<%= i.href %>"><%= i.label %></a></li><% }) %>
-        <li><a href="/contact">ติดต่อเรา</a></li>
-      </ul>
-    </div>
-    <div>
-      <h4>ติดต่อ</h4>
+      <h4>ติดต่อเรา <small>Contact</small></h4>
       <ul class="fcontact">
-        <li><%- icon('pin', 18) %><span><%= S.address %></span></li>
-        <li><%- icon('phone', 18) %><span><%= S.phone %></span></li>
-        <li><%- icon('mail', 18) %><span><%= S.email %></span></li>
-        <li><%- icon('clock', 18) %><span><%= S.hours %></span></li>
+        <% if (S.address) { %><li><%- icon('pin', 17) %><span><%= S.address %></span></li><% } %>
+        <% if (S.phone) { %><li><%- icon('phone', 17) %><a href="tel:<%= S.phone.replace(/[^\d+]/g, '') %>"><%= S.phone %></a></li><% } %>
+        <% if (S.email) { %><li><%- icon('mail', 17) %><a href="mailto:<%= S.email %>"><%= S.email %></a></li><% } %>
+        <% if (S.hours) { %><li><%- icon('clock', 17) %><span><%= S.hours %></span></li><% } %>
       </ul>
+    </div>
+    <div>
+      <h4>ลิงก์ด่วน <small>Quick Links</small></h4>
+      <ul class="flinks">
+        <% nav.forEach(function (i) { var h = i.href || (i.children && i.children[0].href); if (h && h !== '/') { %><li><a href="<%= h %>"><%= i.label %></a></li><% } }) %>
+        <li><a href="/ita">ITA / OIT</a></li>
+        <li><a href="/portal">บริการออนไลน์</a></li>
+      </ul>
+    </div>
+    <div>
+      <h4>แผนที่โรงเรียน <small>School Location</small></h4>
+      <div class="fmap" id="fmap">
+        <button type="button" class="map-load" data-map="https://www.google.com/maps?q=<%= encodeURIComponent(mapQuery) %>&amp;output=embed">
+          <%- icon('map', 28) %><span>แสดงแผนที่</span><small>โหลดจาก Google Maps เมื่อกดเท่านั้น</small>
+        </button>
+      </div>
+      <a class="maplink" href="https://www.google.com/maps/search/?api=1&amp;query=<%= encodeURIComponent(mapQuery) %>" target="_blank" rel="noopener"><%- icon('external', 14) %> เปิดใน Google Maps</a>
+    </div>
+    <div>
+      <h4>ติดตามข่าวสาร <small>Stay Updated</small></h4>
+      <ul class="flinks">
+        <li><a href="/calendar"><%- icon('calendar', 15) %> ปฏิทินกิจกรรม</a></li>
+        <li><a href="/feed.xml"><%- icon('rss', 15) %> ข่าวสาร (RSS)</a></li>
+        <% if (S.facebook) { %><li><a href="<%= S.facebook %>" target="_blank" rel="noopener"><%- icon('facebook', 15) %> Facebook โรงเรียน</a></li><% } %>
+      </ul>
+      <% if (typeof visits !== 'undefined' && visits) { %>
+      <div class="counter" aria-label="สถิติผู้เข้าชม">
+        <div><b><%= fmt(visits.today) %></b><span>วันนี้</span></div>
+        <div><b><%= fmt(visits.month) %></b><span>เดือนนี้</span></div>
+        <div><b><%= fmt(visits.total) %></b><span>ทั้งหมด</span></div>
+      </div>
+      <% } %>
     </div>
   </div>
-  <div class="copy"><div class="wrap">© <%= new Date().getFullYear() + 543 %> <%= S.school_name %> · <%= S.footer_text %>
-    · <a href="/p/privacy-policy">นโยบายความเป็นส่วนตัว</a> · <a href="/sitemap.xml">แผนผังเว็บไซต์</a></div></div>
+  <div class="copy">
+    <div class="wrap copy-in">
+      <span>© <%= new Date().getFullYear() + 543 %> <%= S.school_name %><%= S.footer_text ? ' · ' + S.footer_text : '' %></span>
+      <nav aria-label="นโยบายเว็บไซต์">
+        <a href="/p/privacy-policy">นโยบายความเป็นส่วนตัว</a>
+        <a href="/ita">เปิดเผยข้อมูลสาธารณะ</a>
+        <a href="/contact">ช่องทางร้องเรียน</a>
+        <a href="/sitemap.xml">แผนผังเว็บไซต์</a>
+      </nav>
+    </div>
+  </div>
 </footer>
+
+<div class="fab" role="group" aria-label="เครื่องมือช่วยเหลือ">
+  <button type="button" class="fab-btn" data-fs-cycle aria-label="ปรับขนาดตัวอักษร" title="ปรับขนาดตัวอักษร"><%- icon('type', 18) %></button>
+  <button type="button" class="fab-btn" data-hc aria-pressed="<%= hc %>" aria-label="โหมดความคมชัดสูง" title="ความคมชัดสูง"><%- icon('contrast', 18) %></button>
+  <button type="button" class="fab-btn" id="toTop" aria-label="กลับขึ้นด้านบน" title="กลับขึ้นด้านบน"><%- icon('up', 20) %></button>
+  <button type="button" class="fab-bot" id="botBtn" aria-expanded="false" aria-controls="assistant"><%- icon('bot', 24) %><span>ผู้ช่วย</span></button>
+</div>
+
+<section class="assistant" id="assistant" aria-label="ผู้ช่วยค้นหาข้อมูล" hidden>
+  <header class="as-head">
+    <span class="as-ava"><%- icon('bot', 22) %></span>
+    <div><b>ผู้ช่วยค้นหาข้อมูล</b><small><%= S.school_name %></small></div>
+    <button type="button" class="as-x" id="botClose" aria-label="ปิดผู้ช่วย"><%- icon('x', 18) %></button>
+  </header>
+  <div class="as-body" id="asBody" aria-live="polite">
+    <p class="bubble">สวัสดีครับ พิมพ์สิ่งที่ต้องการค้นหา เช่น “รับสมัคร” “ปฏิทิน” “ITA” หรือเลือกหัวข้อด้านล่างได้เลย</p>
+    <div class="chips">
+      <a href="<%= applyUrl %>">สมัครเรียน</a>
+      <a href="/calendar">ปฏิทินกิจกรรม</a>
+      <a href="/news">ข่าวล่าสุด</a>
+      <a href="/portal">บริการออนไลน์</a>
+      <a href="/ita">ITA / OIT</a>
+      <a href="/contact">ติดต่อโรงเรียน</a>
+    </div>
+  </div>
+  <form class="as-form" id="asForm">
+    <input type="search" name="q" placeholder="พิมพ์คำถามหรือคำค้นหา…" aria-label="คำค้นหา" maxlength="60" autocomplete="off">
+    <button aria-label="ค้นหา"><%- icon('arrow', 18) %></button>
+  </form>
+  <footer class="as-foot">
+    <% if (S.phone) { %><a href="tel:<%= S.phone.replace(/[^\d+]/g, '') %>"><%- icon('phone', 14) %> <%= S.phone %></a><% } %>
+    <% if (S.line_url) { %><a href="<%= S.line_url %>" target="_blank" rel="noopener"><%- icon('chat', 14) %> LINE</a><% } %>
+  </footer>
+</section>
+
+<div class="cookie" id="cookie" role="region" aria-label="การใช้คุกกี้" hidden>
+  <p><b>เว็บไซต์นี้ใช้คุกกี้เท่าที่จำเป็นต่อการทำงานเท่านั้น</b> ไม่มีคุกกี้ติดตามหรือโฆษณา แผนที่และวิดีโอจากภายนอกจะโหลดเมื่อท่านกดเปิดเอง
+    <a href="/p/privacy-policy">นโยบายความเป็นส่วนตัว</a></p>
+  <button type="button" class="btn btn-primary btn-sm" id="cookieOk">รับทราบ</button>
+</div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<template id="icons"><span data-i="book"><%- icon('book', 24) %></span><span data-i="arrow"><%- icon('arrow', 15) %></span></template>
 </body>
 </html>

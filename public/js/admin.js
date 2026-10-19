@@ -31,6 +31,9 @@
     });
   });
 
+  // แถบความคืบหน้า (กำหนดความกว้างด้วย JS เพราะ CSP ไม่อนุญาต style ในหน้า)
+  document.querySelectorAll('[data-pct]').forEach((el) => { el.style.width = `${Math.max(0, Math.min(100, +el.dataset.pct || 0))}%`; });
+
   // ตัวอย่างรูปก่อนอัปโหลด
   document.querySelectorAll('input[type=file]').forEach((inp) => inp.addEventListener('change', () => {
     const f = inp.files[0]; if (!f) return;

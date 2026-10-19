@@ -1,0 +1,34 @@
+<%- include('_head') %>
+<%- include('_pagehead', { heading: 'ปฏิทินกิจกรรม', eyebrow: 'School Calendar', lead: 'กิจกรรมและกำหนดการของโรงเรียน เพิ่มลงปฏิทินในโทรศัพท์ได้', crumbs: [['ข่าวสาร', '/news'], ['ปฏิทินกิจกรรม']] }) %>
+<section class="sec">
+  <div class="wrap two">
+    <div>
+      <% if (!months.length) { %>
+        <div class="panel ev-empty big"><%- icon('calendar', 44) %><p>ยังไม่มีกิจกรรมที่กำลังจะมาถึง</p><small>เมื่อโรงเรียนเพิ่มกิจกรรม จะแสดงที่หน้านี้และในปฏิทินของผู้ที่ติดตามโดยอัตโนมัติ</small></div>
+      <% } %>
+      <% months.forEach(function (m) { %>
+      <section class="cal-month" aria-label="<%= m.label %>">
+        <h2><%= m.label %></h2>
+        <ul class="ev-list"><% m.items.forEach(function (e) { %><%- include('_event', { e: e, full: true }) %><% }) %></ul>
+      </section>
+      <% }) %>
+      <% if (past.length) { %>
+      <details class="cal-past">
+        <summary>กิจกรรมที่ผ่านมา (<%= past.length %>)</summary>
+        <ul class="ev-list past"><% past.forEach(function (e) { %><%- include('_event', { e: e, full: true }) %><% }) %></ul>
+      </details>
+      <% } %>
+    </div>
+    <aside class="side" id="subscribe">
+      <h3>ติดตามปฏิทินโรงเรียน</h3>
+      <p class="muted">เพิ่มปฏิทินครั้งเดียว กิจกรรมใหม่จะขึ้นในโทรศัพท์ของคุณเองโดยอัตโนมัติ</p>
+      <div class="sub-btns">
+        <a class="btn btn-primary btn-block" href="webcal://<%= host %>/calendar.ics"><%- icon('calplus', 18) %> iPhone / Mac / Outlook</a>
+        <a class="btn btn-ghost btn-block" href="https://calendar.google.com/calendar/r?cid=<%= encodeURIComponent('webcal://' + host + '/calendar.ics') %>" target="_blank" rel="noopener"><%- icon('calendar', 18) %> Google Calendar</a>
+      </div>
+      <p class="muted small">หรือคัดลอกลิงก์นี้ไปเพิ่มในโปรแกรมปฏิทินอื่น:</p>
+      <div class="copybox"><code>https://<%= host %>/calendar.ics</code><button type="button" class="btn btn-ghost btn-sm" data-copy="https://<%= host %>/calendar.ics">คัดลอก</button></div>
+    </aside>
+  </div>
+</section>
+<%- include('_foot') %>

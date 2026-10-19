@@ -1,11 +1,15 @@
 <%- include('_head') %>
-<section class="pagehead"><div class="wrap">
-  <nav class="crumb" aria-label="breadcrumb"><a href="/">หน้าแรก</a> / <span>ค้นหา</span></nav>
-  <h1>ผลการค้นหา<%= q ? ': ' + q : '' %></h1>
-</div></section>
-<section class="sec"><div class="wrap one">
-  <% if (q && !news.length && !pages.length) { %><p class="empty">ไม่พบผลลัพธ์ที่ตรงกับคำค้นหา</p><% } %>
-  <% if (pages.length) { %><h3>หน้าเว็บไซต์</h3><ul class="results"><% pages.forEach(function (p) { %><li><a href="/p/<%= p.slug %>"><%= p.title %></a></li><% }) %></ul><% } %>
-  <% if (news.length) { %><h3>ข่าวสาร</h3><ul class="results"><% news.forEach(function (n) { %><li><a href="/news/<%= n.id %>"><%= n.title %></a><small><%= thDate(n.created_at) %></small></li><% }) %></ul><% } %>
-</div></section>
+<%- include('_pagehead', { heading: q ? 'ผลการค้นหา: ' + q : 'ค้นหาข้อมูล', crumbs: [['ค้นหา']] }) %>
+<section class="sec">
+  <div class="wrap one">
+    <form class="bigsearch" action="/search" role="search">
+      <input type="search" name="q" value="<%= q %>" placeholder="พิมพ์คำที่ต้องการค้นหา…" aria-label="คำค้นหา" maxlength="80">
+      <button class="btn btn-primary"><%- icon('search', 18) %> ค้นหา</button>
+    </form>
+    <% if (q && !news.length && !pages.length && !services.length) { %><p class="empty">ไม่พบผลลัพธ์ที่ตรงกับ “<%= q %>” ลองใช้คำที่สั้นลงหรือคำอื่น</p><% } %>
+    <% if (services.length) { %><h2 class="res-h">ระบบบริการออนไลน์</h2><ul class="results"><% services.forEach(function (s) { %><li><a href="<%= s.url %>" target="_blank" rel="noopener"><%= s.title %></a></li><% }) %></ul><% } %>
+    <% if (pages.length) { %><h2 class="res-h">หน้าเว็บไซต์</h2><ul class="results"><% pages.forEach(function (p) { %><li><a href="/p/<%= p.slug %>"><%= p.title %></a></li><% }) %></ul><% } %>
+    <% if (news.length) { %><h2 class="res-h">ข่าวสาร</h2><ul class="results"><% news.forEach(function (n) { %><li><a href="/news/<%= n.id %>"><%= n.title %></a><small><%= thDate(n.created_at) %></small></li><% }) %></ul><% } %>
+  </div>
+</section>
 <%- include('_foot') %>

@@ -1,0 +1,8 @@
+<section class="pagehead">
+  <div class="wrap">
+    <nav class="crumb" aria-label="breadcrumb"><a href="/">หน้าหลัก</a><% (crumbs || []).forEach(function (c) { %> <span aria-hidden="true">/</span> <% if (c[1]) { %><a href="<%= c[1] %>"><%= c[0] %></a><% } else { %><span><%= c[0] %></span><% } %><% }) %></nav>
+    <% if (typeof eyebrow !== 'undefined' && eyebrow) { %><span class="eyebrow"><%= eyebrow %></span><% } %>
+    <h1><%= heading %></h1>
+    <% if (typeof lead !== 'undefined' && lead) { %><p class="ph-lead"><%= lead %></p><% } %>
+  </div>
+</section>

@@ -1,0 +1,15 @@
+<% if (pages > 1) {
+  var win = [], from = Math.max(1, page - 2), to = Math.min(pages, page + 2);
+  if (from > 1) { win.push(1); if (from > 2) win.push(0); }
+  for (var i = from; i <= to; i++) win.push(i);
+  if (to < pages) { if (to < pages - 1) win.push(0); win.push(pages); }
+%>
+<nav class="pager" aria-label="เปลี่ยนหน้า">
+  <% if (page > 1) { %><a href="<%= href(page - 1) %>" aria-label="หน้าก่อนหน้า"><%- icon('left', 18) %></a><% } %>
+  <% win.forEach(function (n) { %>
+    <% if (n === 0) { %><span class="gap">…</span>
+    <% } else { %><a class="<%= n === page ? 'on' : '' %>" href="<%= href(n) %>" <%= n === page ? 'aria-current=page' : '' %>><%= n %></a><% } %>
+  <% }) %>
+  <% if (page < pages) { %><a href="<%= href(page + 1) %>" aria-label="หน้าถัดไป"><%- icon('right', 18) %></a><% } %>
+</nav>
+<% } %>

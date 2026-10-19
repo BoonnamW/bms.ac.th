@@ -135,7 +135,7 @@ try {
     phone: '039-325990', email: 'bms_school@hotmail.com',
     address: '1/7 ถนนแผ่นดินทอง ตำบลตลาด อำเภอเมือง จังหวัดจันทบุรี 22000',
     facebook: 'https://www.facebook.com/benjamanusornschool/',
-    admission_title: 'รับสมัครนักเรียน ปีการศึกษา 2569',
+    admission_title: 'รับสมัครนักเรียน',
     admission_text: 'ดูรายละเอียด คุณสมบัติ และกำหนดการรับสมัครนักเรียนของโรงเรียนเบญจมานุสรณ์',
     admission_link: admissionUrl || '/news?cat=รับสมัคร',
   };
@@ -146,6 +146,11 @@ try {
   db.prepare("DELETE FROM news WHERE body LIKE '%โรงเรียนวิทยาปัญญาขอเชิญ%'").run();
   db.prepare("DELETE FROM pages WHERE body LIKE '%(แก้ไขเนื้อหานี้ได้ที่หลังบ้าน)%'").run();
   db.prepare('DELETE FROM gallery WHERE image IS NULL').run();
+  if (firstImport) {
+    // ส่วนที่สร้างอัตโนมัติจากข้อมูลตัวอย่าง (ถ้าเคยเปิดเว็บก่อนนำเข้า) → สร้างใหม่จากข้อมูลจริงหลังนำเข้า
+    for (const t of ['menu_items', 'services', 'programs', 'highlights']) db.prepare(`DELETE FROM ${t}`).run();
+    db.prepare("DELETE FROM settings WHERE key LIKE 'seeded\\_%' ESCAPE '\\'").run();
+  }
 
   // ข่าว
   const insNews = db.prepare('INSERT INTO news (title,category,excerpt,body,image,published,created_at) VALUES (?,?,?,?,?,1,?)');
@@ -219,23 +224,15 @@ try {
     const pageOf = (wpId, fallback) => legacyGet.get(`?id=${wpId}`)?.target || fallback;
     const slides = [
       ['โรงเรียนเบญจมานุสรณ์ จังหวัดจันทบุรี', 'บัณฑิตย่อมฝึกตน — พัฒนาคุณภาพผู้เรียนสู่มาตรฐานสากล บนพื้นฐานความเป็นไทย', pageOf(379, '/')], // ประวัติโรงเรียน
-      ['รับสมัครนักเรียน ปีการศึกษา 2569', 'ติดตามประกาศและรายละเอียดการรับสมัครนักเรียน', settings.admission_link],
+      ['รับสมัครนักเรียน', 'ติดตามประกาศและรายละเอียดการรับสมัครนักเรียน', settings.admission_link],
       ['กิจกรรมและความภาคภูมิใจของเรา', 'ข่าวและภาพกิจกรรมของนักเรียน คณะครู และบุคลากร', '/news?cat=กิจกรรม'],
     ];
     db.prepare("DELETE FROM slides WHERE title IN ('เรียนดี มีคุณธรรม นำสู่สากล','เปิดรับสมัครนักเรียนใหม่ 2569','ห้องเรียนแห่งอนาคต')").run();
     if (!db.prepare('SELECT 1 FROM slides').get()) slides.forEach(([t, s, l], i) => db.prepare('INSERT INTO slides (title,subtitle,link,sort) VALUES (?,?,?,?)').run(t, s, l, i + 1));
 
-    const links = [
-      ['รับสมัครนักเรียน', 'graduation', settings.admission_link],
-      ['บุคลากร', 'users', pageOf(364, '/')],
-      ['e-Service', 'monitor', '/p/online-services'],
-      ['เปิดเผยข้อมูล (ITA)', 'file', '/p/oit-o1'],
-      ['เบญจมาฯ สาร', 'book', '/p/journal-archive'],
-      ['ช่องทางร้องเรียน', 'phone', '/contact'],
-    ];
+    // เมนูลัดชุดใหม่สร้างใน lib/seed.js — ที่นี่ลบเฉพาะชุดตัวอย่างของโรงเรียนสมมติ
     const demoLinks = ['สมัครเรียน', 'หลักสูตร', 'ปฏิทินการศึกษา', 'บุคลากร', 'ดาวน์โหลดเอกสาร', 'ติดต่อเรา', 'ช่องทางร้องเรียน'];
     db.prepare(`DELETE FROM links WHERE title IN (${demoLinks.map(() => '?').join(',')})`).run(...demoLinks);
-    if (!db.prepare('SELECT 1 FROM links').get()) links.forEach(([t, ic, u], i) => db.prepare('INSERT INTO links (title,icon,url,sort) VALUES (?,?,?,?)').run(t, ic, u, i + 1));
 
     if (!db.prepare('SELECT 1 FROM gallery').get()) {
       const pics = db.prepare("SELECT title, image FROM news WHERE category='กิจกรรม' AND image IS NOT NULL AND image NOT LIKE '%.pdf' ORDER BY created_at DESC LIMIT 12").all();
@@ -253,3 +250,7 @@ try {
   db.exec('ROLLBACK');
   throw e;
 }
+
+// เมนูหลัก ระบบบริการ หลักสูตร จุดเด่น เมนูลัด — สร้างจากข้อมูลที่เพิ่งนำเข้า (เฉพาะส่วนที่ยังไม่เคยสร้าง)
+const { seedDefaults } = await import('../lib/seed.js');
+seedDefaults();

@@ -1,8 +1,14 @@
 <%- include('_head') %>
-<section class="sec"><div class="wrap errbox">
-  <div class="code"><%= code %></div>
-  <h1><%= title %></h1>
-  <p><%= code === 404 ? 'หน้าที่คุณค้นหาอาจถูกย้ายหรือลบไปแล้ว' : 'ขออภัย ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง' %></p>
-  <a class="btn btn-primary" href="/">กลับหน้าแรก</a>
-</div></section>
+<section class="sec">
+  <div class="wrap errbox">
+    <div class="code"><%= code %></div>
+    <h1><%= title %></h1>
+    <p><%= code === 500 ? 'ขออภัย ระบบขัดข้องชั่วคราว กรุณาลองใหม่อีกครั้ง' : code === 404 ? 'หน้าที่คุณค้นหาอาจถูกย้ายหรือลบไปแล้ว ลองค้นหาด้วยคำที่ต้องการ' : 'ลิงก์นี้ไม่ถูกต้อง ลองค้นหาด้วยคำที่ต้องการ' %></p>
+    <form class="bigsearch" action="/search" role="search">
+      <input type="search" name="q" placeholder="ค้นหาข้อมูล…" aria-label="คำค้นหา" maxlength="80">
+      <button class="btn btn-primary"><%- icon('search', 18) %> ค้นหา</button>
+    </form>
+    <a class="btn btn-ghost" href="/">กลับหน้าหลัก</a>
+  </div>
+</section>
 <%- include('_foot') %>

@@ -4,9 +4,31 @@
   <p>จัดการเนื้อหาเว็บไซต์ได้จากเมนูด้านซ้าย การเปลี่ยนแปลงจะแสดงบนหน้าเว็บทันที</p>
   <div class="actions">
     <a class="btn" href="/admin/news/new">+ เพิ่มข่าวใหม่</a>
+    <a class="btn ghost" href="/admin/events/new">+ เพิ่มกิจกรรมในปฏิทิน</a>
     <a class="btn ghost" href="/admin/pages/new">+ เพิ่มหน้าเว็บ</a>
-    <a class="btn ghost" href="/admin/slides/new">+ เพิ่มสไลด์</a>
+    <a class="btn ghost" href="/admin/menu_items">จัดการเมนูหลัก</a>
   </div>
+</div>
+<div class="dash2">
+  <section class="panel">
+    <h3>ปฏิทินกิจกรรม</h3>
+    <p><strong class="big"><%= upcoming %></strong> กิจกรรมที่กำลังจะมาถึง</p>
+    <p class="muted">กิจกรรมที่เพิ่มจะแสดงในหน้าแรก หน้าปฏิทิน และปฏิทินออนไลน์ (iCal) ของผู้ติดตามโดยอัตโนมัติ</p>
+    <a class="btn ghost" href="/admin/events/new">+ เพิ่มกิจกรรม</a>
+  </section>
+  <% if (oit.length) { var done = oit.filter(function (o) { return !o.pending; }).length; %>
+  <section class="panel">
+    <h3>ความพร้อมข้อมูล ITA / OIT</h3>
+    <div class="meter" role="img" aria-label="มีข้อมูลแล้ว <%= done %> จาก <%= oit.length %> หัวข้อ"><span class="meter-fill" data-pct="<%= Math.round(done / oit.length * 100) %>"></span></div>
+    <p><strong><%= done %></strong> จาก <%= oit.length %> หัวข้อมีข้อมูลแล้ว</p>
+    <% if (done < oit.length) { %>
+    <details><summary>หัวข้อที่ยังรอข้อมูล (<%= oit.length - done %>)</summary>
+      <ul class="todo"><% oit.filter(function (o) { return o.pending; }).forEach(function (o) { %>
+        <li><a href="/admin/pages/<%= o.id %>"><%= o.title %></a></li><% }) %></ul>
+    </details>
+    <% } %>
+  </section>
+  <% } %>
 </div>
 <div class="cards">
   <% Object.keys(entities).forEach(function (k) { %>
