@@ -19,10 +19,10 @@
       <% if (s.subtitle) { %><p class="hero-sub"><%= s.subtitle %></p><% } %>
       <div class="hero-btns">
         <% if (i === 0) { %>
-          <a class="hbig hbig-accent" href="<%= aboutUrl %>"><%- icon('building', 22) %><span><b>เกี่ยวกับโรงเรียน</b><small>About Our School</small></span><%- icon('arrow', 18) %></a>
+          <a class="hbig hbig-primary" href="<%= aboutUrl %>"><%- icon('building', 22) %><span><b>เกี่ยวกับโรงเรียน</b><small>About Our School</small></span><%- icon('arrow', 18) %></a>
           <a class="hbig hbig-glass" href="/data"><%- icon('chart', 22) %><span><b>School Data Center</b><small>ข้อมูลสารสนเทศโรงเรียน</small></span><%- icon('arrow', 18) %></a>
         <% } else if (s.link) { %>
-          <a class="hbig hbig-accent" href="<%= s.link %>"><%- icon('arrow', 22) %><span><b>ดูรายละเอียด</b><small>Learn More</small></span></a>
+          <a class="hbig hbig-primary" href="<%= s.link %>"><%- icon('arrow', 22) %><span><b>ดูรายละเอียด</b><small>Learn More</small></span></a>
         <% } %>
       </div>
     </div>
@@ -226,7 +226,7 @@
         <span class="eyebrow">Virtual Campus Tour</span>
         <h2>เยี่ยมชมโรงเรียนแบบออนไลน์</h2>
         <p>ชมบรรยากาศและสถานที่ภายใน<%= S.school_name %></p>
-        <button type="button" class="hbig hbig-accent" data-video="<%= tour.embed %>"><%- icon('play', 22) %><span><b>เริ่มชมวิดีโอ</b><small>โหลดจาก YouTube เมื่อกดเล่น</small></span></button>
+        <button type="button" class="hbig hbig-primary" data-video="<%= tour.embed %>"><%- icon('play', 22) %><span><b>เริ่มชมวิดีโอ</b><small>โหลดจาก YouTube เมื่อกดเล่น</small></span></button>
       </div>
     </div>
     <% } else { %>
@@ -237,9 +237,9 @@
         <h2><%= S.about_title %></h2>
         <p><%= S.about_text %></p>
         <% if (tour && tour.url) { %>
-          <a class="hbig hbig-accent" href="<%= tour.url %>" target="_blank" rel="noopener"><%- icon('play', 22) %><span><b>ชมวิดีโอแนะนำโรงเรียน</b><small>Virtual Tour</small></span></a>
+          <a class="hbig hbig-primary" href="<%= tour.url %>" target="_blank" rel="noopener"><%- icon('play', 22) %><span><b>ชมวิดีโอแนะนำโรงเรียน</b><small>Virtual Tour</small></span></a>
         <% } else { %>
-          <a class="hbig hbig-accent" href="<%= aboutUrl %>"><%- icon('building', 22) %><span><b>ทำความรู้จักโรงเรียน</b><small>About Our School</small></span><%- icon('arrow', 18) %></a>
+          <a class="hbig hbig-primary" href="<%= aboutUrl %>"><%- icon('building', 22) %><span><b>ทำความรู้จักโรงเรียน</b><small>About Our School</small></span><%- icon('arrow', 18) %></a>
         <% } %>
       </div>
     </div>
@@ -298,9 +298,9 @@
       <p><%= S.admission_text %></p>
     </div>
     <div class="cta-btns">
-      <a class="cbtn c-accent" href="<%= applyUrl %>"><%- icon('graduation', 22) %><span><b>สมัครเรียน</b><small>Apply Now</small></span></a>
-      <a class="cbtn c-primary" href="/contact?topic=visit"><%- icon('calendar', 22) %><span><b>นัดเยี่ยมชมโรงเรียน</b><small>Book a Visit</small></span></a>
-      <a class="cbtn c-white" href="/contact"><%- icon('mail', 22) %><span><b>ติดต่อเรา</b><small>Contact Us</small></span></a>
+      <a class="cbtn c-white" href="<%= applyUrl %>"><%- icon('graduation', 22) %><span><b>สมัครเรียน</b><small>Apply Now</small></span></a>
+      <a class="cbtn c-dark" href="/contact?topic=visit"><%- icon('calendar', 22) %><span><b>นัดเยี่ยมชมโรงเรียน</b><small>Book a Visit</small></span></a>
+      <a class="cbtn c-glass" href="/contact"><%- icon('mail', 22) %><span><b>ติดต่อเรา</b><small>Contact Us</small></span></a>
     </div>
   </div>
 </section>

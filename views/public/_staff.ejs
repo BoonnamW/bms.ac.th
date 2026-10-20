@@ -49,12 +49,14 @@
     </span>
     <% if (editor) { %><a class="person-edit" href="/admin/staff/<%= s.id %>?back=<%= encodeURIComponent(back) %>" aria-label="แก้ไขข้อมูล <%= s.name %>" title="แก้ไข"><%- icon('edit', 16) %></a><% } %>
   <% }; %>
-  <% if (staff.head) { %><div class="person person-head" id="staff-<%= staff.head.id %>"><% card(staff.head, true) %></div><% } %>
+  <% var headLast = !!page.head_last; // ทำเนียบผู้บริหาร: เรียงจากคนแรก คนปัจจุบันอยู่ท้ายสุด %>
+  <% if (staff.head && !headLast) { %><div class="person person-head" id="staff-<%= staff.head.id %>"><% card(staff.head, true) %></div><% } %>
   <% if (staff.members.length) { %>
   <ul class="staff-grid" aria-label="รายชื่อ">
     <% staff.members.forEach(function (m) { %><li class="person reveal" id="staff-<%= m.id %>"><% card(m, false) %></li><% }) %>
   </ul>
   <% } %>
+  <% if (staff.head && headLast) { %><div class="person person-head person-last reveal" id="staff-<%= staff.head.id %>"><% card(staff.head, true) %></div><% } %>
   <% if (!staff.head && !staff.members.length) { %>
   <div class="panel ev-empty"><%- icon('users', 40) %><p>ยังไม่มีรายชื่อในหน้านี้</p><% if (editor) { %><small>กดปุ่ม “เพิ่มรายชื่อในหน้านี้” ด้านบนเพื่อเริ่มเพิ่ม</small><% } %></div>
   <% } %>
