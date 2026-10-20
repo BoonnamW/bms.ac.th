@@ -7,6 +7,8 @@ import { formToken, checkFormToken, thDate, parseUtc } from '../lib/helpers.js';
 import { OIT_GROUP } from '../lib/oit.js';
 import { EVENT_END_SQL, nowUtc, eventView, icsCalendar } from '../lib/events.js';
 import { sessionOf } from '../lib/session.js';
+import { album as driveAlbum, summary as driveSummary } from '../lib/gdrive.js';
+import { issues as journalIssues, issueOf, entriesOf, journalName, slugYm, ymSlug, ymLabel, thisYm, releaseDay, JOURNAL_SECTIONS } from '../lib/journal.js';
 import crypto from 'node:crypto';
 
 const r = Router();
@@ -16,6 +18,13 @@ const one = (sql, ...a) => db.prepare(sql).get(...a);
 const baseUrl = (req) => `${req.protocol}://${req.get('host')}`;
 const pageNo = (v) => Math.max(1, Math.min(10000, parseInt(v, 10) || 1));
 const PENDING = "body LIKE '<p>อยู่ระหว่างจัดเตรียมข้อมูล%'"; // หน้า OIT ที่ยังเป็นข้อความรอข้อมูล
+// การ์ดอัลบั้มภาพจาก Google Drive: ปก = รูปที่อัปโหลดไว้ หรือรูปแรกในโฟลเดอร์
+const albumCard = (a) => {
+  const d = driveSummary(a.drive_url);
+  return { id: a.id, href: `/gallery/${a.id}`, title: a.title, date: a.album_date, n: d?.n || 0,
+    image: a.image ? `/uploads/${a.image}` : d?.cover ? `/gdrive/t/${d.cover}` : '' };
+};
+const editorOf = (req) => { const s = sessionOf(req); return s ? { csrf: s.csrf } : null; };
 
 // ลิงก์เดิมจาก WordPress (/bs/2024/01/02/ชื่อข่าว/, /bs/?p=123 ฯลฯ) → หน้าใหม่ เพื่อไม่ให้ลิงก์จาก Google/Facebook เสีย
 const legacy = db.prepare('SELECT target FROM legacy_urls WHERE path=?');
@@ -101,7 +110,9 @@ r.get('/sitemap.xml', (req, res) => {
   const esc = (s) => String(s).replace(/&/g, '&amp;');
   const urls = [
     ['/', '1.0'], ['/news', '0.8'], ['/calendar', '0.7'], ['/gallery', '0.6'], ['/academics', '0.6'], ['/portal', '0.6'],
-    ['/ita', '0.7'], ['/awards', '0.6'], ['/data', '0.5'], ['/contact', '0.5'],
+    ['/ita', '0.7'], ['/awards', '0.6'], ['/journal', '0.6'], ['/data', '0.5'], ['/contact', '0.5'],
+    ...journalIssues().filter((x) => !x.link).map((x) => [`/journal/${x.slug}`, '0.5']),
+    ...all('SELECT id FROM albums WHERE published=1').map((a) => [`/gallery/${a.id}`, '0.5']),
     ...all('SELECT slug FROM pages WHERE published=1').map((p) => [`/p/${p.slug}`, '0.6']),
     ...all('SELECT id FROM news WHERE published=1 ORDER BY created_at DESC LIMIT 500').map((n) => [`/news/${n.id}`, '0.5']),
   ];
@@ -203,6 +214,7 @@ r.get('/', (req, res) => {
     })),
     awardLevels: AWARD_LEVELS, awardIcons: AWARD_ICONS,
     gallery: all('SELECT * FROM gallery ORDER BY sort, id LIMIT 12'),
+    albums: all('SELECT * FROM albums WHERE published=1 ORDER BY album_date DESC, id DESC LIMIT 12').map(albumCard).filter((a) => a.image),
     data: dataSummary(),
     tour: youtubeEmbed(S.tour_url),
   });
@@ -223,14 +235,16 @@ r.get('/news', (req, res) => {
   });
 });
 
-r.get('/news/:id', (req, res, next) => {
+r.get('/news/:id', async (req, res, next) => {
   if (!/^\d+$/.test(req.params.id)) return next();
   const item = one('SELECT * FROM news WHERE id=? AND published=1', req.params.id);
   if (!item) return next();
+  const photos = item.drive_url ? await driveAlbum(item.drive_url) : null; // ภาพกิจกรรมจาก Google Drive
   const recent = all('SELECT id, title, image, created_at FROM news WHERE published=1 AND id<>? ORDER BY created_at DESC LIMIT 5', item.id);
   const related = all('SELECT id, title, category, excerpt, image, created_at FROM news WHERE published=1 AND category=? AND id<>? ORDER BY created_at DESC LIMIT 3',
     item.category, item.id);
-  res.render('public/article', { title: item.title, item, recent, related, shareUrl: `${baseUrl(req)}/news/${item.id}` });
+  const ed = editorOf(req);
+  res.render('public/article', { title: item.title, item, recent, related, photos, editor: !!ed, csrf: ed?.csrf, shareUrl: `${baseUrl(req)}/news/${item.id}` });
 });
 
 // ---------- หน้าเว็บทั่วไป ----------
@@ -284,6 +298,35 @@ r.get('/awards', (req, res) => {
   });
 });
 
+// ---------- วารสารรายเดือน (E-book) ----------
+// ชั้นหนังสือ: เล่มที่เผยแพร่แล้ว (ผู้ดูแลเห็นเล่มที่กำลังรวบรวม/ซ่อนด้วย) + ลิงก์ฉบับย้อนหลังแบบเดิม
+r.get('/journal', (req, res) => {
+  const ed = editorOf(req), name = journalName(), cur = thisYm();
+  res.render('public/journal', {
+    title: name, css: 'ebook', name, list: journalIssues({ editor: !!ed }), sections: JOURNAL_SECTIONS,
+    cur: { ym: cur, slug: ymSlug(cur), label: ymLabel(cur), release: releaseDay(cur),
+      n: one("SELECT COUNT(*) c FROM journal_entries WHERE published=1 AND substr(entry_date,1,7)=?", cur).c },
+    legacy: all('SELECT title, slug FROM pages WHERE published=1 AND menu_group=? AND length(body) > 80 ORDER BY sort, id', name), // ไม่รวมหน้าที่ยังว่าง
+    editor: !!ed, csrf: ed?.csrf,
+  });
+});
+
+r.get('/journal/:ym', async (req, res, next) => {
+  const ym = slugYm(req.params.ym);
+  if (!ym) return next();
+  const ed = editorOf(req);
+  const issue = issueOf(ym, { editor: !!ed });
+  if (!issue && !ed) return next();
+  if (issue?.link && !ed) return res.redirect(issue.link); // เล่มที่ทำไว้ที่อื่น (AnyFlip / PDF)
+  const entries = entriesOf(ym);
+  await Promise.all(entries.map(async (e) => { e.photos = e.drive_url ? (await driveAlbum(e.drive_url, { limit: 6, wait: 4000 }))?.photos || [] : []; }));
+  const name = journalName(), label = ymLabel(ym);
+  res.render('public/ebook', {
+    title: `${name} ฉบับเดือน${label}`, css: 'ebook', name, ym, slug: ymSlug(ym), label, issue, entries, sections: JOURNAL_SECTIONS,
+    release: releaseDay(ym), host: req.get('host'), editor: !!ed,
+  });
+});
+
 // ---------- ปฏิทินกิจกรรม ----------
 r.get('/calendar', (req, res) => {
   const now = nowUtc();
@@ -312,14 +355,30 @@ r.get('/events/:id.ics', (req, res, next) => {
     .send(icsCalendar([e], { name: getSettings().school_name, host: req.hostname, base: baseUrl(req) }));
 });
 
-// ---------- คลังภาพกิจกรรม (ข่าวที่มีอัลบั้มภาพ) ----------
+// ---------- คลังภาพกิจกรรม: อัลบั้มจาก Google Drive และข่าวที่มีภาพกิจกรรม ----------
+const NEWS_ALBUMS = "published=1 AND image IS NOT NULL AND image NOT LIKE '%.pdf' AND (category='กิจกรรม' OR body LIKE '%wp-gallery%' OR COALESCE(drive_url,'')<>'')";
 r.get('/gallery', (req, res) => {
-  const where = "published=1 AND image IS NOT NULL AND image NOT LIKE '%.pdf' AND (category='กิจกรรม' OR body LIKE '%wp-gallery%')";
   const per = 12, page = pageNo(req.query.page);
-  const total = one(`SELECT COUNT(*) c FROM news WHERE ${where}`).c;
-  const albums = all(`SELECT id, title, image, created_at, body FROM news WHERE ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`, per, (page - 1) * per)
-    .map((n) => ({ id: n.id, title: n.title, image: n.image, created_at: n.created_at, photos: (String(n.body).match(/<img\b/g) || []).length }));
-  res.render('public/gallery', { title: 'ภาพกิจกรรม', albums, page, pages: Math.max(1, Math.ceil(total / per)), total });
+  const nAlbums = one('SELECT COUNT(*) c FROM albums WHERE published=1').c;
+  const nNews = one(`SELECT COUNT(*) c FROM news WHERE ${NEWS_ALBUMS}`).c;
+  const src = req.query.src === 'news' || !nAlbums ? 'news' : 'albums';
+  const total = src === 'albums' ? nAlbums : nNews;
+  const items = src === 'albums'
+    ? all('SELECT * FROM albums WHERE published=1 ORDER BY album_date DESC, id DESC LIMIT ? OFFSET ?', per, (page - 1) * per).map(albumCard)
+    : all(`SELECT id, title, image, created_at, body, drive_url FROM news WHERE ${NEWS_ALBUMS} ORDER BY created_at DESC LIMIT ? OFFSET ?`, per, (page - 1) * per)
+      .map((n) => ({ id: n.id, href: `/news/${n.id}`, title: n.title, image: `/uploads/${n.image}`, date: n.created_at,
+        n: (n.drive_url && driveSummary(n.drive_url)?.n) || (String(n.body).match(/<img\b/g) || []).length }));
+  res.render('public/gallery', { title: 'ภาพกิจกรรม', items, src, nAlbums, nNews, page, total, pages: Math.max(1, Math.ceil(total / per)), editor: !!sessionOf(req) });
+});
+
+r.get('/gallery/:id', async (req, res, next) => {
+  if (!/^\d+$/.test(req.params.id)) return next();
+  const a = one('SELECT * FROM albums WHERE id=? AND published=1', req.params.id);
+  if (!a) return next();
+  const photos = await driveAlbum(a.drive_url);
+  const more = all('SELECT * FROM albums WHERE published=1 AND id<>? ORDER BY album_date DESC, id DESC LIMIT 4', a.id).map(albumCard);
+  const ed = editorOf(req);
+  res.render('public/album', { title: a.title, a, photos, more, editor: !!ed, csrf: ed?.csrf, drive: req.query.drive || '' });
 });
 
 // ---------- ศูนย์ข้อมูลสารสนเทศ ----------

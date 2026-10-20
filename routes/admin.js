@@ -5,13 +5,18 @@ import rateLimit from 'express-rate-limit';
 import { db, getSettings } from '../lib/db.js';
 import { entities, settingsFields } from '../lib/entities.js';
 import { sessionOf } from '../lib/session.js';
+import { parseFolder, folderLink, refresh as refreshDrive, status as driveStatus } from '../lib/gdrive.js';
 import {
-  token, sha256, safeEqual, cookieOpts, cleanHtml, saveImage, removeImage, safeUrl,
+  token, sha256, safeEqual, cookieOpts, cleanHtml, saveImage, removeImage, saveDoc, removeDoc, pics, docs, safeUrl,
 } from '../lib/helpers.js';
 
 const r = Router();
 const SESSION_MS = 2 * 60 * 60 * 1000; // 2 ชั่วโมง
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 40 } });
+// ฟอร์มเนื้อหา: รูปหลัก 1 รูป · รูปประกอบหลายรูป (images) · เอกสารแนบ (files)
+const MAX_IMAGES = 12, MAX_FILES = 5, IMG_BYTES = 5 * 1024 * 1024;
+const uploadForm = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 1 + MAX_IMAGES + MAX_FILES, fields: 80 } })
+  .fields([{ name: 'image', maxCount: 1 }, { name: 'images', maxCount: MAX_IMAGES }, { name: 'files', maxCount: MAX_FILES }]);
 const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', 12);
 
 r.use((req, res, next) => {
@@ -138,6 +143,15 @@ r.post('/settings', requireAuth, upload.single('logo'), csrfCheck, (req, res) =>
   res.redirect('/admin/settings?saved=1');
 });
 
+// ---------- รูปจาก Google Drive: อ่านรายชื่อรูปใหม่ทันที (ปุ่ม "อัปเดตรูปจาก Drive" บนหน้าเว็บ) ----------
+r.post('/gdrive/refresh', requireAuth, csrfCheck, async (req, res) => {
+  const f = parseFolder(req.body.url);
+  const back = backUrl(req.body.back) || '/admin';
+  if (!f) return res.redirect(back);
+  const r2 = await refreshDrive(f);
+  res.redirect(`${back}${back.includes('?') ? '&' : '?'}drive=${r2.ok ? 'ok' : 'err'}`);
+});
+
 // ---------- CRUD ทั่วไป ----------
 function getEntity(req, res, next) {
   const e = Object.hasOwn(entities, req.params.e) ? entities[req.params.e] : null;
@@ -150,7 +164,7 @@ function getEntity(req, res, next) {
 function validate(fields, body, existing = {}) {
   const values = {}, errors = [];
   for (const f of fields) {
-    if (f.type === 'image') continue;
+    if (['image', 'images', 'files'].includes(f.type)) continue; // จัดการแยกตอนบันทึก
     let v = body[f.n];
     if (Array.isArray(v)) v = v[0];
     switch (f.type) {
@@ -173,6 +187,14 @@ function validate(fields, body, existing = {}) {
       case 'color': v = String(v ?? '').trim();
         if (!/^#[0-9a-fA-F]{6}$/.test(v)) { errors.push(`"${f.label}" ต้องเป็นรหัสสี เช่น #14325e`); continue; }
         break;
+      case 'time': v = String(v ?? '').trim();
+        if (v && !/^([01]\d|2[0-3]):[0-5]\d$/.test(v)) { errors.push(`"${f.label}" รูปแบบเวลาไม่ถูกต้อง (เช่น 09:30)`); continue; }
+        break;
+      case 'coloropt': // ติ๊ก "ใช้สีตามธีม" = ว่าง
+        v = body[`${f.n}_auto`] ? '' : String(v ?? '').trim();
+        if (v && !/^#[0-9a-fA-F]{6}$/.test(v)) { errors.push(`"${f.label}" ต้องเป็นรหัสสี เช่น #14325e`); continue; }
+        values[f.n] = v.toLowerCase();
+        continue;
       case 'date': v = String(v ?? '').trim();
         if (v && (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(`${v}T00:00:00Z`)))) { errors.push(`"${f.label}" รูปแบบไม่ถูกต้อง`); continue; }
         break;
@@ -186,6 +208,15 @@ function validate(fields, body, existing = {}) {
         else if (f.blank) v = '';
         else v = existing[f.n] || new Date().toISOString().slice(0, 19).replace('T', ' ');
         break;
+      case 'gdrive': {
+        v = String(v ?? '').trim();
+        if (v) {
+          const f2 = parseFolder(v);
+          if (!f2) { errors.push(`"${f.label}" ต้องเป็นลิงก์โฟลเดอร์ Google Drive เช่น https://drive.google.com/drive/folders/… (ไม่ใช่ลิงก์ของไฟล์)`); continue; }
+          v = folderLink(f2);
+        }
+        break;
+      }
       case 'select': v = String(v ?? '');
         if (v && !f.options.includes(v)) { errors.push(`"${f.label}" ไม่ถูกต้อง`); continue; }
         break;
@@ -204,15 +235,29 @@ r.get('/:e', requireAuth, getEntity, (req, res) => {
 });
 
 // ปุ่มเพิ่ม/แก้ไขบนหน้าเว็บส่งหน้าเดิมมาเป็น back → บันทึกแล้วกลับไปหน้านั้น (รับเฉพาะหน้าในเว็บนี้)
-const backUrl = (v) => (/^\/(p\/[a-z0-9-]+|awards)$/.test(String(v || '')) ? String(v) : '');
+const backUrl = (v) => (/^\/(p\/[a-z0-9-]+|awards|news\/\d+|gallery(\/\d+)?|journal(\/25\d\d-(0[1-9]|1[0-2]))?)$/.test(String(v || '')) ? String(v) : '');
+
+// โฟลเดอร์ Google Drive ในฟอร์ม: อ่านรายชื่อรูปทันทีที่บันทึก — โฟลเดอร์ไม่ได้แชร์ / ไม่มีรูป แจ้งในฟอร์ม
+// (ติดต่อ Google ไม่ได้ชั่วคราว บันทึกได้ตามปกติ ระบบจะลองอ่านใหม่เองตอนมีคนเปิดดู)
+async function checkDrive(fields, values, existing) {
+  const errors = [];
+  for (const f of fields.filter((x) => x.type === 'gdrive' && values[x.n])) {
+    if (existing?.[f.n] === values[f.n] && driveStatus(values[f.n])?.ok) continue; // ลิงก์เดิมที่อ่านได้แล้ว
+    const r = await refreshDrive(parseFolder(values[f.n]));
+    if (r.ok && !r.n) errors.push(`"${f.label}": ไม่พบไฟล์รูปในโฟลเดอร์นี้ (รูปต้องอยู่ในโฟลเดอร์นี้โดยตรง ไม่ใช่โฟลเดอร์ย่อย)`);
+    else if (!r.ok && r.final) errors.push(`"${f.label}": ${r.error}`);
+  }
+  return errors;
+}
 
 r.get('/:e/new', requireAuth, getEntity, (req, res) => {
   if (req.ent.readonly) return res.redirect(`/admin/${req.table}`);
   const item = {};
   for (const f of req.ent.fields) {
-    if (f.def !== undefined) item[f.n] = f.def;
+    if (f.def !== undefined) item[f.n] = typeof f.def === 'function' ? f.def() : f.def;
     const q = req.query[f.n]; // เช่น ?page_id=17 จากปุ่ม "เพิ่มบุคลากร" ของหน้ากลุ่มสาระ
     if (f.type === 'select' && typeof q === 'string' && f.options.includes(q)) item[f.n] = q;
+    if (f.type === 'date' && typeof q === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(q)) item[f.n] = q;
   }
   item.created_at = new Date().toISOString().slice(0, 19).replace('T', ' ');
   res.render('admin/form', { title: `เพิ่ม${req.ent.singular}`, item, errors: [], back: backUrl(req.query.back) });
@@ -225,7 +270,7 @@ r.get('/:e/:id', requireAuth, getEntity, (req, res, next) => {
   res.render('admin/form', { title: req.ent.readonly ? `ดู${req.ent.singular}` : `แก้ไข${req.ent.singular}`, item, errors: [], back: backUrl(req.query.back) });
 });
 
-r.post('/:e/save', requireAuth, getEntity, upload.single('image'), csrfCheck, (req, res) => {
+r.post('/:e/save', requireAuth, getEntity, uploadForm, csrfCheck, async (req, res) => {
   if (req.ent.readonly) return res.redirect(`/admin/${req.table}`);
   const id = /^\d+$/.test(req.body.id || '') ? Number(req.body.id) : null;
   const existing = id ? db.prepare(`SELECT * FROM ${req.table} WHERE id=?`).get(id) : null;
@@ -233,20 +278,53 @@ r.post('/:e/save', requireAuth, getEntity, upload.single('image'), csrfCheck, (r
 
   const { values, errors } = validate(req.ent.fields, req.body, existing || {});
   if (!errors.length && req.ent.check) errors.push(...req.ent.check(values, existing, id));
-  const hasImage = req.ent.fields.some((f) => f.type === 'image');
+  if (!errors.length) errors.push(...await checkDrive(req.ent.fields, values, existing));
+  const has = (t) => req.ent.fields.some((f) => f.type === t);
+  const up = req.files || {};
+  const saved = { images: [], files: [] }; // ไฟล์ใหม่ — บันทึกไม่สำเร็จจะลบทิ้ง
   let newImg = null;
-  try { if (req.file && hasImage) newImg = saveImage(req.file); } catch (e) { errors.push(e.message); }
+  const keep = (v) => (Array.isArray(v) ? v : v ? [v] : []).map(String);
+  try {
+    if (!errors.length) {
+      if (has('image') && up.image?.[0]) {
+        if (up.image[0].size > IMG_BYTES) throw new Error('รูปภาพต้องมีขนาดไม่เกิน 5 MB');
+        newImg = saveImage(up.image[0]);
+      }
+      if (has('images')) for (const f of up.images || []) {
+        if (f.size > IMG_BYTES) throw new Error(`รูป "${f.originalname}" ใหญ่เกิน 5 MB`);
+        saved.images.push(saveImage(f));
+      }
+      if (has('files')) for (const f of up.files || []) saved.files.push(saveDoc(f));
+    }
+  } catch (e) { errors.push(e.message); }
+  // รูปประกอบ/เอกสาร: ของเดิม − ที่ติ๊กลบ + ที่อัปโหลดใหม่
+  const dropPics = keep(req.body.remove_images), dropDocs = keep(req.body.remove_files);
+  if (has('images')) {
+    const list = [...pics(existing?.images).filter((x) => !dropPics.includes(x)), ...saved.images];
+    if (list.length > MAX_IMAGES) errors.push(`รูปประกอบได้ไม่เกิน ${MAX_IMAGES} รูป (ตอนนี้ ${list.length} รูป) — ติ๊กลบรูปเดิมบางรูปก่อน`);
+    values.images = JSON.stringify(list);
+  }
+  if (has('files')) {
+    const list = [...docs(existing?.files).filter((x) => !dropDocs.includes(x.f)).map(({ n, f }) => ({ n, f })), ...saved.files];
+    if (list.length > MAX_FILES) errors.push(`เอกสารแนบได้ไม่เกิน ${MAX_FILES} ไฟล์`);
+    values.files = JSON.stringify(list);
+  }
 
   const rerender = (status = 400) => {
     removeImage(newImg);
+    saved.images.forEach(removeImage);
+    saved.files.forEach((x) => removeDoc(x.f));
+    const item = { ...(existing || {}), ...values, id };
+    if (has('images')) item.images = existing?.images || '[]';
+    if (has('files')) item.files = existing?.files || '[]';
     return res.status(status).render('admin/form', {
-      title: id ? `แก้ไข${req.ent.singular}` : `เพิ่ม${req.ent.singular}`, item: { ...(existing || {}), ...values, id }, errors, back: backUrl(req.body.back) });
+      title: id ? `แก้ไข${req.ent.singular}` : `เพิ่ม${req.ent.singular}`, item, errors, back: backUrl(req.body.back) });
   };
   if (errors.length) return rerender();
 
-  if (hasImage) {
-    if (newImg) { removeImage(existing?.image); values.image = newImg; }
-    else if (req.body.remove_image) { removeImage(existing?.image); values.image = null; }
+  if (has('image')) {
+    if (newImg) values.image = newImg;
+    else if (req.body.remove_image) values.image = null;
   }
   const cols = Object.keys(values);
   let rowId = id;
@@ -257,6 +335,10 @@ r.post('/:e/save', requireAuth, getEntity, upload.single('image'), csrfCheck, (r
     if (String(e.message).includes('UNIQUE')) { errors.push('ชื่อในลิงก์ (slug) นี้ถูกใช้แล้ว'); return rerender(); }
     throw e;
   }
+  // บันทึกสำเร็จแล้วจึงลบไฟล์เดิมที่ถูกแทน/ติ๊กลบ
+  if (has('image') && (newImg || req.body.remove_image)) removeImage(existing?.image);
+  dropPics.filter((x) => pics(existing?.images).includes(x)).forEach(removeImage);
+  docs(existing?.files).filter((x) => dropDocs.includes(x.f)).forEach((x) => removeDoc(x.f));
   req.ent.afterSave?.(rowId, values);
   const back = backUrl(req.body.back);
   res.redirect(back ? `${back}${req.ent.anchor ? `#${req.ent.anchor}-${rowId}` : ''}` : `/admin/${req.table}?saved=1`);
@@ -269,6 +351,8 @@ r.post('/:e/:id/delete', requireAuth, getEntity, csrfCheck, (req, res) => {
     db.prepare(`DELETE FROM ${req.table} WHERE id=?`).run(item.id);
     req.ent.onDelete?.(item);
     removeImage(item.image);
+    pics(item.images).forEach(removeImage);
+    docs(item.files).forEach((x) => removeDoc(x.f));
   }
   res.redirect(backUrl(req.body.back) || `/admin/${req.table}?deleted=1`);
 });
@@ -276,7 +360,8 @@ r.post('/:e/:id/delete', requireAuth, getEntity, csrfCheck, (req, res) => {
 // จัดการข้อผิดพลาดจาก multer (ไฟล์ใหญ่เกิน ฯลฯ)
 r.use((err, req, res, next) => {
   if (err instanceof multer.MulterError) {
-    return res.status(400).render('admin/message', { title: 'อัปโหลดไม่สำเร็จ', msg: err.code === 'LIMIT_FILE_SIZE' ? 'ไฟล์มีขนาดใหญ่เกิน 5 MB' : 'อัปโหลดไม่สำเร็จ' });
+    return res.status(400).render('admin/message', { title: 'อัปโหลดไม่สำเร็จ', msg: err.code === 'LIMIT_FILE_SIZE' ? 'ไฟล์มีขนาดใหญ่เกินกำหนด (รูป 5 MB · เอกสาร 10 MB)'
+      : err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_UNEXPECTED_FILE' ? `อัปโหลดได้ครั้งละไม่เกิน ${MAX_IMAGES} รูป และเอกสาร ${MAX_FILES} ไฟล์` : 'อัปโหลดไม่สำเร็จ' });
   }
   next(err);
 });

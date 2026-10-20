@@ -3,12 +3,13 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { db, getSettings, ROOT, UPLOAD_DIR } from './lib/db.js';
 import { navTree } from './lib/nav.js';
-import { parseCookies, icon, thDate, thDateTime, thTime, thDay, dateParts, token, IFRAME_HOSTS, WP_FILE } from './lib/helpers.js';
+import { parseCookies, icon, thDate, thDateTime, thTime, thDay, dateParts, token, pics, docs, IFRAME_HOSTS, WP_FILE } from './lib/helpers.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import { seedDefaults } from './lib/seed.js';
 import { wpMedia } from './lib/wpmedia.js';
 import { themeCss } from './lib/colors.js';
+import { gdriveMedia, status as driveStatus } from './lib/gdrive.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 
@@ -16,7 +17,7 @@ seedDefaults(); // เมนูหลัก ระบบบริการ ฯ�
 
 // เลขเวอร์ชันไฟล์ CSS/JS — เปลี่ยนเมื่อไฟล์เปลี่ยน เบราว์เซอร์จะโหลดไฟล์ใหม่ทันที
 const assetVersion = crypto.createHash('md5')
-  .update(['css/site.css', 'js/site.js'].map((f) => fs.readFileSync(path.join(ROOT, 'public', f))).join('')).digest('hex').slice(0, 8);
+  .update(['css/site.css', 'js/site.js', 'css/ebook.css', 'js/ebook.js'].map((f) => fs.readFileSync(path.join(ROOT, 'public', f))).join('')).digest('hex').slice(0, 8);
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -43,7 +44,8 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       styleSrc: ["'self'", 'https://fonts.googleapis.com'],
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-      imgSrc: ["'self'", 'data:', 'blob:', ...(WP_MEDIA_ORIGIN ? [WP_MEDIA_ORIGIN] : [])], // blob: = ตัวอย่างรูปก่อนอัปโหลดในหลังบ้าน
+      // blob: = ตัวอย่างรูปก่อนอัปโหลดในหลังบ้าน · Google = รูปจาก Drive กรณีเซิร์ฟเวอร์ดึงมาเก็บไม่ได้
+      imgSrc: ["'self'", 'data:', 'blob:', 'https://drive.google.com', 'https://*.googleusercontent.com', ...(WP_MEDIA_ORIGIN ? [WP_MEDIA_ORIGIN] : [])],
       frameSrc: ["'self'", ...IFRAME_HOSTS.map((h) => `https://${h}`), ...(WP_MEDIA_ORIGIN ? [WP_MEDIA_ORIGIN] : [])],
       connectSrc: ["'self'"],
       objectSrc: ["'none'"],
@@ -76,6 +78,7 @@ app.use('/uploads', express.static(UPLOAD_DIR, {
   setHeaders: (res) => res.setHeader('Content-Disposition', 'inline'),
 }));
 app.use('/uploads/wp', wpMedia(WP_MEDIA_URL)); // ไฟล์ที่ยังไม่มีในเครื่อง → ดึงจากเว็บเดิมมาเก็บไว้
+app.get('/gdrive/:size/:file', gdriveMedia()); // รูปย่อจากโฟลเดอร์ Google Drive ที่ใช้บนเว็บ
 
 // สีประจำโรงเรียน (ตั้งค่าได้ในหลังบ้าน) → ตัวแปรสีของเว็บ
 app.get('/theme.css', (req, res) => res.type('text/css').set('Cache-Control', 'no-cache').send(themeCss(getSettings())));
@@ -89,7 +92,7 @@ app.use((req, res, next) => {
   const ann = S.announce_on === '1' && S.announce_text
     ? crypto.createHash('md5').update(`${S.announce_text}\n${S.announce_link || ''}`).digest('hex').slice(0, 10) : '';
   Object.assign(res.locals, {
-    icon, thDate, thDateTime, thTime, thDay, dateParts, S, path: req.path, url: req.originalUrl, title: '', v: assetVersion,
+    icon, thDate, thDateTime, thTime, thDay, dateParts, driveStatus, pics, docs, S, path: req.path, url: req.originalUrl, title: '', v: assetVersion,
     fs: (pref.match(/\b(sm|lg)\b/) || [])[1] || '', hc: /\bhc\b/.test(pref),
     annKey: ann && req.cookies.ann !== ann ? ann : '',
     extLinks: extLinksSql.all(), // ลิงก์หน่วยงานภายนอกท้ายเว็บ

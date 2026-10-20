@@ -15,6 +15,7 @@
           <% } else if (c[0] === 'created_at') { %><%= thDate(v) %>
           <% } else if (f.type === 'datetime') { %><%= v ? thDateTime(v) : '' %>
           <% } else if (f.type === 'date') { %><%= v ? thDay(v, 'short') : '' %>
+          <% } else if (f.type === 'gdrive') { var ds = v && driveStatus(v); %><%= !v ? '' : !ds ? 'รออ่านโฟลเดอร์' : ds.ok ? ds.n.toLocaleString('th-TH') + ' รูป' : 'อ่านไม่ได้' %>
           <% } else if (i === 0) { %><a href="/admin/<%= table %>/<%= row.id %>" class="<%= ent.indent && ent.indent(row) ? 'sub' : '' %>"><strong><%= v %></strong></a>
           <% } else if (f.type === 'select' && f.labels) { var lb = f.labels; %><%= lb[v] !== undefined ? lb[v] : v %>
           <% } else { %><%= v %><% } %>

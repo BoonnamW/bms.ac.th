@@ -1,0 +1,30 @@
+<%
+  // ภาพจากโฟลเดอร์ Google Drive: photos = { link, info, photos } · caption = ชื่ออัลบั้ม (ใช้เป็นคำอธิบายรูป)
+  // ผู้ดูแลที่เข้าสู่ระบบอยู่เห็นปุ่ม "อัปเดตรูปจาก Drive"
+  var list = photos.photos, info = photos.info || {};
+  var psetTitle = typeof heading !== 'undefined' ? heading : 'ภาพกิจกรรม';
+%>
+<section class="pset" aria-labelledby="psetTitle">
+  <div class="pset-h">
+    <h2 id="psetTitle"><%- icon('image', 20) %> <%= psetTitle %><% if (list.length) { %> <small><%= list.length.toLocaleString('th-TH') %> ภาพ</small><% } %></h2>
+    <a class="more" href="<%= photos.link %>" target="_blank" rel="noopener">เปิดโฟลเดอร์ใน Google Drive <%- icon('external', 14) %><span class="sr-only"> (เปิดหน้าต่างใหม่)</span></a>
+  </div>
+  <% if (list.length) { %>
+  <ul class="pgrid" data-lightbox data-caption="<%= caption %>">
+    <% list.forEach(function (p, i) { %>
+    <li><a href="/gdrive/l/<%= p.id %>" data-open="<%= p.open %>"><img src="/gdrive/t/<%= p.id %>" alt="<%= caption %> ภาพที่ <%= i + 1 %>" loading="lazy" width="480" height="360"></a></li>
+    <% }) %>
+  </ul>
+  <% } else { %>
+  <div class="panel ev-empty"><%- icon('image', 34) %><p><%= info.error ? 'ยังแสดงภาพจาก Google Drive ไม่ได้ในขณะนี้' : 'กำลังโหลดภาพจาก Google Drive — ลองเปิดหน้านี้ใหม่อีกครั้ง' %></p>
+    <a href="<%= photos.link %>" target="_blank" rel="noopener">ดูภาพใน Google Drive</a></div>
+  <% } %>
+  <% if (typeof editor !== 'undefined' && editor && typeof csrf !== 'undefined' && csrf) { %>
+  <form class="pset-tools" method="post" action="/admin/gdrive/refresh">
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="url" value="<%= photos.link %>"><input type="hidden" name="back" value="<%= back %>">
+    <button class="btn btn-ghost btn-sm"><%- icon('refresh', 15) %> อัปเดตรูปจาก Drive ตอนนี้</button>
+    <span class="muted small"><%- icon('lock', 13) %> ผู้ดูแล ·
+      <%= info.fetched_at ? (info.ok ? 'อ่านโฟลเดอร์ล่าสุด ' + thDateTime(new Date(info.fetched_at).toISOString().slice(0, 19).replace('T', ' ')) : 'อ่านโฟลเดอร์ไม่ได้: ' + info.error) : 'ยังไม่ได้อ่านโฟลเดอร์' %></span>
+  </form>
+  <% } %>
+</section>

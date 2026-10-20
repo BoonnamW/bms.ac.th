@@ -1,0 +1,21 @@
+<%- include('_head') %>
+<%- include('_pagehead', { heading: a.title, eyebrow: 'Photo Album', lead: (a.album_date ? thDay(a.album_date) : '') + (photos.photos.length ? ' · ' + photos.photos.length.toLocaleString('th-TH') + ' ภาพ' : ''),
+  crumbs: [['ภาพกิจกรรม', '/gallery'], [a.title]] }) %>
+<section class="sec">
+  <div class="wrap">
+    <% if (drive) { %><p class="alert <%= drive === 'ok' ? 'ok' : 'err' %>"><%= drive === 'ok' ? 'อัปเดตรายการรูปจาก Google Drive แล้ว' : 'อ่านโฟลเดอร์ Google Drive ไม่ได้ — ตรวจสอบว่าแชร์แบบ “ทุกคนที่มีลิงก์ดูได้”' %></p><% } %>
+    <% if (editor) { %>
+    <div class="staff-tools">
+      <a class="btn btn-primary btn-sm" href="/admin/albums/<%= a.id %>?back=<%= encodeURIComponent('/gallery/' + a.id) %>"><%- icon('edit', 15) %> แก้ไขอัลบั้มนี้</a>
+      <a class="btn btn-ghost btn-sm" href="/admin/albums/new?back=<%= encodeURIComponent('/gallery') %>"><%- icon('plus', 16) %> เพิ่มอัลบั้ม</a>
+    </div>
+    <% } %>
+    <% if (a.detail) { %><p class="album-detail"><%= a.detail %></p><% } %>
+    <%- include('_photos', { photos: photos, caption: a.title, heading: 'ภาพทั้งหมด', back: '/gallery/' + a.id }) %>
+    <% if (more.length) { %>
+    <div class="sec-h mt"><div><h2>อัลบั้มอื่น ๆ</h2><p class="en">More Albums</p></div><a class="more" href="/gallery">ดูทั้งหมด <%- icon('arrow', 16) %></a></div>
+    <div class="album-grid"><% more.forEach(function (m) { %><%- include('_album', { m: m }) %><% }) %></div>
+    <% } %>
+  </div>
+</section>
+<%- include('_foot') %>

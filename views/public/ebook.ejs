@@ -1,0 +1,129 @@
+<%- include('_head') %>
+<%
+  var img = function (v) { return !v ? '' : /^https:\/\//.test(v) ? v : '/uploads/' + v; };
+  var logo = S.logo ? '/uploads/' + S.logo : '/img/icon-192.png';
+  var row = (issue && issue.row) || {};
+  var number = issue && issue.number, cover = issue ? issue.cover : '';
+  var issueLine = [row.volume ? 'ปีที่ ' + row.volume : '', number ? 'ฉบับที่ ' + number : ''].filter(Boolean).join(' ');
+  var highlights = entries.slice(0, 4);
+  var back = '/journal/' + slug;
+%>
+<section class="eb-shell">
+  <div class="wrap">
+    <nav class="crumb" aria-label="breadcrumb"><a href="/">หน้าหลัก</a> <span aria-hidden="true">/</span> <a href="/journal"><%= name %></a> <span aria-hidden="true">/</span> <span><%= label %></span></nav>
+    <div class="eb-head">
+      <div>
+        <span class="eyebrow">School Newsletter · E-Book</span>
+        <h1><%= name %> <span>ฉบับเดือน<%= label %></span></h1>
+        <p class="eb-sub"><%= [issueLine, entries.length + ' บทความ'].filter(Boolean).join(' · ') %></p>
+      </div>
+      <div class="eb-tools" role="toolbar" aria-label="เครื่องมืออ่านเล่ม" hidden>
+        <button type="button" data-eb-mode="book" aria-pressed="true"><%- icon('bookopen', 16) %> แบบรูปเล่ม</button>
+        <button type="button" data-eb-mode="scroll" aria-pressed="false"><%- icon('list', 16) %> เลื่อนอ่าน</button>
+        <button type="button" data-eb-full><%- icon('expand', 16) %> เต็มจอ</button>
+        <button type="button" data-eb-print><%- icon('printer', 16) %> พิมพ์ / บันทึก PDF</button>
+      </div>
+    </div>
+    <% if (editor) { %>
+    <div class="jtools">
+      <p><%- icon('lock', 15) %>
+        <% if (!issue) { %>เดือนนี้ยังไม่มีบทความ — เพิ่มบทความแล้วเล่มจะรวมให้เอง
+        <% } else if (issue.link) { %>เล่มนี้ตั้งเป็นลิงก์ภายนอก ผู้ชมจะถูกพาไปที่ <a href="<%= issue.link %>" target="_blank" rel="noopener"><%= issue.link %></a>
+        <% } else if (issue.isPublic) { %>เผยแพร่แล้ว<%= issue.status === 'now' ? ' (ตั้งให้เผยแพร่ทันที)' : '' %>
+        <% } else if (issue.status === 'hidden') { %>ซ่อนอยู่ — ผู้ชมทั่วไปยังไม่เห็นเล่มนี้
+        <% } else { %>กำลังรวบรวม — เผยแพร่อัตโนมัติ <b><%= thDay(release) %></b> (ตอนนี้เห็นเฉพาะผู้ดูแล)<% } %>
+</p>
+      <div class="row">
+        <a class="btn btn-primary btn-sm" href="/admin/journal_entries/new?entry_date=<%= ym %>-01&back=<%= encodeURIComponent(back) %>"><%- icon('plus', 16) %> เพิ่มบทความในเล่มนี้</a>
+        <a class="btn btn-ghost btn-sm" href="<%= row.id ? '/admin/journal_issues/' + row.id : '/admin/journal_issues/new?ym=' + ym %>&back=<%= encodeURIComponent(back) %>"><%- icon('edit', 15) %> ปก / เลขฉบับ / การเผยแพร่</a>
+        <a class="btn btn-ghost btn-sm" href="/admin/journal_entries">บทความทั้งหมด</a>
+      </div>
+    </div>
+    <% } %>
+  </div>
+
+  <% if (entries.length) { %>
+  <div class="ebook" id="ebook" data-name="<%= name %>" data-month="<%= label %>">
+    <div class="eb-src">
+      <section class="eb-page eb-cover" data-fixed aria-label="ปกหน้า">
+        <div class="ebc-top"><img src="<%= logo %>" alt="" data-fallback="/img/icon-192.png"><span><%= S.school_name %><small><%= S.school_name_en %></small></span><% if (issueLine) { %><span class="ebc-no"><%= issueLine %></span><% } %></div>
+        <div class="ebc-mast"><h2><%= name %></h2><p>จดหมายข่าวประจำเดือน<b><%= label %></b></p></div>
+        <figure class="ebc-img"><% if (cover) { %><img src="<%= img(cover) %>" alt=""><% } %><%- icon('bookopen', 56) %></figure>
+        <div class="ebc-in"><h3>ในฉบับนี้</h3>
+          <ol><% highlights.forEach(function (e) { %><li class="sec-<%= e.section %>"><span><%= sections[e.section] %></span><b><%= e.title %></b></li><% }) %></ol></div>
+        <div class="ebc-foot"><span><%= host %>/journal</span><span><%= S.phone || '' %></span></div>
+      </section>
+
+      <section class="eb-flow eb-inside" data-flow data-run="สารบัญ">
+        <% if (row.editorial) { %>
+        <h3 class="eb-h">บรรณาธิการแถลง</h3>
+        <div class="eb-text eb-ed"><% String(row.editorial).split(/\n{2,}/).forEach(function (para) { %><p><%= para.trim() %></p><% }) %></div>
+        <% } %>
+        <h3 class="eb-h">สารบัญ</h3>
+        <ol class="eb-toc">
+          <% entries.forEach(function (e) { %><li class="sec-<%= e.section %>"><a href="#art-<%= e.id %>" data-goto="art-<%= e.id %>"><span class="toc-sec"><%= sections[e.section] %></span><span class="toc-t"><%= e.title %></span><span class="toc-pg"></span></a></li><% }) %>
+        </ol>
+      </section>
+
+      <% entries.forEach(function (e) {
+        // รูปทั้งหมดของบทความ: รูปหลัก · รูปประกอบที่อัปโหลด · รูปจาก Google Drive
+        var main = e.image ? img(e.image) : '';
+        var extra = pics(e.images).map(function (x) { return img(x); }).concat(e.photos.map(function (p) { return '/gdrive/t/' + p.id; }));
+        var layout = e.layout || 'top';
+        if (layout === 'feature' && !main && extra.length) main = extra.shift();
+        if (layout === 'feature' && !main) layout = 'top';
+        if (layout === 'gallery' && main) { extra.unshift(main); main = ''; }
+        if (layout === 'text') { main = ''; extra = []; }
+        var cols = layout === 'gallery' ? 2 : 3, rows = [];
+        for (var i = 0; i < extra.length; i += cols) rows.push(extra.slice(i, i + cols));
+        var head = '<span class="eb-chip">' + sections[e.section] + '</span>';
+      %>
+      <% if (layout === 'feature') { %>
+      <section class="eb-page eb-feature sec-<%= e.section %>" data-fixed aria-label="<%= e.title %>">
+        <img src="<%= main %>" alt="">
+        <header class="eb-ah eb-fh" data-art="art-<%= e.id %>"><%- head %><h2><%= e.title %></h2>
+          <p class="eb-meta"><%= thDay(e.entry_date) %><%= e.author ? ' · ' + e.author : '' %></p></header>
+      </section>
+      <% } %>
+      <article class="eb-flow eb-art lay-<%= layout %> sec-<%= e.section %>" id="art-<%= e.id %>" data-flow data-run="<%= sections[e.section] %>">
+        <% if (layout !== 'feature') { %>
+        <header class="eb-ah"><%- head %><h2><%= e.title %></h2>
+          <p class="eb-meta"><%= thDay(e.entry_date) %><%= e.author ? ' · ' + e.author : '' %></p></header>
+        <% } %>
+        <% if (main && layout === 'top') { %><figure class="eb-fig"><img src="<%= main %>" alt=""></figure><% } %>
+        <% if (main && layout === 'side') { %><figure class="eb-side"><img src="<%= main %>" alt=""></figure><% } %>
+        <div class="eb-text"><%- e.body %></div>
+        <% if (rows.length) { %><p class="eb-photos-h">ภาพกิจกรรม</p><% rows.forEach(function (r) { %><div class="eb-photos c<%= cols %>"><% r.forEach(function (src) { %><span><img src="<%= src %>" alt=""></span><% }) %></div><% }) %><% } %>
+        <% if (e.link) { %><p class="eb-more"><a href="<%= e.link %>">อ่านต่อ</a></p><% } %>
+        <% if (editor) { %><p class="eb-more"><a href="/admin/journal_entries/<%= e.id %>?back=<%= encodeURIComponent(back) %>">แก้ไขบทความนี้ (ผู้ดูแล)</a></p><% } %>
+      </article>
+      <% }) %>
+
+      <section class="eb-page eb-back" data-fixed aria-label="ปกหลัง">
+        <img src="<%= logo %>" alt="" data-fallback="/img/icon-192.png">
+        <h2><%= S.school_name %></h2>
+        <% if (S.tagline) { %><p class="ebb-tag">“<%= S.tagline %>”</p><% } %>
+        <ul>
+          <% if (S.address) { %><li><%= S.address %></li><% } %>
+          <% if (S.phone) { %><li>โทร <%= S.phone %></li><% } %>
+          <% if (S.email) { %><li><%= S.email %></li><% } %>
+          <li><%= host %></li>
+        </ul>
+        <% if (row.credits) { %><div class="ebb-credits"><h3>คณะผู้จัดทำ</h3><%= row.credits %></div><% } %>
+        <p class="ebb-note">อ่าน<%= name %>ฉบับอื่นได้ที่ <%= host %>/journal</p>
+      </section>
+    </div>
+    <div class="eb-stage" hidden><div class="eb-scale"><div class="eb-book"></div></div></div>
+    <div class="eb-nav" hidden>
+      <button type="button" data-eb-prev aria-label="หน้าก่อนหน้า"><%- icon('left', 22) %></button>
+      <span class="eb-count" aria-live="polite"></span>
+      <button type="button" data-eb-next aria-label="หน้าถัดไป"><%- icon('right', 22) %></button>
+    </div>
+    <p class="eb-hint" hidden>กดลูกศร ← → หรือปัดซ้าย–ขวาเพื่อพลิกหน้า · กดที่สารบัญเพื่อไปยังบทความ</p>
+  </div>
+  <% } else { %>
+  <div class="wrap"><div class="panel ev-empty big"><%- icon('bookopen', 44) %><p>เดือนนี้ยังไม่มีบทความ</p></div></div>
+  <% } %>
+</section>
+<script src="/js/ebook.js?v=<%= v %>" defer></script>
+<%- include('_foot') %>

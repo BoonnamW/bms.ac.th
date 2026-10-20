@@ -1,0 +1,75 @@
+<%- include('_head') %>
+<%
+  var img = function (v) { return !v ? '' : /^https:\/\//.test(v) ? v : '/uploads/' + v; };
+  var href = function (x) { return x.link && !editor ? x.link : '/journal/' + x.slug; };
+  var ext = function (x) { return x.link && !editor ? ' target="_blank" rel="noopener"' : ''; };
+  var sub = function (x) { return x.link ? 'E-Book (ลิงก์ภายนอก)' : (x.number ? 'ฉบับที่ ' + x.number + ' · ' : '') + x.n + ' บทความ'; };
+  var feat = list.find(function (x) { return x.isPublic; }) || list[0];
+  var years = [];
+  list.forEach(function (x) { var y = Number(x.ym.slice(0, 4)) + 543; if (!years.length || years[years.length - 1].y !== y) years.push({ y: y, items: [] }); years[years.length - 1].items.push(x); });
+%>
+<%- include('_pagehead', { heading: name, eyebrow: 'School Newsletter · E-Book', lead: 'จดหมายข่าวรายเดือนของโรงเรียน — ระบบรวมบทความของแต่ละเดือนเป็นรูปเล่มให้อัตโนมัติทุกวันที่ 1',
+  crumbs: [['ข่าวสาร', '/news'], [name]] }) %>
+<section class="sec">
+  <div class="wrap">
+    <% if (editor) { %>
+    <div class="jtools">
+      <p><%- icon('calendar', 16) %> เดือน<%= cur.label %>: <b><%= cur.n %> บทความ</b> — รวมเป็นเล่มและเผยแพร่อัตโนมัติ <b><%= thDay(cur.release) %></b></p>
+      <div class="row">
+        <a class="btn btn-primary btn-sm" href="/admin/journal_entries/new?back=<%= encodeURIComponent('/journal/' + cur.slug) %>"><%- icon('plus', 16) %> เขียนบทความ</a>
+        <a class="btn btn-ghost btn-sm" href="/journal/<%= cur.slug %>"><%- icon('bookopen', 15) %> ดูตัวอย่างเล่มเดือนนี้</a>
+        <a class="btn btn-ghost btn-sm" href="/admin/journal_issues">ตั้งค่าเล่ม / ปก</a>
+        <a class="btn btn-ghost btn-sm" href="/admin/journal_entries">บทความทั้งหมด</a>
+      </div>
+      <p class="muted small"><%- icon('lock', 14) %> แสดงเฉพาะผู้ดูแลที่เข้าสู่ระบบอยู่ · เล่มที่ยังไม่เผยแพร่มีป้ายกำกับ ผู้ชมทั่วไปยังไม่เห็น</p>
+    </div>
+    <% } %>
+
+    <% if (feat) { %>
+    <div class="jfeat">
+      <a class="jcard" href="<%= href(feat) %>"<%- ext(feat) %> aria-hidden="true" tabindex="-1">
+        <span class="jbook<%= feat.link ? ' ext' : '' %>">
+          <span class="jb-top"><b><%= name %></b><small><%= feat.label %></small></span>
+          <span class="jb-img"><% if (feat.cover) { %><img src="<%= img(feat.cover) %>" alt="" loading="lazy"><% } %><%- icon('bookopen', 40) %></span>
+          <span class="jb-foot"><%= S.school_name %></span>
+        </span>
+      </a>
+      <div>
+        <span class="eyebrow"><%= feat.isPublic ? 'ฉบับล่าสุด' : 'ตัวอย่างเล่ม (ยังไม่เผยแพร่)' %></span>
+        <h2><%= name %> ฉบับเดือน<%= feat.label %></h2>
+        <p><%= sub(feat) %><%= feat.volume ? ' · ปีที่ ' + feat.volume : '' %></p>
+        <a class="btn btn-primary" href="<%= href(feat) %>"<%- ext(feat) %>><%- icon('bookopen', 18) %> <%= feat.link && !editor ? 'เปิด E-Book' : 'อ่านเล่มนี้' %></a>
+      </div>
+    </div>
+    <% } else { %>
+    <div class="panel ev-empty big"><%- icon('bookopen', 44) %><p>ยังไม่มีเล่มที่เผยแพร่</p><small>เล่มแรกจะรวมให้อัตโนมัติเมื่อสิ้นเดือนที่มีบทความ</small></div>
+    <% } %>
+
+    <% years.forEach(function (g) { %>
+    <h2 class="jyear">พ.ศ. <%= g.y %></h2>
+    <div class="jgrid">
+      <% g.items.forEach(function (x) { %>
+      <a class="jcard" href="<%= href(x) %>"<%- ext(x) %>>
+        <span class="jbook<%= x.link ? ' ext' : '' %>" aria-hidden="true">
+          <span class="jb-top"><b><%= name %></b><small><%= x.label %></small></span>
+          <span class="jb-img"><% if (x.cover) { %><img src="<%= img(x.cover) %>" alt="" loading="lazy"><% } %><%- icon('bookopen', 30) %></span>
+          <span class="jb-foot"><%= x.link ? 'E-Book' : (x.number ? 'ฉบับที่ ' + x.number : S.school_name) %></span>
+        </span>
+        <span class="jcard-m"><b><%= x.label %></b><small><%= sub(x) %></small>
+          <% if (!x.isPublic) { %><span class="jbadge <%= x.status === 'hidden' ? 'off' : 'wait' %>"><%= x.status === 'hidden' ? 'ซ่อนอยู่' : 'เผยแพร่ ' + thDay(x.release, 'short') %></span><% } %>
+          <% if (x.link && editor) { %><span class="jbadge">ลิงก์ภายนอก</span><% } %>
+        </span>
+      </a>
+      <% }) %>
+    </div>
+    <% }) %>
+
+    <% if (legacy.length) { %>
+    <div class="jlegacy">
+      <div class="sec-h"><div><h2>ฉบับย้อนหลังแบบเดิม</h2><p class="en">Archive</p></div></div>
+      <ul><% legacy.forEach(function (p) { %><li><a href="/p/<%= p.slug %>"><%- icon('book', 18) %> <%= p.title %></a></li><% }) %></ul>
+    </div>
+    <% } %>
+  </div>
+</section>
+<%- include('_foot') %>

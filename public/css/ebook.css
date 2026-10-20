@@ -1,0 +1,205 @@
+/* ===== วารสารรายเดือน (E-book): ชั้นหนังสือ /journal และตัวอ่านแบบพลิกหน้า /journal/<เดือน> ===== */
+
+/* ---------- ชั้นหนังสือ ---------- */
+.jfeat{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:36px;align-items:center;margin-bottom:40px;padding:28px;border-radius:24px;
+  background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--primary) 12%,transparent),transparent 50%),#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
+.jfeat h2{font-size:clamp(1.4rem,2.6vw,1.9rem);color:var(--dark);margin:6px 0}
+.jfeat p{color:var(--ink2)}
+.jfeat .btn{margin-top:16px}
+.jfeat .eyebrow{color:var(--primary-d)}
+.jgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:26px 22px}
+.jyear{display:flex;align-items:center;gap:14px;margin:34px 0 16px;font-size:1.15rem;color:var(--dark)}
+.jyear::after{content:"";flex:1;height:1px;background:var(--line)}
+.jcard{display:grid;gap:10px;color:inherit}
+.jcard:hover .jbook{transform:translateY(-6px) rotate(-1deg);box-shadow:0 22px 40px rgba(60,20,38,.22)}
+.jcard-m b{display:block;font:600 1rem/1.35 var(--f-head);color:var(--ink)}
+.jcard-m small{display:block;font-size:.8rem;color:var(--muted)}
+.jbadge{display:inline-block;margin-top:4px;padding:1px 10px;border-radius:99px;font:500 .72rem/1.6 var(--f-head);background:var(--accent-l);color:var(--accent-d)}
+.jbadge.wait{background:var(--primary-l);color:var(--primary-d)}.jbadge.off{background:#eee;color:#555}
+/* ปกเล่มย่อ (สร้างจาก CSS ล้วน) */
+.jbook{position:relative;aspect-ratio:1/1.414;border-radius:4px 10px 10px 4px;overflow:hidden;background:#fff;display:flex;flex-direction:column;
+  box-shadow:0 10px 24px rgba(60,20,38,.16),inset 4px 0 0 rgba(0,0,0,.06);transition:.3s;container-type:inline-size}
+.jbook::before{content:"";position:absolute;left:0;top:0;bottom:0;width:7%;background:linear-gradient(90deg,rgba(0,0,0,.14),rgba(255,255,255,.18) 60%,transparent);z-index:2}
+.jb-top{padding:7cqw 8cqw 3cqw;background:var(--dark);color:#fff}
+.jb-top b{display:block;font:700 12.5cqw/1.05 var(--f-head);color:var(--primary-lt)}
+.jb-top small{display:block;margin-top:2cqw;font-size:5.6cqw;opacity:.9}
+.jb-img{flex:1;position:relative;background:linear-gradient(135deg,var(--primary-l),var(--primary-m));display:grid;place-items:center;color:var(--primary)}
+.jb-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.jb-img img+.ic{display:none}
+.jb-foot{padding:3cqw 8cqw;font:500 5cqw var(--f-head);color:var(--dark);background:#fff;border-top:2cqw solid var(--primary)}
+.jbook.ext .jb-top{background:var(--primary-d)}
+.jbook.ext .jb-top b{color:#fff}
+.jlegacy{margin-top:40px}
+.jlegacy ul{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.jlegacy a{display:flex;gap:10px;align-items:center;padding:12px 16px;border-radius:12px;background:var(--bg);font-weight:500}
+.jlegacy a:hover{background:var(--primary-l);color:var(--primary-d)}
+.jlegacy .ic{color:var(--primary)}
+.jtools{display:grid;gap:12px;margin-bottom:28px;padding:16px 18px;border:1.5px dashed var(--primary-m);border-radius:16px;background:var(--primary-l)}
+.jtools p{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--ink2)}
+.jtools .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.jtools form{display:inline}
+
+/* ---------- ตัวอ่าน ---------- */
+.eb-shell{background:linear-gradient(180deg,var(--bg),#fff 60%);padding:28px 0 48px}
+.eb-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:10px 0 18px}
+.eb-head h1{font-size:clamp(1.3rem,2.6vw,1.9rem);color:var(--dark);line-height:1.25}
+.eb-head h1 span{display:block;font-size:.62em;color:var(--primary-d);font-weight:500;margin-top:2px}
+.eb-sub{color:var(--muted);font-size:.9rem;margin-top:4px}
+.eb-shell .crumb{color:var(--muted)}
+.eb-shell .eyebrow{color:var(--primary-d)}
+.eb-tools{display:flex;gap:6px;flex-wrap:wrap}
+.eb-tools button{display:inline-flex;gap:6px;align-items:center;padding:7px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;
+  font:500 .84rem var(--f-head);color:var(--ink2);cursor:pointer}
+.eb-tools button:hover{border-color:var(--primary);color:var(--primary-d)}
+.eb-tools button[aria-pressed=true]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+.ebook{position:relative}
+.ebook:fullscreen{background:var(--bg);display:flex;flex-direction:column;justify-content:center;padding:12px}
+.eb-stage{position:relative;overflow:hidden;touch-action:pan-y}
+.eb-scale{position:relative;transform-origin:0 0}
+.eb-book{position:relative;width:100%;height:100%;perspective:2600px}
+.eb-sheet{position:absolute;top:0;width:var(--pw);height:var(--ph);transform-style:preserve-3d;transform-origin:left center;transition:transform .8s cubic-bezier(.35,.1,.25,1)}
+.eb-book.spread .eb-sheet{left:var(--pw)}
+.eb-book.single .eb-sheet{left:0}
+.eb-sheet.flipped{transform:rotateY(-180deg)}
+.eb-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden;background:#fff}
+.eb-face.back{transform:rotateY(180deg)}
+.eb-face.blank{background:#fbf7f9}
+/* เงาสันหนังสือ */
+.eb-book.spread .eb-face.front::after,.eb-book.spread .eb-face.back::after{content:"";position:absolute;top:0;bottom:0;width:8%;pointer-events:none}
+.eb-book.spread .eb-face.front::after{left:0;background:linear-gradient(90deg,rgba(0,0,0,.13),transparent)}
+.eb-book.spread .eb-face.back::after{right:0;background:linear-gradient(270deg,rgba(0,0,0,.13),transparent)}
+.eb-book.spread::before{content:"";position:absolute;top:0;bottom:0;left:0;right:0;box-shadow:0 24px 60px rgba(60,20,38,.22);border-radius:4px;pointer-events:none}
+.eb-book.spread.at-start::before{left:50%}.eb-book.spread.at-end::before{right:50%}
+.eb-book.single{box-shadow:0 18px 44px rgba(60,20,38,.2)}
+.eb-nav{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:16px}
+.eb-nav button{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--primary-d);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow)}
+.eb-nav button:hover:not(:disabled){background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+.eb-nav button:disabled{opacity:.35;cursor:default}
+.eb-count{min-width:140px;text-align:center;font:500 .9rem var(--f-head);color:var(--ink2)}
+.eb-hint{text-align:center;font-size:.78rem;color:var(--muted);margin-top:6px}
+.eb-measure{position:absolute;left:-10000px;top:0;visibility:hidden;pointer-events:none}
+.eb-scale.clip{overflow:hidden} /* ทีละหน้า: หน้าที่พลิกไปแล้วหายไปทางซ้าย */
+.eb-pg-fixed{display:block}
+.eb-pg-fixed>section{height:100%;margin:0;border-radius:0;box-shadow:none;max-width:none;aspect-ratio:auto}
+
+/* โหมดเลื่อนอ่าน และพิมพ์: หน้าเรียงต่อกันตามลำดับ */
+.ebook.is-scroll .eb-stage{height:auto!important;overflow:visible}
+.ebook.is-scroll .eb-scale{transform:none!important;width:auto!important;height:auto!important;margin:0!important}
+.ebook.is-scroll .eb-book{display:grid;justify-content:center;gap:18px;perspective:none;height:auto}
+.ebook.is-scroll .eb-sheet{position:static;display:contents;transform:none}
+.ebook.is-scroll .eb-face{position:relative;inset:auto;transform:none;width:var(--pw);height:var(--ph);zoom:var(--fit,1);visibility:visible!important;box-shadow:0 8px 28px rgba(60,20,38,.14)}
+.ebook.is-scroll .eb-face.blank,.ebook.is-scroll .eb-face::after,.ebook.is-scroll .eb-book::before,.ebook.is-scroll .eb-nav,.ebook.is-scroll .eb-hint{display:none}
+
+/* ---------- หน้าในเล่ม (ขนาดฐาน --pw × --ph แล้วย่อ/ขยายทั้งเล่ม) ---------- */
+.ebook{--pw:460px;--ph:650px}
+.eb-src .eb-page,.eb-src .eb-flow{max-width:640px;margin:0 auto 22px;background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.eb-src .eb-page{width:min(100%,var(--pw));aspect-ratio:46/65;height:auto} /* ไม่มีสคริปต์: แสดงปกเป็นการ์ด เนื้อหาเรียงเป็นหน้าเว็บ */
+.eb-src .eb-flow{font-size:1rem;line-height:1.8}
+.eb-src .eb-flow{padding:28px}
+.eb-pg{position:relative;width:var(--pw);height:var(--ph);display:flex;flex-direction:column;background:#fff;color:#22302a;font:400 13.5px/1.72 var(--f-body);
+  -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.eb-run{display:flex;justify-content:space-between;gap:10px;padding:16px 30px 0;font:500 9.5px/1.4 var(--f-head);letter-spacing:.08em;text-transform:uppercase;color:#8a9690}
+.eb-run b{color:var(--sec,var(--primary-d));font-weight:600;letter-spacing:.04em}
+.eb-body{flex:1;min-height:0;overflow:hidden;padding:12px 30px 0}
+.eb-foot{display:flex;justify-content:center;padding:6px 0 14px}
+.eb-foot span{min-width:26px;height:26px;padding:0 7px;border-radius:99px;display:grid;place-items:center;background:var(--sec,var(--primary));color:#fff;font:600 11px var(--f-head)}
+.eb-body>*+*{margin-top:9px}
+.eb-body p{text-indent:1.6em}
+.eb-body p.eb-cont,.eb-body .eb-ah p,.eb-body .eb-more,.eb-body .eb-ed p:first-child{text-indent:0}
+.eb-body ul,.eb-body ol{padding-left:1.4em}.eb-body ul{list-style:disc}.eb-body ol{list-style:decimal}
+.eb-body ul+ul,.eb-body ol+ol{margin-top:2px}
+.eb-body ul.eb-cont,.eb-body ol.eb-cont{list-style:none}
+.eb-sep{border:0;height:1px;margin:16px 0 14px!important;background:linear-gradient(90deg,var(--primary-m),transparent)}
+.eb-body>h2{font-size:16px;color:var(--dark)}
+.eb-body blockquote{border-left:3px solid var(--sec,var(--primary));padding:4px 0 4px 12px;color:#4a5751;font-style:italic}
+.eb-body h3,.eb-body h4{font-size:15px;color:var(--dark);margin-top:14px}
+.eb-body img{max-width:100%}
+.eb-clip{max-height:100%;overflow:hidden}
+/* สีประจำหมวด */
+.sec-highlight,.sec-pr{--sec:var(--primary);--sec-l:var(--primary-l)}
+.sec-activity,.sec-academic{--sec:var(--accent);--sec-l:var(--accent-l)}
+.sec-award,.sec-article{--sec:var(--dark);--sec-l:var(--dark-l)}
+.sec-other{--sec:#5f6c65;--sec-l:#eef1ef}
+.eb-ah{margin-bottom:12px}
+.eb-chip{display:inline-block;padding:2px 12px;border-radius:99px;background:var(--sec-l,var(--primary-l));color:var(--sec,var(--primary-d));font:600 10.5px/1.6 var(--f-head)}
+.eb-ah h2{margin:8px 0 4px;font:600 21px/1.32 var(--f-head);color:var(--dark)}
+.eb-meta{font-size:11.5px;color:#7a8780}
+.eb-fig{margin:0;border-radius:10px;overflow:hidden;aspect-ratio:16/10;background:var(--sec-l,var(--bg))}
+.eb-fig img,.eb-photos img,.eb-text img{width:100%;height:100%;object-fit:cover;display:block}
+.eb-text img{aspect-ratio:4/3;height:auto;border-radius:8px}
+.eb-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;clear:both}
+.eb-photos.c2{grid-template-columns:repeat(2,1fr);gap:7px}
+.eb-photos.c2 span{border-radius:8px}
+.eb-photos+.eb-photos{margin-top:5px!important}
+.eb-side{float:right;width:46%;margin:2px 0 8px 14px!important;border-radius:10px;overflow:hidden;aspect-ratio:3/4;background:var(--sec-l,var(--bg))}
+.eb-side img{width:100%;height:100%;object-fit:cover;display:block}
+.lay-side .eb-text p:first-child{text-indent:0}
+/* ภาพเต็มหน้า: รูปพื้นหลังทั้งหน้า หัวเรื่องบนแถบไล่สีด้านล่าง */
+.eb-feature{position:relative;height:100%;background:var(--dark);overflow:hidden}
+.eb-feature>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.eb-feature::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,color-mix(in srgb,var(--dark) 92%,transparent) 88%)}
+.eb-fh{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:26px 30px 30px;margin:0!important;color:#fff}
+.eb-fh .eb-chip{background:var(--sec,var(--primary));color:#fff}
+.eb-fh h2{color:#fff!important;font-size:26px!important;line-height:1.28!important}
+.eb-fh .eb-meta{color:rgba(255,255,255,.85)}
+.eb-photos span{aspect-ratio:4/3;border-radius:6px;overflow:hidden;background:var(--bg)}
+.eb-photos-h{font:600 11px var(--f-head);color:var(--sec,var(--primary-d));text-indent:0!important}
+.eb-more a{color:var(--sec,var(--primary-d));text-decoration:underline;font-size:12px;word-break:break-all}
+.eb-h{font:600 17px var(--f-head)!important;color:var(--dark)!important;padding-bottom:6px;border-bottom:2px solid var(--primary-m);margin-top:6px!important}
+.eb-ed p{color:#3b4842}
+.eb-toc{list-style:none!important;padding:0!important}
+.eb-toc a{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px dotted #d9cfd4;color:inherit}
+.eb-toc a:hover .toc-t{color:var(--primary-d);text-decoration:underline}
+.toc-sec{font:600 10px var(--f-head);color:var(--sec,var(--primary-d));min-width:80px}
+.toc-t{font:500 12.5px/1.45 var(--f-head)}
+.toc-pg{font:600 12px var(--f-head);color:var(--primary-d);min-width:18px;text-align:right}
+/* ปกหน้า */
+.eb-cover{display:flex;flex-direction:column;height:100%;background:#fff}
+.ebc-top{display:flex;align-items:center;gap:10px;padding:14px 22px;background:var(--dark);color:#fff;font:500 11px/1.3 var(--f-head)}
+.ebc-top img{width:34px;height:34px;object-fit:contain;background:#fff;border-radius:8px;padding:2px}
+.ebc-top small{display:block;opacity:.75;font-size:9.5px}
+.ebc-top .ebc-no{margin-left:auto;padding:3px 10px;border:1px solid rgba(255,255,255,.4);border-radius:99px;white-space:nowrap}
+.ebc-mast{padding:16px 22px 10px;background:linear-gradient(180deg,var(--primary-l),#fff)}
+.ebc-mast h2{font:700 46px/1 var(--f-head);color:var(--primary);letter-spacing:-.01em}
+.ebc-mast p{margin-top:6px;font:500 13px var(--f-head);color:var(--dark)}
+.ebc-mast p b{display:block;font-size:19px;color:var(--dark)}
+.ebc-img{flex:1;min-height:0;margin:0 22px;border-radius:14px;overflow:hidden;position:relative;background:linear-gradient(135deg,var(--primary-l),var(--primary-m));display:grid;place-items:center;color:var(--primary)}
+.ebc-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ebc-img img+.ic{display:none}
+.ebc-in{padding:12px 22px 6px}
+.ebc-in h3{font:600 11px var(--f-head);letter-spacing:.12em;text-transform:uppercase;color:var(--primary-d)}
+.ebc-in ol{list-style:none;margin-top:4px}
+.ebc-in li{display:flex;gap:8px;align-items:baseline;padding:3px 0;border-bottom:1px solid #f1e6eb;font:500 12px/1.4 var(--f-head);color:#26332c}
+.ebc-in li span{flex:none;font-size:9.5px;color:var(--sec,var(--primary-d))}
+.ebc-in li b{font-weight:500;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+.ebc-foot{margin-top:auto;padding:8px 22px 12px;display:flex;justify-content:space-between;gap:8px;font:500 10px var(--f-head);color:#6b7771;border-top:5px solid var(--primary)}
+/* ปกหลัง */
+.eb-back{height:100%;background:var(--dark);color:rgba(255,255,255,.88);display:flex;flex-direction:column;justify-content:center;padding:34px 30px;text-align:center;font-size:12px}
+.eb-back img{width:70px;height:70px;object-fit:contain;background:#fff;border-radius:16px;padding:4px;margin:0 auto 10px}
+.eb-back h2{font:600 19px var(--f-head);color:#fff}
+.eb-back .ebb-tag{color:var(--primary-lt);font-style:italic;margin:4px 0 14px}
+.eb-back ul{display:grid;gap:4px;margin-bottom:16px}
+.ebb-credits{margin:4px auto 0;padding:14px 18px;max-width:320px;border:1px solid rgba(255,255,255,.18);border-radius:12px;white-space:pre-line;line-height:1.6}
+.ebb-credits h3{font:600 12px var(--f-head);color:var(--primary-lt);margin-bottom:4px;white-space:normal}
+.ebb-note{margin-top:16px;font-size:11px;color:rgba(255,255,255,.7)}
+.eb-blankpg{height:100%;display:grid;place-items:center;color:#d9c7cf;font:500 12px var(--f-head)}
+
+@media (max-width:860px){
+  .jfeat{grid-template-columns:minmax(0,1fr);gap:20px;padding:20px;justify-items:center;text-align:center}
+  .jfeat .jbook{width:min(220px,70vw)}
+  .jgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 14px}
+}
+
+@media print{
+  @page{size:A4;margin:0}
+  html,body{background:#fff!important}
+  body>*:not(main),main>*:not(.eb-shell),.eb-shell>.wrap,.eb-nav,.eb-hint,.eb-src,.eb-tools,.fab,.cookie{display:none!important}
+  .eb-shell{padding:0;background:none}
+  .eb-stage{height:auto!important;overflow:visible}
+  .eb-scale{transform:none!important;width:auto!important;height:auto!important;margin:0!important}
+  .eb-book{perspective:none;height:auto}
+  .eb-book::before,.eb-face::after{display:none!important}
+  .eb-sheet{position:static;display:contents;transform:none!important}
+  .eb-face{position:relative;inset:auto;transform:none!important;width:var(--pw);height:var(--ph);zoom:var(--print-zoom,1.72);visibility:visible!important;break-after:page;page-break-after:always}
+  .eb-face.blank{display:none}
+}

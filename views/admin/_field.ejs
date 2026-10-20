@@ -39,8 +39,30 @@
         <div class="imgcur"><img src="<%= /^https:\/\//.test(v) ? v : '/uploads/' + v %>" alt=""><label class="inl"><input type="checkbox" name="remove_<%= f.n %>" value="1"> ลบรูปนี้</label></div>
       <% } %>
       <input id="f_<%= f.n %>" type="file" name="<%= f.n %>" accept="image/jpeg,image/png,image/webp,image/gif">
+    <% } else if (f.type === 'images') { var cur = pics(v); %>
+      <% if (cur.length) { %>
+      <ul class="imglist"><% cur.forEach(function (x) { %>
+        <li><img src="/uploads/<%= x %>" alt="" loading="lazy"><label class="inl"><input type="checkbox" name="remove_images" value="<%= x %>"> ลบ</label></li><% }) %></ul>
+      <% } %>
+      <input id="f_<%= f.n %>" type="file" name="images" multiple accept="image/jpeg,image/png,image/webp,image/gif" data-max="12">
+      <small>เลือกได้หลายรูปพร้อมกัน (รวมไม่เกิน 12 รูป) — ระบบย่อรูปให้อัตโนมัติก่อนอัปโหลด<%= cur.length ? ' · ตอนนี้มี ' + cur.length + ' รูป' : '' %></small>
+    <% } else if (f.type === 'files') { var cur = docs(v); %>
+      <% if (cur.length) { %>
+      <ul class="doclist"><% cur.forEach(function (x) { %>
+        <li><a href="/uploads/<%= x.f %>" target="_blank" rel="noopener"><%= x.n %></a> <label class="inl"><input type="checkbox" name="remove_files" value="<%= x.f %>"> ลบ</label></li><% }) %></ul>
+      <% } %>
+      <input id="f_<%= f.n %>" type="file" name="files" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" data-doc>
+      <small>PDF, Word, Excel, PowerPoint ไฟล์ละไม่เกิน 10 MB (รวมไม่เกิน 5 ไฟล์)</small>
+    <% } else if (f.type === 'time') { %>
+      <input id="f_<%= f.n %>" type="time" name="<%= f.n %>" value="<%= v || '' %>">
+    <% } else if (f.type === 'coloropt') { %>
+      <span class="copt"><input id="f_<%= f.n %>" type="color" name="<%= f.n %>" value="<%= v || '#888888' %>" class="colorin" <%= v ? '' : 'disabled' %>>
+        <label class="inl"><input type="checkbox" name="<%= f.n %>_auto" value="1" data-copt="f_<%= f.n %>" <%= v ? '' : 'checked' %>> ใช้สีตามธีม</label></span>
     <% } else if (f.type === 'color') { %>
       <input id="f_<%= f.n %>" type="color" name="<%= f.n %>" value="<%= v %>" class="colorin">
+    <% } else if (f.type === 'gdrive') { var ds = v && driveStatus(v); %>
+      <input id="f_<%= f.n %>" type="url" name="<%= f.n %>" value="<%= v %>" inputmode="url" placeholder="https://drive.google.com/drive/folders/…" <%= f.req ? 'required' : '' %>>
+      <% if (ds) { %><p class="dstat <%= ds.ok ? 'ok' : 'err' %>"><%= ds.ok ? 'เชื่อมต่อแล้ว · ' + ds.n.toLocaleString('th-TH') + ' รูป' : 'อ่านโฟลเดอร์ไม่ได้: ' + ds.error %> · อัปเดตล่าสุด <%= thDateTime(ds.at) %> · <a href="<%= v %>" target="_blank" rel="noopener">เปิดโฟลเดอร์</a></p><% } %>
     <% } else if (f.type === 'date') { %>
       <input id="f_<%= f.n %>" type="date" name="<%= f.n %>" value="<%= v || '' %>" <%= f.req ? 'required' : '' %>>
     <% } else if (f.type === 'datetime') { %>

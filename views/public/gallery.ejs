@@ -1,18 +1,24 @@
 <%- include('_head') %>
-<%- include('_pagehead', { heading: 'ภาพกิจกรรม', eyebrow: 'Photo Gallery', lead: 'อัลบั้มภาพกิจกรรมทั้งหมด ' + total.toLocaleString('th-TH') + ' อัลบั้ม', crumbs: [['ข่าวสาร', '/news'], ['ภาพกิจกรรม']] }) %>
+<%- include('_pagehead', { heading: 'ภาพกิจกรรม', eyebrow: 'Photo Gallery', lead: (src === 'albums' ? 'อัลบั้มภาพกิจกรรม ' : 'ภาพจากข่าวกิจกรรม ') + total.toLocaleString('th-TH') + ' อัลบั้ม',
+  crumbs: [['ข่าวสาร', '/news'], ['ภาพกิจกรรม']] }) %>
 <section class="sec">
   <div class="wrap">
-    <% if (!albums.length) { %><p class="empty">ยังไม่มีอัลบั้มภาพ</p><% } %>
-    <div class="album-grid">
-      <% albums.forEach(function (a) { %>
-      <a class="album reveal" href="/news/<%= a.id %>">
-        <span class="album-img"><img src="/uploads/<%= a.image %>" alt="" loading="lazy">
-          <% if (a.photos > 1) { %><span class="album-n"><%- icon('image', 14) %> <%= a.photos %> ภาพ</span><% } %></span>
-        <span class="album-b"><b><%= a.title %></b><time><%= thDate(a.created_at) %></time></span>
-      </a>
-      <% }) %>
+    <% if (editor) { %>
+    <div class="staff-tools">
+      <a class="btn btn-primary btn-sm" href="/admin/albums/new?back=<%= encodeURIComponent('/gallery') %>"><%- icon('plus', 16) %> เพิ่มอัลบั้มจาก Google Drive</a>
+      <a class="btn btn-ghost btn-sm" href="/admin/albums">จัดการอัลบั้มทั้งหมด</a>
+      <span class="muted small"><%- icon('lock', 14) %> แสดงเฉพาะผู้ดูแลที่เข้าสู่ระบบอยู่</span>
     </div>
-    <%- include('_pager', { page: page, pages: pages, href: function (n) { return '/gallery?page=' + n; } }) %>
+    <% } %>
+    <% if (nAlbums) { %>
+    <nav class="tabs" aria-label="ประเภทภาพกิจกรรม">
+      <a class="<%= src === 'albums' ? 'on' : '' %>" href="/gallery" <%= src === 'albums' ? 'aria-current=true' : '' %>>อัลบั้มภาพ</a>
+      <a class="<%= src === 'news' ? 'on' : '' %>" href="/gallery?src=news" <%= src === 'news' ? 'aria-current=true' : '' %>>ภาพจากข่าวกิจกรรม</a>
+    </nav>
+    <% } %>
+    <% if (!items.length) { %><p class="empty">ยังไม่มีอัลบั้มภาพ</p><% } %>
+    <div class="album-grid"><% items.forEach(function (m) { %><%- include('_album', { m: m }) %><% }) %></div>
+    <%- include('_pager', { page: page, pages: pages, href: function (n) { return '/gallery?' + (src === 'news' && nAlbums ? 'src=news&' : '') + 'page=' + n; } }) %>
   </div>
 </section>
 <%- include('_foot') %>

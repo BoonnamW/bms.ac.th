@@ -588,4 +588,63 @@
       hint('ติดตั้งเรียบร้อยแล้ว เปิดได้จากไอคอนบนหน้าจอ');
     });
   });
+
+  // ---------- ดูภาพทีละรูป (อัลบั้มจาก Google Drive): ลูกศร/ปัดซ้ายขวา · Esc ปิด · ไม่มีสคริปต์ = เปิดรูปใหญ่ตามลิงก์ ----------
+  part('lightbox', () => {
+    $$('[data-lightbox]').forEach((grid) => {
+      const links = $$('a', grid);
+      if (!links.length) return;
+      let dlg, img, count, open, idx = 0, opener = null;
+      const show = (i) => {
+        idx = (i + links.length) % links.length;
+        const a = links[idx];
+        img.src = a.getAttribute('href');
+        img.alt = $('img', a)?.alt || '';
+        count.textContent = `ภาพที่ ${idx + 1} จาก ${links.length}`;
+        open.href = a.dataset.open || a.href;
+        [idx - 1, idx + 1].forEach((k) => { const n = links[(k + links.length) % links.length]; if (n) new Image().src = n.getAttribute('href'); });
+      };
+      const build = () => {
+        dlg = el('dialog', 'lb');
+        dlg.setAttribute('aria-label', grid.dataset.caption ? `ภาพ: ${grid.dataset.caption}` : 'ดูภาพ');
+        const fig = el('figure', 'lb-fig');
+        img = el('img');
+        fig.append(img);
+        const btn = (cls, label, ic, fn) => { const b = el('button', `lb-btn ${cls}`); b.type = 'button'; b.setAttribute('aria-label', label); b.append(icon(ic)); b.addEventListener('click', fn); return b; };
+        const bar = el('div', 'lb-bar');
+        count = el('span');
+        count.setAttribute('aria-live', 'polite');
+        open = el('a', '', 'ดูไฟล์ต้นฉบับใน Google Drive ');
+        open.target = '_blank'; open.rel = 'noopener';
+        open.append(icon('external'));
+        bar.append(count, open);
+        dlg.append(fig, btn('lb-prev', 'ภาพก่อนหน้า', 'left', () => show(idx - 1)), btn('lb-next', 'ภาพถัดไป', 'right', () => show(idx + 1)), btn('lb-x', 'ปิด', 'x', () => dlg.close()), bar);
+        dlg.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowLeft') { e.preventDefault(); show(idx - 1); }
+          if (e.key === 'ArrowRight') { e.preventDefault(); show(idx + 1); }
+        });
+        let x0 = null, swiped = false; // ปัดซ้าย/ขวาบนจอสัมผัส
+        dlg.addEventListener('pointerdown', (e) => { x0 = e.clientX; swiped = false; });
+        dlg.addEventListener('pointerup', (e) => {
+          if (x0 === null) return;
+          const dx = e.clientX - x0; x0 = null;
+          if (Math.abs(dx) > 50) { swiped = true; show(idx + (dx < 0 ? 1 : -1)); }
+        });
+        dlg.addEventListener('click', (e) => {
+          if (swiped) { swiped = false; return; }
+          if (e.target === dlg || e.target === fig) dlg.close(); // กดพื้นหลัง = ปิด
+        });
+        dlg.addEventListener('close', () => { img.removeAttribute('src'); opener?.focus(); });
+        document.body.append(dlg);
+      };
+      links.forEach((a, i) => a.addEventListener('click', (e) => {
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+        e.preventDefault();
+        if (!dlg) build();
+        opener = a;
+        show(i);
+        dlg.showModal();
+      }));
+    });
+  });
 })();

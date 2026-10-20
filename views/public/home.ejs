@@ -194,7 +194,7 @@
 </section>
 <% } %>
 
-<% if (gallery.length) { %>
+<% if (albums.length || gallery.length) { %>
 <section class="sec">
   <div class="wrap">
     <div class="sec-h">
@@ -204,7 +204,14 @@
     <div class="slider gal" data-slider>
       <button type="button" class="sl-btn" data-prev aria-label="ภาพก่อนหน้า"><%- icon('left', 20) %></button>
       <div class="sl-track" tabindex="0" aria-label="ภาพกิจกรรม (เลื่อนดูได้)">
-        <% gallery.forEach(function (g, i) { %>
+        <% albums.forEach(function (a) { %>
+        <a class="gal-item" href="<%= a.href %>">
+          <img src="<%= a.image %>" alt="" loading="lazy">
+          <% if (a.n > 1) { %><span class="album-n"><%- icon('image', 14) %> <%= a.n.toLocaleString('th-TH') %> ภาพ</span><% } %>
+          <span class="gal-cap"><%= a.title %></span>
+        </a>
+        <% }) %>
+        <% if (!albums.length) gallery.forEach(function (g, i) { %>
         <a class="gal-item" href="/gallery">
           <% if (g.image) { %><img src="/uploads/<%= g.image %>" alt="" loading="lazy"><% } else { %><span class="ph ph-<%= i % 5 %>"><%- icon('image', 36) %></span><% } %>
           <span class="gal-cap"><%= g.title %></span>

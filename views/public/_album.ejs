@@ -1,0 +1,5 @@
+<a class="album reveal" href="<%= m.href %>">
+  <span class="album-img"><% if (m.image) { %><img src="<%= m.image %>" alt="" loading="lazy"><% } %><%- icon('image', 36) %>
+    <% if (m.n > 1) { %><span class="album-n"><%- icon('image', 14) %> <%= m.n.toLocaleString('th-TH') %> ภาพ</span><% } %></span>
+  <span class="album-b"><b><%= m.title %></b><% if (m.date) { %><time><%= /\d\d:\d\d/.test(m.date) ? thDate(m.date) : thDay(m.date) %></time><% } %></span>
+</a>

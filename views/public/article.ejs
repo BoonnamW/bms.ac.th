@@ -13,6 +13,7 @@
         <% if (item.image) { %><img class="cover" src="/uploads/<%= item.image %>" alt=""><% } %>
         <%- item.body %>
       </article>
+      <% if (photos) { %><%- include('_photos', { photos: photos, caption: item.title, heading: 'ภาพกิจกรรม', back: '/news/' + item.id }) %><% } %>
       <div class="share" aria-label="แบ่งปันข่าวนี้">
         <span>แบ่งปัน:</span>
         <a class="share-fb" href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(shareUrl) %>" target="_blank" rel="noopener"><%- icon('facebook', 16) %> Facebook</a>

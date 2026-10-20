@@ -100,3 +100,15 @@ input:focus,textarea:focus,select:focus{border-color:var(--primary);outline:0;bo
   .main{padding:0 16px 40px}
   .login{grid-template-columns:1fr}.login-art{padding:36px 28px}.login-box{padding:36px 28px}
 }
+/* สถานะโฟลเดอร์ Google Drive ในฟอร์ม */
+.dstat{margin-top:6px;font-size:13.5px;padding:6px 10px;border-radius:8px}
+.dstat.ok{background:#e7f6ec;color:#166534}.dstat.err{background:#fdecec;color:#991b1b}
+.dstat a{text-decoration:underline}
+/* รูปประกอบหลายรูป / เอกสารแนบ / สีแต่ละส่วน */
+.imglist{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:8px}
+.imglist li{display:grid;gap:4px;font-size:13px}
+.imglist img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
+.doclist{display:grid;gap:4px;margin-bottom:8px;font-size:14px}.doclist a{text-decoration:underline}
+.copt{display:flex;gap:12px;align-items:center}
+.copt input[type=color]:disabled{opacity:.35}
+.previews{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.previews img{width:84px;height:63px;object-fit:cover;border-radius:6px}
