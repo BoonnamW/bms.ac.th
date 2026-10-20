@@ -304,12 +304,22 @@
   </div>
 </section>
 
-<% if (popup) { var pimg = popup.image ? '/uploads/' + popup.image : ''; %>
-<dialog class="popup" id="popup" data-key="<%= popup.key %>" data-frequency="<%= popup.frequency || 'session' %>" aria-labelledby="popupTitle">
+<% if (popup) {
+  var pimg = popup.image ? (/^https:\/\//.test(popup.image) ? popup.image : '/uploads/' + popup.image) : '';
+  var pstyle = ['poster', 'mourning'].indexOf(popup.style) >= 0 ? popup.style : 'card';
+  if (pstyle === 'poster' && !pimg) pstyle = 'card'; // โปสเตอร์ต้องมีภาพ
+  var psize = ['m', 'l', 'xl'].indexOf(popup.size) >= 0 ? popup.size : 'm';
+  var ptitle = popup.show_title !== 0;
+%>
+<dialog class="popup p-<%= pstyle %> ps-<%= psize %>" id="popup" data-key="<%= popup.key %>" data-frequency="<%= popup.frequency || 'session' %>"
+  <%= ptitle ? 'aria-labelledby=popupTitle' : '' %> aria-label="<%= popup.title %>">
   <button type="button" class="popup-x" data-close aria-label="ปิดหน้าต่างนี้"><%- icon('x', 20) %></button>
+  <% if (pstyle === 'mourning' && pimg) { %><span class="popup-ribbon" aria-hidden="true"><%- ribbonSvg %></span><% } %>
   <% if (pimg) { %>
     <% if (popup.link) { %><a class="popup-img" href="<%= popup.link %>"><img src="<%= pimg %>" alt="<%= popup.title %>"></a>
     <% } else { %><span class="popup-img"><img src="<%= pimg %>" alt="<%= popup.title %>"></span><% } %>
+  <% } else if (pstyle === 'mourning') { %>
+    <div class="popup-mourn"><%- ribbonSvg %></div>
   <% } else { %>
     <div class="popup-hero">
       <img src="/img/hero.jpg" alt="">
@@ -317,12 +327,13 @@
     </div>
   <% } %>
   <div class="popup-b">
-    <h2 id="popupTitle"><%= popup.title %></h2>
+    <% if (ptitle) { %><h2 id="popupTitle"><%= popup.title %></h2><% } %>
     <% if (popup.body) { %><p><%= popup.body %></p><% } %>
     <div class="popup-btns">
       <% if (popup.link) { %><a class="btn btn-ghost" href="<%= popup.link %>"><%= popup.link_text || 'ดูรายละเอียด' %></a><% } %>
       <button type="button" class="btn btn-primary" data-close autofocus>เข้าสู่เว็บไซต์ <%- icon('arrow', 16) %></button>
     </div>
+    <% if (popup.preview) { %><p class="popup-prev"><%- icon('lock', 13) %> ตัวอย่างสำหรับผู้ดูแล — ผู้ชมเห็นตามช่วงเวลาที่ตั้งไว้</p><% } %>
   </div>
 </dialog>
 <% } %>

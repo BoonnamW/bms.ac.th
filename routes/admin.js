@@ -129,7 +129,7 @@ r.get('/settings', requireAuth, (req, res) =>
 
 r.post('/settings', requireAuth, upload.single('logo'), csrfCheck, (req, res) => {
   const current = getSettings();
-  const { values, errors } = validate(settingsFields.filter((f) => f.n), req.body, current);
+  const { values, errors } = validate(settingsFields, req.body, current);
   let newImg = null;
   try { if (req.file) newImg = saveImage(req.file); } catch (e) { errors.push(e.message); }
   if (errors.length) {
@@ -165,7 +165,7 @@ function getEntity(req, res, next) {
 function validate(fields, body, existing = {}) {
   const values = {}, errors = [];
   for (const f of fields) {
-    if (['image', 'images', 'files'].includes(f.type)) continue; // จัดการแยกตอนบันทึก
+    if (!f.n || ['image', 'images', 'files'].includes(f.type)) continue; // หัวข้อกลุ่ม / ไฟล์ (จัดการแยกตอนบันทึก)
     let v = body[f.n];
     if (Array.isArray(v)) v = v[0];
     switch (f.type) {

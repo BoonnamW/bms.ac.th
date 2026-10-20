@@ -8,8 +8,8 @@ import { OIT_GROUP } from '../lib/oit.js';
 import { EVENT_END_SQL, nowUtc, eventView, icsCalendar } from '../lib/events.js';
 import { sessionOf } from '../lib/session.js';
 import { album as driveAlbum, summary as driveSummary } from '../lib/gdrive.js';
+import { currentPopup, previewPopup } from '../lib/popups.js';
 import { issues as journalIssues, issueOf, entriesOf, journalName, slugYm, ymSlug, ymLabel, thisYm, releaseDay, JOURNAL_SECTIONS } from '../lib/journal.js';
-import crypto from 'node:crypto';
 
 const r = Router();
 const PAGE_SIZE = 9;
@@ -195,20 +195,11 @@ r.get('/api/search', (req, res) => {
 });
 
 // ---------- หน้าแรก ----------
-// ป๊อปอัปก่อนเข้าเว็บที่อยู่ในช่วงเวลาแสดง (ทีละ 1 อัน) — key เปลี่ยนเมื่อแก้เนื้อหา ผู้ชมจะเห็นอีกครั้ง
-function currentPopup() {
-  const now = nowUtc();
-  const pop = one(`SELECT * FROM popups WHERE active=1 AND (COALESCE(start_at,'')='' OR start_at<=?)
-    AND (COALESCE(end_at,'')='' OR end_at>=?) ORDER BY sort, id LIMIT 1`, now, now);
-  if (!pop) return null;
-  const key = crypto.createHash('md5').update([pop.id, pop.title, pop.image, pop.body, pop.link, pop.start_at, pop.end_at].join('|')).digest('hex').slice(0, 10);
-  return { ...pop, key };
-}
-
 r.get('/', (req, res) => {
   const S = res.locals.S;
   res.render('public/home', {
-    popup: currentPopup(),
+    // ผู้ดูแลดูตัวอย่างป๊อปอัปได้ที่ /?popup=<เลขที่>
+    popup: /^\d+$/.test(req.query.popup || '') && sessionOf(req) ? previewPopup(req.query.popup) : currentPopup(),
     title: '',
     slides: all('SELECT * FROM slides WHERE active=1 ORDER BY sort, id'),
     links: all('SELECT * FROM links ORDER BY sort, id'),

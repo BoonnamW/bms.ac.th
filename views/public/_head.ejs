@@ -11,7 +11,8 @@
   var applyUrl = S.admission_link || '/contact';
   var logoSrc = S.logo ? '/uploads/' + S.logo : '/img/icon-192.png';
 %><!doctype html>
-<html lang="th"<% if (fs) { %> data-fs="<%= fs %>"<% } %><% if (hc) { %> class="hc"<% } %>>
+<% var htmlCls = [hc ? 'hc' : '', mourning && mourning.mono ? 'mono' : '', mourning && mourning.ribbon ? 'ribbon' : ''].filter(Boolean).join(' '); %>
+<html lang="th"<% if (fs) { %> data-fs="<%= fs %>"<% } %><% if (htmlCls) { %> class="<%= htmlCls %>"<% } %>>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -37,6 +38,7 @@
 </head>
 <body>
 <a class="skip" href="#main">ข้ามไปยังเนื้อหา</a>
+<% if (mourning && mourning.ribbon) { %><span class="mourn-ribbon" role="img" aria-label="โบว์ดำไว้อาลัย — <%= mourning.ribbon %>" title="<%= mourning.ribbon %>"><%- ribbonSvg %></span><% } %>
 
 <div class="topbar">
   <div class="wrap topbar-in">

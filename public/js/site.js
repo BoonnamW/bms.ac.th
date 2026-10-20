@@ -79,8 +79,21 @@
     try { seen = store?.getItem(key) || ''; } catch { /* เช่นเดียวกัน */ }
     if (freq !== 'always' && (freq === 'day' ? seen === today : seen)) return;
     d.addEventListener('click', (e) => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
-    d.showModal();
-    try { store?.setItem(key, today); } catch { /* ไม่เป็นไร */ } // แสดงแล้ว = เห็นแล้ว
+    // โปสเตอร์/ไว้อาลัย: ย่อภาพให้ภาพและข้อความใต้ภาพพอดีจอ ไม่ต้องเลื่อน
+    const fit = () => {
+      const cap = $('.popup-b', d);
+      if (cap && d.open && d.matches('.p-poster, .p-mourning')) for (let i = 0; i < 2; i++) d.style.setProperty('--cap', `${cap.offsetHeight}px`);
+    };
+    addEventListener('resize', fit);
+    const show = () => {
+      d.showModal();
+      fit();
+      try { store?.setItem(key, today); } catch { /* ไม่เป็นไร */ } // แสดงแล้ว = เห็นแล้ว
+    };
+    // รอภาพโหลดก่อน (สูงสุด 2.5 วินาที) กล่องจะได้ขนาดพอดีภาพตั้งแต่แรก ไม่กระตุก
+    const img = $('.popup-img img', d);
+    if (img && !img.complete && img.decode) Promise.race([img.decode().catch(() => {}), new Promise((r) => setTimeout(r, 2500))]).then(show);
+    else show();
   });
 
   // ---------- ประกาศสำคัญ (ปิดแล้วไม่แสดงซ้ำจนกว่าจะมีประกาศใหม่) ----------

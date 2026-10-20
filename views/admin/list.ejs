@@ -23,6 +23,7 @@
       <% }) %>
       <td class="r act">
         <a href="/admin/<%= table %>/<%= row.id %>"><%= ent.readonly ? 'ดู' : 'แก้ไข' %></a>
+        <% var viewUrl = ent.view && ent.view(row); if (viewUrl) { %><a href="<%= viewUrl %>" target="_blank" rel="noopener"><%= ent.viewLabel || 'ดูบนเว็บ' %></a><% } %>
         <form method="post" action="/admin/<%= table %>/<%= row.id %>/delete" data-confirm="ยืนยันการลบรายการนี้? การลบไม่สามารถกู้คืนได้">
           <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="del">ลบ</button>
         </form>

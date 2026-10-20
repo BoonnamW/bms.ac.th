@@ -8,6 +8,7 @@
   <div class="formbar">
     <% if (!ent.readonly) { %><button class="btn">บันทึก</button><% } %>
     <a class="btn ghost" href="<%= back || '/admin/' + table %>"><%= back ? '← กลับไปหน้าเว็บ' : '← กลับ' %></a>
+    <% var viewUrl = item.id && ent.view && ent.view(item); if (viewUrl) { %><a class="btn ghost" href="<%= viewUrl %>" target="_blank" rel="noopener"><%= ent.viewLabel || 'ดูบนเว็บ' %> ↗</a><% } %>
   </div>
 </form>
 <% if (item.id && !ent.readonly) { %>
