@@ -12,10 +12,11 @@ import {
 
 const r = Router();
 const SESSION_MS = 2 * 60 * 60 * 1000; // 2 ชั่วโมง
-const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 40 } });
+// defParamCharset utf8 = ชื่อไฟล์ภาษาไทยไม่เพี้ยน (ค่าเริ่มต้นของ multer อ่านเป็น latin1)
+const upload = multer({ storage: multer.memoryStorage(), defParamCharset: 'utf8', limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 40 } });
 // ฟอร์มเนื้อหา: รูปหลัก 1 รูป · รูปประกอบหลายรูป (images) · เอกสารแนบ (files)
 const MAX_IMAGES = 12, MAX_FILES = 5, IMG_BYTES = 5 * 1024 * 1024;
-const uploadForm = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024, files: 1 + MAX_IMAGES + MAX_FILES, fields: 80 } })
+const uploadForm = multer({ storage: multer.memoryStorage(), defParamCharset: 'utf8', limits: { fileSize: 10 * 1024 * 1024, files: 1 + MAX_IMAGES + MAX_FILES, fields: 80 } })
   .fields([{ name: 'image', maxCount: 1 }, { name: 'images', maxCount: MAX_IMAGES }, { name: 'files', maxCount: MAX_FILES }]);
 const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', 12);
 
@@ -235,7 +236,7 @@ r.get('/:e', requireAuth, getEntity, (req, res) => {
 });
 
 // ปุ่มเพิ่ม/แก้ไขบนหน้าเว็บส่งหน้าเดิมมาเป็น back → บันทึกแล้วกลับไปหน้านั้น (รับเฉพาะหน้าในเว็บนี้)
-const backUrl = (v) => (/^\/(p\/[a-z0-9-]+|awards|news\/\d+|gallery(\/\d+)?|journal(\/25\d\d-(0[1-9]|1[0-2]))?)$/.test(String(v || '')) ? String(v) : '');
+const backUrl = (v) => (/^\/(p\/[a-z0-9-]+|awards(\/\d+)?|news\/\d+|gallery(\/\d+)?|journal(\/25\d\d-(0[1-9]|1[0-2]))?)$/.test(String(v || '')) ? String(v) : '');
 
 // โฟลเดอร์ Google Drive ในฟอร์ม: อ่านรายชื่อรูปทันทีที่บันทึก — โฟลเดอร์ไม่ได้แชร์ / ไม่มีรูป แจ้งในฟอร์ม
 // (ติดต่อ Google ไม่ได้ชั่วคราว บันทึกได้ตามปกติ ระบบจะลองอ่านใหม่เองตอนมีคนเปิดดู)

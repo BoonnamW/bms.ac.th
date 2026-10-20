@@ -16,7 +16,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><%= title ? title + ' | ' : '' %><%= S.school_name %></title>
-  <meta name="description" content="<%= S.school_name %> – <%= S.tagline %>">
+  <% var metaDesc = typeof description !== 'undefined' && description ? description : S.school_name + ' – ' + S.tagline; %>
+  <meta name="description" content="<%= metaDesc %>">
+  <meta property="og:site_name" content="<%= S.school_name %>">
+  <meta property="og:title" content="<%= title || S.school_name %>">
+  <meta property="og:description" content="<%= metaDesc %>">
+  <% if (typeof ogImage !== 'undefined' && ogImage) { %><meta property="og:image" content="<%= /^https:/.test(ogImage) ? ogImage : origin + ogImage %>"><% } %>
   <meta name="theme-color" content="<%= S.primary %>">
   <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/img/favicon-32.png" type="image/png">

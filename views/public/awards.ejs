@@ -7,7 +7,6 @@
     return '/awards' + (out.length ? '?' + out.join('&') : '');
   };
   var be = function (d) { return d ? Number(String(d).slice(0, 4)) + 543 : 0; };
-  var photo = function (v) { return /^https:\/\//.test(v) ? v : '/uploads/' + v; };
   var sum = Object.keys(owners).reduce(function (s, k) { return s + (counts[k] || 0); }, 0);
   var groups = [];
   items.forEach(function (a) {
@@ -59,18 +58,22 @@
     <section class="aw-yg" aria-labelledby="awy-<%= g.year %>">
       <h2 class="aw-yh" id="awy-<%= g.year %>"><%= g.year ? 'พ.ศ. ' + g.year : 'ไม่ระบุปี' %></h2>
       <ul class="aw-rows">
-        <% g.items.forEach(function (a) { var ext = /^https?:/.test(a.link || ''); %>
+        <% g.items.forEach(function (a) { %>
         <li class="awr aw-<%= a.owner %>" id="aw-<%= a.id %>">
-          <span class="awr-img"><% if (a.image) { %><img src="<%= photo(a.image) %>" alt="" loading="lazy"><% } %><%- icon(awardIcons[a.owner] || 'award', 26) %></span>
+          <span class="awr-img"><% if (a.cover) { %><img src="<%= a.cover %>" alt="" loading="lazy"><% } %><%- icon(awardIcons[a.owner] || 'award', 26) %></span>
           <div class="awr-b">
             <p class="awr-meta">
-              <span class="awr-own"><%= owners[a.owner] || 'ผลงาน' %></span>
+              <span class="aw-badge"><%= owners[a.owner] || 'ผลงาน' %></span>
               <% if (awardLevels[a.level]) { %><span class="awr-lv"><%= awardLevels[a.level] %></span><% } %>
-              <% if (a.award_date) { %><time datetime="<%= a.award_date %>"><%= thDay(a.award_date, 'short') %></time><% } %>
+              <% if (a.award_date) { %><time datetime="<%= a.award_date %>"><%= thDay(a.award_date, 'short') %><%= a.award_time ? ' · ' + a.award_time + ' น.' : '' %></time><% } %>
             </p>
-            <h3><% if (a.link) { %><a href="<%= a.link %>"<% if (ext) { %> target="_blank" rel="noopener"<% } %>><%= a.title %><% if (ext) { %> <%- icon('external', 14) %><span class="sr-only"> (เปิดหน้าต่างใหม่)</span><% } %></a><% } else { %><%= a.title %><% } %></h3>
+            <h3><a href="/awards/<%= a.id %>"><%= a.title %></a></h3>
             <% if (a.people) { %><p class="awr-people"><%- icon('user', 14) %> <%= a.people %></p><% } %>
-            <% if (a.detail) { %><p class="awr-detail"><%= a.detail %></p><% } %>
+            <% if (a.excerpt) { %><p class="awr-detail"><%= a.excerpt %></p><% } %>
+            <% if (a.nPics || a.nDocs || a.drive_url) { %><p class="awr-has">
+              <% if (a.nPics || a.drive_url) { %><span><%- icon('image', 14) %> <%= a.nPics ? a.nPics + ' รูป' : 'อัลบั้มภาพ' %></span><% } %>
+              <% if (a.nDocs) { %><span><%- icon('file', 14) %> เอกสาร <%= a.nDocs %> ไฟล์</span><% } %>
+            </p><% } %>
           </div>
           <% if (editor) { %><a class="person-edit" href="/admin/awards/<%= a.id %>?back=<%= encodeURIComponent('/awards') %>" aria-label="แก้ไข <%= a.title %>" title="แก้ไข"><%- icon('edit', 16) %></a><% } %>
         </li>

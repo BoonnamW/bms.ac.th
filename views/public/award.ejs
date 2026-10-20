@@ -1,0 +1,93 @@
+<%- include('_head') %>
+<%
+  var upl = function (v) { return !v ? '' : /^https:\/\//.test(v) ? v : '/uploads/' + v; };
+  var back = '/awards/' + a.id;
+  var ext = /^https?:/.test(a.link || '');
+  var KIND = { pdf: 'PDF', doc: 'Word', docx: 'Word', xls: 'Excel', xlsx: 'Excel', ppt: 'PowerPoint', pptx: 'PowerPoint' };
+%>
+<section class="pagehead awd-head aw-<%= a.owner %>">
+  <div class="wrap">
+    <nav class="crumb" aria-label="breadcrumb"><a href="/">หน้าหลัก</a> <span aria-hidden="true">/</span> <a href="/awards">ผลงานและรางวัล</a> <span aria-hidden="true">/</span> <a href="/awards?owner=<%= a.owner %>"><%= owners[a.owner] || 'ผลงาน' %></a></nav>
+    <p class="awd-tags">
+      <span class="aw-badge"><%- icon(awardIcons[a.owner] || 'award', 14) %> <%= owners[a.owner] || 'ผลงาน' %></span>
+      <% if (awardLevels[a.level]) { %><span class="awd-lv"><%= awardLevels[a.level] %></span><% } %>
+      <% if (!a.published) { %><span class="awd-off">ซ่อนอยู่ — เห็นเฉพาะผู้ดูแล</span><% } %>
+    </p>
+    <h1><%= a.title %></h1>
+    <p class="meta">
+      <% if (a.award_date) { %><time datetime="<%= a.award_date %><%= a.award_time ? 'T' + a.award_time : '' %>"><%- icon('calendar', 15) %> <%= thDay(a.award_date) %></time><% } %>
+      <% if (a.award_time) { %><span><%- icon('clock', 15) %> เวลา <%= a.award_time %> น.</span><% } %>
+    </p>
+  </div>
+</section>
+<section class="sec">
+  <div class="wrap two">
+    <div class="main-col">
+      <% if (editor) { %>
+      <div class="staff-tools">
+        <a class="btn btn-primary btn-sm" href="/admin/awards/<%= a.id %>?back=<%= encodeURIComponent(back) %>"><%- icon('edit', 15) %> แก้ไขผลงานนี้</a>
+        <a class="btn btn-ghost btn-sm" href="/admin/awards/new?owner=<%= a.owner %>&back=<%= encodeURIComponent('/awards') %>"><%- icon('plus', 16) %> เพิ่มผลงาน</a>
+        <span class="muted small"><%- icon('lock', 14) %> แสดงเฉพาะผู้ดูแลที่เข้าสู่ระบบอยู่</span>
+      </div>
+      <% } %>
+      <% if (a.people) { %>
+      <p class="awd-who aw-<%= a.owner %>"><%- icon('user', 18) %><span><small>ผู้ได้รับรางวัล / เจ้าของผลงาน</small><%= a.people %></span></p>
+      <% } %>
+      <article class="prose">
+        <% if (a.image) { %><img class="cover" src="<%= upl(a.image) %>" alt=""><% } %>
+        <%- a.detail || '' %>
+      </article>
+
+      <% if (images.length) { %>
+      <section class="pset" aria-labelledby="awPics">
+        <div class="pset-h"><h2 id="awPics"><%- icon('image', 20) %> รูปภาพ <small><%= images.length.toLocaleString('th-TH') %> ภาพ</small></h2></div>
+        <ul class="pgrid" data-lightbox data-caption="<%= a.title %>">
+          <% images.forEach(function (x, i) { %><li><a href="<%= upl(x) %>"><img src="<%= upl(x) %>" alt="<%= a.title %> ภาพที่ <%= i + 1 %>" loading="lazy"></a></li><% }) %>
+        </ul>
+      </section>
+      <% } %>
+      <% if (photos) { %><%- include('_photos', { photos: photos, caption: a.title, heading: images.length ? 'ภาพเพิ่มเติมจาก Google Drive' : 'รูปภาพ', back: back }) %><% } %>
+
+      <% if (files.length) { %>
+      <section class="awd-docs" aria-labelledby="awDocs">
+        <h2 id="awDocs"><%- icon('file', 20) %> เอกสารแนบ</h2>
+        <ul>
+          <% files.forEach(function (d) { var pdf = d.ext === 'pdf'; %>
+          <li><a href="/uploads/<%= d.f %>"<% if (pdf) { %> target="_blank" rel="noopener"<% } else { %> download="<%= d.n %>"<% } %>>
+            <span class="doc-ic doc-<%= d.ext.slice(0, 3) %>"><%= (KIND[d.ext] || d.ext).slice(0, 4).toUpperCase() %></span>
+            <span class="doc-n"><%= d.n %><small><%= KIND[d.ext] || d.ext.toUpperCase() %> · <%= pdf ? 'เปิดดู' : 'ดาวน์โหลด' %></small></span>
+            <%- icon(pdf ? 'external' : 'download', 18) %><% if (pdf) { %><span class="sr-only"> (เปิดหน้าต่างใหม่)</span><% } %>
+          </a></li>
+          <% }) %>
+        </ul>
+      </section>
+      <% } %>
+
+      <% if (a.link) { %>
+      <p class="awd-link"><a class="btn btn-ghost" href="<%= a.link %>"<% if (ext) { %> target="_blank" rel="noopener"<% } %>><%- icon(ext ? 'external' : 'arrow', 16) %> <%= /^\/news\/\d+$/.test(a.link) ? 'อ่านข่าวผลงานนี้' : 'ข้อมูลเพิ่มเติม' %><% if (ext) { %><span class="sr-only"> (เปิดหน้าต่างใหม่)</span><% } %></a></p>
+      <% } %>
+
+      <div class="share" aria-label="แบ่งปันผลงานนี้">
+        <span>แบ่งปัน:</span>
+        <a class="share-fb" href="https://www.facebook.com/sharer/sharer.php?u=<%= encodeURIComponent(shareUrl) %>" target="_blank" rel="noopener"><%- icon('facebook', 16) %> Facebook</a>
+        <a class="share-line" href="https://social-plugins.line.me/lineit/share?url=<%= encodeURIComponent(shareUrl) %>" target="_blank" rel="noopener"><%- icon('chat', 16) %> LINE</a>
+        <button type="button" class="share-copy" data-copy="<%= shareUrl %>"><%- icon('external', 16) %> <span>คัดลอกลิงก์</span></button>
+      </div>
+    </div>
+    <aside class="side">
+      <h3>ผลงานอื่น ๆ</h3>
+      <% if (more.length) { %>
+      <ul class="side-news awd-more">
+        <% more.forEach(function (m) { %>
+        <li class="aw-<%= m.owner %>"><a href="/awards/<%= m.id %>">
+          <span class="awd-th"><% if (m.cover) { %><img src="<%= m.cover %>" alt="" loading="lazy"><% } %><%- icon(awardIcons[m.owner] || 'award', 22) %></span>
+          <span><%= m.title %><time><%= owners[m.owner] %> · <%= thDay(m.award_date, 'short') %></time></span>
+        </a></li>
+        <% }) %>
+      </ul>
+      <% } %>
+      <a class="more" href="/awards">ผลงานทั้งหมด <%- icon('arrow', 15) %></a>
+    </aside>
+  </div>
+</section>
+<%- include('_foot') %>

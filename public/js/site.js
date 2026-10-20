@@ -594,7 +594,7 @@
     $$('[data-lightbox]').forEach((grid) => {
       const links = $$('a', grid);
       if (!links.length) return;
-      let dlg, img, count, open, idx = 0, opener = null;
+      let dlg, img, count, open, openText, idx = 0, opener = null;
       const show = (i) => {
         idx = (i + links.length) % links.length;
         const a = links[idx];
@@ -602,6 +602,7 @@
         img.alt = $('img', a)?.alt || '';
         count.textContent = `ภาพที่ ${idx + 1} จาก ${links.length}`;
         open.href = a.dataset.open || a.href;
+        openText.textContent = a.dataset.open ? 'ดูไฟล์ต้นฉบับใน Google Drive ' : 'เปิดรูปขนาดเต็ม '; // รูปจาก Drive / รูปที่อัปโหลด
         [idx - 1, idx + 1].forEach((k) => { const n = links[(k + links.length) % links.length]; if (n) new Image().src = n.getAttribute('href'); });
       };
       const build = () => {
@@ -614,9 +615,10 @@
         const bar = el('div', 'lb-bar');
         count = el('span');
         count.setAttribute('aria-live', 'polite');
-        open = el('a', '', 'ดูไฟล์ต้นฉบับใน Google Drive ');
+        open = el('a');
+        openText = document.createTextNode('');
         open.target = '_blank'; open.rel = 'noopener';
-        open.append(icon('external'));
+        open.append(openText, icon('external'));
         bar.append(count, open);
         dlg.append(fig, btn('lb-prev', 'ภาพก่อนหน้า', 'left', () => show(idx - 1)), btn('lb-next', 'ภาพถัดไป', 'right', () => show(idx + 1)), btn('lb-x', 'ปิด', 'x', () => dlg.close()), bar);
         dlg.addEventListener('keydown', (e) => {

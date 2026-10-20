@@ -157,39 +157,31 @@
 </section>
 <% } %>
 
-<% if (awards.some(function (g) { return g.items.length; })) { %>
+<% if (awards.length) { %>
 <section class="sec aw-sec" aria-labelledby="awTitle">
   <div class="wrap">
     <div class="sec-h">
       <div><h2 id="awTitle">ผลงานและความภาคภูมิใจ</h2><p class="en">Achievements &amp; Awards</p></div>
       <a class="more" href="/awards">ดูทั้งหมด <%- icon('arrow', 16) %></a>
     </div>
-    <div class="aw-grid">
-      <% awards.forEach(function (g) { %>
-      <div class="aw-card aw-<%= g.key %> reveal">
-        <div class="aw-head">
-          <span class="aw-ic"><%- icon(awardIcons[g.key], 20) %></span>
-          <h3><%= g.title %></h3>
-          <a class="aw-all" href="/awards?owner=<%= g.key %>">ดูทั้งหมด<span class="sr-only"> (<%= g.title %>)</span> <%- icon('arrow', 14) %></a>
-        </div>
-        <% if (g.items.length) { %>
-        <ul class="aw-list">
-          <% g.items.forEach(function (a) { var sub = [awardLevels[a.level], a.people].filter(Boolean).join(' · ') || thDay(a.award_date); %>
-          <li>
-            <span class="aw-year"><%= a.award_date ? 'พ.ศ. ' + (Number(a.award_date.slice(0, 4)) + 543) : '' %></span>
-            <span class="aw-b">
-              <% if (a.link) { %><a href="<%= a.link %>"<% if (/^https?:/.test(a.link)) { %> target="_blank" rel="noopener"<% } %>><%= a.title %></a><% } else { %><b><%= a.title %></b><% } %>
-              <% if (sub) { %><small><%= sub %></small><% } %>
-            </span>
-          </li>
-          <% }) %>
-        </ul>
-        <% } else { %>
-        <p class="aw-empty"><%- icon('award', 28) %>ยังไม่มีผลงานในหมวดนี้</p>
-        <% } %>
-      </div>
+    <ul class="aw-legend" aria-label="ดูผลงานแยกตามประเภท">
+      <% Object.keys(owners).forEach(function (k) { %>
+      <li><a class="aw-<%= k %>" href="/awards?owner=<%= k %>"><%- icon(awardIcons[k], 15) %> <%= owners[k] %> <b><%= (awardCounts[k] || 0).toLocaleString('th-TH') %></b></a></li>
       <% }) %>
-    </div>
+    </ul>
+    <ul class="awc-grid">
+      <% awards.forEach(function (a) { %>
+      <li class="awc aw-<%= a.owner %> reveal">
+        <span class="awc-img"><% if (a.cover) { %><img src="<%= a.cover %>" alt="" loading="lazy"><% } %><%- icon(awardIcons[a.owner] || 'award', 34) %></span>
+        <div class="awc-b">
+          <span class="aw-badge"><%= owners[a.owner] || 'ผลงาน' %></span>
+          <h3><a href="/awards/<%= a.id %>"><%= a.title %></a></h3>
+          <% if (a.people) { %><p class="awc-people"><%= a.people %></p><% } %>
+          <p class="awc-meta"><% if (awardLevels[a.level]) { %><b><%= awardLevels[a.level] %></b><% } %><time datetime="<%= a.award_date %>"><%= thDay(a.award_date, 'short') %></time></p>
+        </div>
+      </li>
+      <% }) %>
+    </ul>
   </div>
 </section>
 <% } %>

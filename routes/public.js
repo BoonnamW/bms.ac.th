@@ -3,7 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { db, getSettings } from '../lib/db.js';
 import { navTree } from '../lib/nav.js';
 import { CATEGORIES, AWARD_OWNERS, AWARD_LEVELS, AWARD_ICONS } from '../lib/entities.js';
-import { formToken, checkFormToken, thDate, parseUtc } from '../lib/helpers.js';
+import { formToken, checkFormToken, thDate, parseUtc, pics, docs, textOf } from '../lib/helpers.js';
 import { OIT_GROUP } from '../lib/oit.js';
 import { EVENT_END_SQL, nowUtc, eventView, icsCalendar } from '../lib/events.js';
 import { sessionOf } from '../lib/session.js';
@@ -25,6 +25,14 @@ const albumCard = (a) => {
     image: a.image ? `/uploads/${a.image}` : d?.cover ? `/gdrive/t/${d.cover}` : '' };
 };
 const editorOf = (req) => { const s = sessionOf(req); return s ? { csrf: s.csrf } : null; };
+const upl = (v) => (!v ? '' : /^https:\/\//.test(v) ? v : `/uploads/${v}`);
+// การ์ดผลงาน: รูปปก = รูปหลัก → รูปเพิ่มเติมรูปแรก → รูปแรกในโฟลเดอร์ Google Drive
+const awardCard = (a) => {
+  const extra = pics(a.images), cover = a.image || extra[0];
+  const drive = !cover && a.drive_url ? driveSummary(a.drive_url)?.cover : null;
+  return { ...a, cover: cover ? upl(cover) : drive ? `/gdrive/t/${drive}` : '', nPics: extra.length, nDocs: docs(a.files).length };
+};
+const AWARD_ORDER = "award_date DESC, COALESCE(award_time,'') DESC, id DESC";
 
 // ลิงก์เดิมจาก WordPress (/bs/2024/01/02/ชื่อข่าว/, /bs/?p=123 ฯลฯ) → หน้าใหม่ เพื่อไม่ให้ลิงก์จาก Google/Facebook เสีย
 const legacy = db.prepare('SELECT target FROM legacy_urls WHERE path=?');
@@ -113,6 +121,7 @@ r.get('/sitemap.xml', (req, res) => {
     ['/ita', '0.7'], ['/awards', '0.6'], ['/journal', '0.6'], ['/data', '0.5'], ['/contact', '0.5'],
     ...journalIssues().filter((x) => !x.link).map((x) => [`/journal/${x.slug}`, '0.5']),
     ...all('SELECT id FROM albums WHERE published=1').map((a) => [`/gallery/${a.id}`, '0.5']),
+    ...all('SELECT id FROM awards WHERE published=1').map((a) => [`/awards/${a.id}`, '0.4']),
     ...all('SELECT slug FROM pages WHERE published=1').map((p) => [`/p/${p.slug}`, '0.6']),
     ...all('SELECT id FROM news WHERE published=1 ORDER BY created_at DESC LIMIT 500').map((n) => [`/news/${n.id}`, '0.5']),
   ];
@@ -176,8 +185,8 @@ r.get('/api/search', (req, res) => {
     ...all("SELECT title, slug FROM pages WHERE published=1 AND title LIKE ? ESCAPE '\\' LIMIT 4", like)
       .map((p) => ({ title: p.title, url: `/p/${p.slug}`, type: 'หน้าเว็บ' })),
     ...staffLike(like, 4).map((s) => ({ title: s.name, url: `/p/${s.slug}#staff-${s.id}`, type: s.dept })),
-    ...all("SELECT title, owner, award_date FROM awards WHERE published=1 AND (title LIKE ? ESCAPE '\\' OR people LIKE ? ESCAPE '\\') ORDER BY award_date DESC LIMIT 3", like, like)
-      .map((a) => ({ title: a.title, url: `/awards?q=${encodeURIComponent(a.title.slice(0, 60))}`, type: `${AWARD_OWNERS[a.owner] || 'ผลงาน'}${a.award_date ? ` · พ.ศ. ${Number(a.award_date.slice(0, 4)) + 543}` : ''}` })),
+    ...all("SELECT id, title, owner, award_date FROM awards WHERE published=1 AND (title LIKE ? ESCAPE '\\' OR people LIKE ? ESCAPE '\\') ORDER BY award_date DESC LIMIT 3", like, like)
+      .map((a) => ({ title: a.title, url: `/awards/${a.id}`, type: `${AWARD_OWNERS[a.owner] || 'ผลงาน'}${a.award_date ? ` · พ.ศ. ${Number(a.award_date.slice(0, 4)) + 543}` : ''}` })),
     ...all("SELECT id, title, created_at FROM news WHERE published=1 AND title LIKE ? ESCAPE '\\' ORDER BY created_at DESC LIMIT 5", like)
       .map((n) => ({ title: n.title, url: `/news/${n.id}`, type: `ข่าว · ${thDate(n.created_at)}` })),
   ];
@@ -209,10 +218,10 @@ r.get('/', (req, res) => {
     events: upcomingEvents(4),
     programs: all('SELECT * FROM programs ORDER BY sort, id LIMIT 4'),
     highlights: all('SELECT * FROM highlights ORDER BY sort, id LIMIT 6'),
-    awards: Object.entries(AWARD_OWNERS).map(([key, title]) => ({
-      key, title, items: all('SELECT * FROM awards WHERE published=1 AND owner=? ORDER BY award_date DESC, id DESC LIMIT 4', key),
-    })),
-    awardLevels: AWARD_LEVELS, awardIcons: AWARD_ICONS,
+    // ผลงานทุกประเภทรวมเป็นรายการเดียว (ป้ายบอกว่าเป็นผลงานโรงเรียน ครู หรือนักเรียน)
+    awards: all(`SELECT * FROM awards WHERE published=1 ORDER BY ${AWARD_ORDER} LIMIT 8`).map(awardCard),
+    awardCounts: Object.fromEntries(all('SELECT owner, COUNT(*) n FROM awards WHERE published=1 GROUP BY owner').map((x) => [x.owner, x.n])),
+    owners: AWARD_OWNERS, awardLevels: AWARD_LEVELS, awardIcons: AWARD_ICONS,
     gallery: all('SELECT * FROM gallery ORDER BY sort, id LIMIT 12'),
     albums: all('SELECT * FROM albums WHERE published=1 ORDER BY album_date DESC, id DESC LIMIT 12').map(albumCard).filter((a) => a.image),
     data: dataSummary(),
@@ -244,7 +253,8 @@ r.get('/news/:id', async (req, res, next) => {
   const related = all('SELECT id, title, category, excerpt, image, created_at FROM news WHERE published=1 AND category=? AND id<>? ORDER BY created_at DESC LIMIT 3',
     item.category, item.id);
   const ed = editorOf(req);
-  res.render('public/article', { title: item.title, item, recent, related, photos, editor: !!ed, csrf: ed?.csrf, shareUrl: `${baseUrl(req)}/news/${item.id}` });
+  res.render('public/article', { title: item.title, description: textOf(item.excerpt || item.body, 160), ogImage: upl(item.image),
+    item, recent, related, photos, editor: !!ed, csrf: ed?.csrf, shareUrl: `${baseUrl(req)}/news/${item.id}` });
 });
 
 // ---------- หน้าเว็บทั่วไป ----------
@@ -289,12 +299,29 @@ r.get('/awards', (req, res) => {
   const cond = where.join(' AND ');
   const total = one(`SELECT COUNT(*) c FROM awards WHERE ${cond}`, ...args).c;
   const pages = Math.max(1, Math.ceil(total / AWARDS_PAGE)), page = Math.min(pageNo(req.query.page), pages);
-  const items = all(`SELECT * FROM awards WHERE ${cond} ORDER BY award_date DESC, id DESC LIMIT ? OFFSET ?`, ...args, AWARDS_PAGE, (page - 1) * AWARDS_PAGE);
+  const items = all(`SELECT * FROM awards WHERE ${cond} ORDER BY ${AWARD_ORDER} LIMIT ? OFFSET ?`, ...args, AWARDS_PAGE, (page - 1) * AWARDS_PAGE)
+    .map((a) => ({ ...awardCard(a), excerpt: textOf(a.detail, 180) }));
   const years = all("SELECT DISTINCT substr(award_date,1,4) y FROM awards WHERE published=1 AND COALESCE(award_date,'')<>'' ORDER BY y DESC")
     .map((x) => Number(x.y) + 543);
   res.render('public/awards', {
     title: owner ? AWARD_OWNERS[owner] : 'ผลงานและรางวัล', items, total, page, pages, owner, year, q, counts, years,
     owners: AWARD_OWNERS, awardLevels: AWARD_LEVELS, awardIcons: AWARD_ICONS, editor: !!sessionOf(req),
+  });
+});
+
+// รายละเอียดผลงาน: ข้อความ รูปภาพ วันที่ เวลา เอกสารแนบ (ผู้ดูแลเปิดดูผลงานที่ซ่อนอยู่ได้)
+r.get('/awards/:id', async (req, res, next) => {
+  if (!/^\d+$/.test(req.params.id)) return next();
+  const ed = editorOf(req);
+  const a = one('SELECT * FROM awards WHERE id=?', req.params.id);
+  if (!a || (!a.published && !ed)) return next();
+  const photos = a.drive_url ? await driveAlbum(a.drive_url) : null;
+  // ผลงานอื่น: ประเภทเดียวกันก่อน
+  const more = all(`SELECT * FROM awards WHERE published=1 AND id<>? ORDER BY owner=? DESC, ${AWARD_ORDER} LIMIT 4`, a.id, a.owner).map(awardCard);
+  res.render('public/award', {
+    title: a.title, description: textOf(a.detail, 160) || [AWARD_OWNERS[a.owner], a.people].filter(Boolean).join(' · '),
+    ogImage: awardCard(a).cover, a, images: pics(a.images), files: docs(a.files), photos, more,
+    owners: AWARD_OWNERS, awardLevels: AWARD_LEVELS, awardIcons: AWARD_ICONS, editor: !!ed, csrf: ed?.csrf, shareUrl: `${baseUrl(req)}/awards/${a.id}`,
   });
 });
 
@@ -446,7 +473,7 @@ r.get('/search', (req, res) => {
     pages = all("SELECT title, slug FROM pages WHERE published=1 AND title LIKE ? ESCAPE '\\' LIMIT 20", like);
     services = all("SELECT title, url FROM services WHERE active=1 AND title LIKE ? ESCAPE '\\' LIMIT 10", like);
     people = staffLike(like, 20);
-    awards = all("SELECT title, owner, award_date FROM awards WHERE published=1 AND (title LIKE ? ESCAPE '\\' OR people LIKE ? ESCAPE '\\') ORDER BY award_date DESC LIMIT 20", like, like);
+    awards = all("SELECT id, title, owner, award_date FROM awards WHERE published=1 AND (title LIKE ? ESCAPE '\\' OR people LIKE ? ESCAPE '\\') ORDER BY award_date DESC LIMIT 20", like, like);
   }
   res.render('public/search', { title: 'ค้นหา', q, news, pages, services, people, awards, owners: AWARD_OWNERS });
 });
