@@ -1,0 +1,15 @@
+<% var fmt = function (n) { return Number(n || 0).toLocaleString('th-TH'); }; %>
+<% if (stats.length) { %>
+<section class="wrap stats-row" aria-label="ข้อมูลโรงเรียนโดยสรุป">
+  <% stats.forEach(function (s, i) { %>
+  <div class="statc reveal t<%= i % 6 %>">
+    <span class="s-ic"><%- icon(s.icon || 'star', 26) %></span>
+    <div>
+      <strong><span class="count" data-to="<%= s.value %>"><%= fmt(s.value) %></span><%= s.suffix || '' %></strong>
+      <span class="s-l"><%= s.label %></span>
+      <% if (s.label_en) { %><small><%= s.label_en %></small><% } %>
+    </div>
+  </div>
+  <% }) %>
+</section>
+<% } %>

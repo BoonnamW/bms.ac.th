@@ -1,0 +1,56 @@
+<% var fmt = function (n) { return Number(n || 0).toLocaleString('th-TH'); }; %>
+<section class="sec<%= alt ? ' sec-alt' : '' %>">
+  <div class="wrap grid-2">
+    <% if (tour && tour.embed) { %>
+    <div class="tour" id="tour">
+      <img class="tour-bg" src="/img/hero.jpg" alt="" loading="lazy">
+      <div class="tour-in">
+        <span class="eyebrow">Virtual Campus Tour</span>
+        <h2>เยี่ยมชมโรงเรียนแบบออนไลน์</h2>
+        <p>ชมบรรยากาศและสถานที่ภายใน<%= S.school_name %></p>
+        <button type="button" class="hbig hbig-primary" data-video="<%= tour.embed %>"><%- icon('play', 22) %><span><b>เริ่มชมวิดีโอ</b><small>โหลดจาก YouTube เมื่อกดเล่น</small></span></button>
+      </div>
+    </div>
+    <% } else { %>
+    <div class="tour">
+      <img class="tour-bg" src="/img/hero.jpg" alt="" loading="lazy">
+      <div class="tour-in">
+        <span class="eyebrow">About Us</span>
+        <h2><%= S.about_title %></h2>
+        <p><%= S.about_text %></p>
+        <% if (tour && tour.url) { %>
+          <a class="hbig hbig-primary" href="<%= tour.url %>" target="_blank" rel="noopener"><%- icon('play', 22) %><span><b>ชมวิดีโอแนะนำโรงเรียน</b><small>Virtual Tour</small></span></a>
+        <% } else { %>
+          <a class="hbig hbig-primary" href="<%= aboutUrl %>"><%- icon('building', 22) %><span><b>ทำความรู้จักโรงเรียน</b><small>About Our School</small></span><%- icon('arrow', 18) %></a>
+        <% } %>
+      </div>
+    </div>
+    <% } %>
+
+    <div class="dc-card">
+      <div class="dc-h">
+        <div><h2>School Data Center</h2><p>ศูนย์ข้อมูลสารสนเทศโรงเรียน</p></div>
+        <a class="btn btn-white btn-sm" href="/data">ดูข้อมูลทั้งหมด <%- icon('arrow', 15) %></a>
+      </div>
+      <div class="dc-grid">
+        <% data.stats.slice(0, 2).forEach(function (s) { %>
+        <div class="dc-tile"><span class="dc-l"><%= s.label %></span><strong><%= fmt(s.value) %><%= s.suffix || '' %></strong><small><%= s.label_en %></small></div>
+        <% }) %>
+        <% if (data.perYear.length) { var mx = Math.max.apply(null, data.perYear.map(function (y) { return y.n; })); var last = data.perYear[data.perYear.length - 1]; %>
+        <div class="dc-tile">
+          <span class="dc-l">ข่าวและประกาศ</span><strong><%= fmt(data.newsTotal) %></strong>
+          <span class="spark" role="img" aria-label="จำนวนข่าวต่อปี พ.ศ. <%= data.perYear[0].year %>–<%= last.year %> ปีล่าสุด <%= last.n %> เรื่อง">
+            <% data.perYear.forEach(function (y, k) { %><span class="sb h-<%= Math.max(4, Math.round(y.n / mx * 100)) %> <%= k === data.perYear.length - 1 ? 'cur' : '' %>"></span><% }) %>
+          </span>
+        </div>
+        <% } %>
+        <% if (data.oit.total) { %>
+        <a class="dc-tile dc-link" href="/ita">
+          <span class="dc-l">เปิดเผยข้อมูลสาธารณะ</span><strong><%= data.oit.total %><small class="of"> หัวข้อ</small></strong>
+          <small>ITA / OIT <%- icon('arrow', 13) %></small>
+        </a>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>

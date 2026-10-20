@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { db, getSettings } from '../lib/db.js';
 import { entities, settingsFields, colorFields } from '../lib/entities.js';
 import { SCHOOL_COLORS } from '../lib/seed.js';
+import { HOME_SECTIONS, homeLayout } from '../lib/home.js';
 import { sessionOf } from '../lib/session.js';
 import { parseFolder, folderLink, refresh as refreshDrive, status as driveStatus } from '../lib/gdrive.js';
 import {
@@ -156,6 +157,88 @@ r.post('/colors', requireAuth, csrfCheck, (req, res) => {
   const up = db.prepare('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
   for (const [k, v] of Object.entries(values)) up.run(k, String(v ?? ''));
   res.redirect('/admin/colors?saved=1');
+});
+
+// ---------- จัดเมนูและหน้าแรก (ลากวาง) ----------
+// เมนู: ส่งโครงสร้างทั้งหมดมาครั้งเดียว (JSON) — รายการที่ไม่อยู่ในโครงสร้างใหม่คือรายการที่ถูกลบ
+// rev = ลายนิ้วมือของเมนูตอนเปิดหน้า กันบันทึกทับเมื่อมีคนแก้เมนูจากที่อื่นระหว่างจัด
+const menuRows = () => db.prepare('SELECT id, title, title_en, url, parent_id, sort, active FROM menu_items ORDER BY sort, id').all();
+const menuRev = (rows) => sha256(JSON.stringify(rows)).slice(0, 20);
+const MAX_MENU = 400;
+function menuTree(rows) {
+  const tops = rows.filter((x) => !x.parent_id).map((x) => ({ ...x, children: [] }));
+  const byId = new Map(tops.map((t) => [t.id, t]));
+  const lost = []; // เมนูย่อยที่ไม่มีเมนูแม่แล้ว (ไม่แสดงบนเว็บ) — ให้เห็นเป็นเมนูหลักที่ซ่อนอยู่
+  for (const x of rows) if (x.parent_id) (byId.get(x.parent_id)?.children || lost).push(x);
+  return [...tops, ...lost.map((x) => ({ ...x, active: 0, children: [] }))];
+}
+function parseMenu(json, ids) {
+  let data;
+  try { data = JSON.parse(json || ''); } catch { data = null; }
+  if (!Array.isArray(data)) return { items: [], errors: ['ข้อมูลเมนูไม่ถูกต้อง โหลดหน้านี้ใหม่แล้วลองอีกครั้ง'] };
+  const errors = [], used = new Set();
+  let count = 0;
+  const item = (x, depth) => {
+    count++;
+    const title = String(x?.title ?? '').replace(/\s+/g, ' ').trim();
+    if (!title) errors.push('มีเมนูที่ยังไม่ได้ตั้งชื่อ');
+    else if (title.length > 120) errors.push(`ชื่อเมนู "${title.slice(0, 40)}…" ยาวเกิน 120 ตัวอักษร`);
+    let url = String(x?.url ?? '').trim();
+    if (url) {
+      const u = safeUrl(url);
+      if (u === null) errors.push(`ลิงก์ของเมนู "${title}" ไม่ถูกต้อง (ใช้ /path หรือ https://…)`);
+      else url = u;
+    }
+    let id = Number(x?.id);
+    if (!Number.isInteger(id) || !ids.has(id) || used.has(id)) id = null; // รายการใหม่
+    else used.add(id);
+    const kids = Array.isArray(x?.children) ? x.children : [];
+    if (depth > 0 && kids.length) errors.push(`เมนูย่อย "${title}" มีเมนูย่อยซ้อนอีกชั้นไม่ได้`);
+    return { id, title, title_en: String(x?.title_en ?? '').trim().slice(0, 60), url, active: x?.active ? 1 : 0,
+      children: depth === 0 && count <= MAX_MENU ? kids.slice(0, MAX_MENU).map((c) => item(c, 1)) : [] };
+  };
+  const items = data.slice(0, MAX_MENU).map((x) => item(x, 0));
+  if (count > MAX_MENU) errors.push(`เมนูมากเกินไป (ไม่เกิน ${MAX_MENU} รายการ)`);
+  return { items, errors: [...new Set(errors)] };
+}
+const renderArrange = (req, res, errors = [], status = 200) => {
+  const rows = menuRows();
+  res.status(status).render('admin/arrange', {
+    title: 'จัดเมนูและหน้าแรก', menu: menuTree(rows), rev: menuRev(rows), errors, saved: String(req.query.saved || ''),
+    home: homeLayout(getSettings().home_sections).map((x) => ({ ...x, label: HOME_SECTIONS[x.k].label })),
+  });
+};
+r.get('/arrange', requireAuth, (req, res) => renderArrange(req, res));
+r.post('/arrange/menu', requireAuth, csrfCheck, (req, res) => {
+  const rows = menuRows();
+  if (req.body.rev !== menuRev(rows)) return renderArrange(req, res, ['มีการแก้ไขเมนูจากที่อื่นระหว่างที่จัดอยู่ — หน้านี้แสดงเมนูล่าสุดแล้ว กรุณาจัดอีกครั้ง'], 409);
+  const { items, errors } = parseMenu(req.body.data, new Set(rows.map((x) => x.id)));
+  if (errors.length) return renderArrange(req, res, errors, 400);
+  db.exec('BEGIN');
+  try {
+    const up = db.prepare('UPDATE menu_items SET title=?, title_en=?, url=?, parent_id=?, sort=?, active=? WHERE id=?');
+    const ins = db.prepare('INSERT INTO menu_items (title, title_en, url, parent_id, sort, active) VALUES (?,?,?,?,?,?)');
+    const keep = new Set();
+    const put = (x, parent, sort) => {
+      const id = x.id ?? Number(ins.run(x.title, x.title_en, x.url, parent, sort, x.active).lastInsertRowid);
+      if (x.id) up.run(x.title, x.title_en, x.url, parent, sort, x.active, x.id);
+      keep.add(id);
+      return id;
+    };
+    items.forEach((t, i) => { const id = put(t, 0, (i + 1) * 10); t.children.forEach((c, j) => put(c, id, (j + 1) * 10)); });
+    const del = db.prepare('DELETE FROM menu_items WHERE id=?');
+    for (const x of rows) if (!keep.has(x.id)) del.run(x.id);
+    db.exec('COMMIT');
+  } catch (e) { db.exec('ROLLBACK'); throw e; }
+  res.redirect('/admin/arrange?saved=menu');
+});
+r.post('/arrange/home', requireAuth, csrfCheck, (req, res) => {
+  let list;
+  try { list = JSON.parse(req.body.data || ''); } catch { list = null; }
+  if (!Array.isArray(list)) return renderArrange(req, res, ['ข้อมูลลำดับหน้าแรกไม่ถูกต้อง'], 400);
+  const layout = homeLayout(JSON.stringify(list.slice(0, 50).map((x) => ({ k: String(x?.k ?? ''), on: !!x?.on }))));
+  db.prepare("INSERT INTO settings (key,value) VALUES ('home_sections',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(JSON.stringify(layout));
+  res.redirect('/admin/arrange?saved=home');
 });
 
 // ---------- รูปจาก Google Drive: อ่านรายชื่อรูปใหม่ทันที (ปุ่ม "อัปเดตรูปจาก Drive" บนหน้าเว็บ) ----------

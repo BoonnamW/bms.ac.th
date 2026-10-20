@@ -9,6 +9,7 @@ import { EVENT_END_SQL, nowUtc, eventView, icsCalendar } from '../lib/events.js'
 import { sessionOf } from '../lib/session.js';
 import { album as driveAlbum, summary as driveSummary } from '../lib/gdrive.js';
 import { currentPopup, previewPopup } from '../lib/popups.js';
+import { homeSections } from '../lib/home.js';
 import { issues as journalIssues, issueOf, entriesOf, journalName, slugYm, ymSlug, ymLabel, thisYm, releaseDay, JOURNAL_SECTIONS } from '../lib/journal.js';
 
 const r = Router();
@@ -197,27 +198,38 @@ r.get('/api/search', (req, res) => {
 // ---------- หน้าแรก ----------
 r.get('/', (req, res) => {
   const S = res.locals.S;
-  res.render('public/home', {
+  // ส่วนต่าง ๆ ของหน้าแรกตามลำดับที่จัดไว้ในหลังบ้าน — อ่านข้อมูลเฉพาะส่วนที่แสดง
+  const sections = homeSections(S.home_sections), on = new Set(sections.map((x) => x.k));
+  const about = res.locals.nav.find((n) => n.en === 'About');
+  const v = {
     // ผู้ดูแลดูตัวอย่างป๊อปอัปได้ที่ /?popup=<เลขที่>
     popup: /^\d+$/.test(req.query.popup || '') && sessionOf(req) ? previewPopup(req.query.popup) : currentPopup(),
-    title: '',
+    title: '', sections,
+    applyUrl: S.admission_link || '/contact',
+    aboutUrl: (about && (about.href || about.children?.[0]?.href)) || '/contact',
     slides: all('SELECT * FROM slides WHERE active=1 ORDER BY sort, id'),
     links: all('SELECT * FROM links ORDER BY sort, id'),
-    stats: all('SELECT * FROM stats ORDER BY sort, id'),
+  };
+  if (on.has('stats')) v.stats = all('SELECT * FROM stats ORDER BY sort, id');
+  if (on.has('news')) Object.assign(v, {
     news: all('SELECT id, title, category, excerpt, image, created_at FROM news WHERE published=1 ORDER BY created_at DESC LIMIT 4'),
-    cats: newsCats(),
-    events: upcomingEvents(4),
-    programs: all('SELECT * FROM programs ORDER BY sort, id LIMIT 4'),
-    highlights: all('SELECT * FROM highlights ORDER BY sort, id LIMIT 6'),
-    // ผลงานทุกประเภทรวมเป็นรายการเดียว (ป้ายบอกว่าเป็นผลงานโรงเรียน ครู หรือนักเรียน)
+    cats: newsCats(), events: upcomingEvents(4),
+  });
+  if (on.has('programs')) Object.assign(v, {
+    programs: all('SELECT * FROM programs ORDER BY sort, id LIMIT 4'), highlights: all('SELECT * FROM highlights ORDER BY sort, id LIMIT 6'),
+  });
+  // ผลงานทุกประเภทรวมเป็นรายการเดียว (ป้ายบอกว่าเป็นผลงานโรงเรียน ครู หรือนักเรียน)
+  if (on.has('awards')) Object.assign(v, {
     awards: all(`SELECT * FROM awards WHERE published=1 ORDER BY ${AWARD_ORDER} LIMIT 8`).map(awardCard),
     awardCounts: Object.fromEntries(all('SELECT owner, COUNT(*) n FROM awards WHERE published=1 GROUP BY owner').map((x) => [x.owner, x.n])),
     owners: AWARD_OWNERS, awardLevels: AWARD_LEVELS, awardIcons: AWARD_ICONS,
-    gallery: all('SELECT * FROM gallery ORDER BY sort, id LIMIT 12'),
-    albums: all('SELECT * FROM albums WHERE published=1 ORDER BY album_date DESC, id DESC LIMIT 12').map(albumCard).filter((a) => a.image),
-    data: dataSummary(),
-    tour: youtubeEmbed(S.tour_url),
   });
+  if (on.has('gallery')) Object.assign(v, {
+    albums: all('SELECT * FROM albums WHERE published=1 ORDER BY album_date DESC, id DESC LIMIT 12').map(albumCard).filter((a) => a.image),
+    gallery: all('SELECT * FROM gallery ORDER BY sort, id LIMIT 12'),
+  });
+  if (on.has('about')) Object.assign(v, { data: dataSummary(), tour: youtubeEmbed(S.tour_url) });
+  res.render('public/home', v);
 });
 
 // ---------- ข่าวสาร ----------

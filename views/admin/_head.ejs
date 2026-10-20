@@ -15,9 +15,13 @@
 <body class="<%= user ? 'app' : 'auth' %>">
 <% if (user) { %>
 <aside class="sb">
-  <a class="sb-brand" href="/admin"><%- icon('building', 22) %> <span>หลังบ้าน<small><%= S.school_name %></small></span></a>
-  <nav>
+  <div class="sb-top">
+    <a class="sb-brand" href="/admin"><%- icon('building', 22) %> <span>หลังบ้าน<small><%= S.school_name %></small></span></a>
+    <button type="button" class="sb-toggle" aria-expanded="false" aria-controls="sbNav"><%- icon('menu', 20) %> เมนู</button>
+  </div>
+  <nav id="sbNav">
     <a href="/admin" class="<%= (path === '/admin' || path === '/admin/') ? 'on' : '' %>">แดชบอร์ด</a>
+    <a href="/admin/arrange" class="<%= path.startsWith('/admin/arrange') ? 'on' : '' %>">จัดเมนูและหน้าแรก (ลากวาง)</a>
     <% [['เนื้อหา', ['news', 'journal_entries', 'journal_issues', 'events', 'awards', 'albums', 'pages', 'staff', 'gallery']], ['หน้าแรก', ['popups', 'slides', 'links', 'stats', 'programs', 'highlights']],
         ['เมนูและบริการ', ['menu_items', 'services', 'ext_links']]].forEach(function (g) { %>
     <p><%= g[0] %></p>

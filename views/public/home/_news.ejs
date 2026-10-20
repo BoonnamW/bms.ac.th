@@ -1,0 +1,54 @@
+<% var feat = news[0], rest = news.slice(1, 4); %>
+<section class="sec<%= alt ? ' sec-alt' : '' %>">
+  <div class="wrap grid-news">
+    <div>
+      <div class="sec-h">
+        <div><h2>ข่าวสารและกิจกรรมล่าสุด</h2><p class="en">Latest News</p></div>
+        <a class="more" href="/news">ดูทั้งหมด <%- icon('arrow', 16) %></a>
+      </div>
+      <div class="tabs" id="newsTabs" role="group" aria-label="เลือกหมวดข่าว">
+        <a href="/news" data-cat="" class="on" aria-current="true">ทั้งหมด</a>
+        <% cats.slice(0, 6).forEach(function (c) { %><a href="/news?cat=<%= encodeURIComponent(c) %>" data-cat="<%= c %>"><%= c %></a><% }) %>
+      </div>
+      <div class="news-feat" id="newsFeat" aria-live="polite">
+        <% if (feat) { %>
+        <article class="nf-main">
+          <a class="nf-img" href="/news/<%= feat.id %>" tabindex="-1" aria-hidden="true">
+            <% if (feat.image) { %><img src="/uploads/<%= feat.image %>" alt="" loading="lazy"><% } else { %><div class="ph ph-<%= feat.id % 5 %>"><%- icon('book', 48) %></div><% } %>
+          </a>
+          <p class="meta-row"><span class="chip"><%= feat.category %></span><time><%= thDate(feat.created_at) %></time></p>
+          <h3><a href="/news/<%= feat.id %>"><%= feat.title %></a></h3>
+          <% if (feat.excerpt) { %><p class="ex"><%= feat.excerpt %></p><% } %>
+          <a class="readmore" href="/news/<%= feat.id %>">อ่านต่อ <%- icon('arrow', 15) %></a>
+        </article>
+        <div class="nf-list">
+          <% rest.forEach(function (n) { %>
+          <article class="nf-item">
+            <a class="nf-thumb" href="/news/<%= n.id %>" tabindex="-1" aria-hidden="true">
+              <% if (n.image) { %><img src="/uploads/<%= n.image %>" alt="" loading="lazy"><% } else { %><div class="ph ph-<%= n.id % 5 %>"><%- icon('book', 26) %></div><% } %>
+            </a>
+            <div>
+              <p class="meta-row"><span class="chip"><%= n.category %></span><time><%= thDate(n.created_at) %></time></p>
+              <h3><a href="/news/<%= n.id %>"><%= n.title %></a></h3>
+            </div>
+          </article>
+          <% }) %>
+        </div>
+        <% } else { %><p class="empty">ยังไม่มีข่าว</p><% } %>
+      </div>
+    </div>
+
+    <aside class="panel ev-panel" aria-labelledby="evTitle">
+      <div class="sec-h sm">
+        <div><h2 id="evTitle">ปฏิทินกิจกรรม</h2><p class="en">Upcoming Events</p></div>
+        <a class="more" href="/calendar">ดูทั้งหมด <%- icon('arrow', 16) %></a>
+      </div>
+      <% if (events.length) { %>
+        <ul class="ev-list"><% events.forEach(function (e) { %><%- include('../_event', { e: e }) %><% }) %></ul>
+      <% } else { %>
+        <div class="ev-empty"><%- icon('calendar', 34) %><p>ยังไม่มีกิจกรรมที่กำลังจะมาถึง</p><a href="/calendar">ดูปฏิทินกิจกรรม</a></div>
+      <% } %>
+      <a class="ical" href="/calendar#subscribe"><%- icon('rss', 15) %> ติดตามปฏิทินโรงเรียน (iCal)</a>
+    </aside>
+  </div>
+</section>

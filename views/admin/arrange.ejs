@@ -1,0 +1,60 @@
+<%- include('_head') %>
+<% if (saved === 'menu') { %><div class="alert ok">บันทึกการจัดเมนูเรียบร้อยแล้ว</div><% } %>
+<% if (saved === 'home') { %><div class="alert ok">บันทึกลำดับส่วนของหน้าแรกเรียบร้อยแล้ว</div><% } %>
+<% if (errors.length) { %><div class="alert err" role="alert"><ul><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div><% } %>
+<noscript><div class="alert err">หน้านี้ต้องเปิดใช้ JavaScript — หรือจัดการเมนูทีละรายการได้ที่ <a href="/admin/menu_items">เมนูหลัก</a></div></noscript>
+
+<section class="ar-card">
+  <div class="ar-head">
+    <div><h2>เมนูหลัก</h2>
+      <p class="hint">จับ <span class="ar-gripi" aria-hidden="true">⋮⋮</span> แล้วลากเพื่อย้าย — วางบนครึ่งล่างของเมนูหลักเพื่อให้เป็นเมนูย่อย
+        หรือใช้ปุ่ม ↑ ↓ → ← (กดลูกศรบนแป้นพิมพ์ที่ปุ่มจับก็ได้) · ทุกอย่างยังไม่บันทึกจนกว่าจะกด “บันทึกการจัดเมนู”</p></div>
+  </div>
+  <form method="post" action="/admin/arrange/menu" data-arrange="menu" data-nest>
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="rev" value="<%= rev %>"><input type="hidden" name="data">
+    <div class="ar-bar">
+      <button type="button" class="btn ghost" data-add-top>+ เพิ่มเมนูหลัก</button>
+      <button type="button" class="btn ghost" data-fold-all>แสดงเมนูย่อยทั้งหมด</button>
+      <span class="ar-status" aria-live="polite"></span>
+      <button class="btn" data-save disabled>บันทึกการจัดเมนู</button>
+    </div>
+    <ol class="ar-tree" data-nest></ol>
+    <script type="application/json" class="ar-data"><%- JSON.stringify(menu.map(function (t) {
+      return { id: t.id, title: t.title, title_en: t.title_en || '', url: t.url || '', active: t.active ? 1 : 0,
+        children: t.children.map(function (c) { return { id: c.id, title: c.title, title_en: c.title_en || '', url: c.url || '', active: c.active ? 1 : 0 }; }) };
+    })).replace(/</g, '\\u003c') %></script>
+  </form>
+</section>
+
+<section class="ar-card">
+  <div class="ar-head">
+    <div><h2>ส่วนต่าง ๆ ของหน้าแรก</h2>
+      <p class="hint">ลากเพื่อเรียงลำดับ และติ๊ก “แสดง” เพื่อซ่อน/แสดงแต่ละส่วน — ภาพสไลด์และเมนูลัดอยู่บนสุดเสมอ สีพื้นของแต่ละส่วนสลับให้เองตามลำดับ</p></div>
+    <a class="btn ghost" href="/" target="_blank" rel="noopener">ดูหน้าแรก ↗</a>
+  </div>
+  <form method="post" action="/admin/arrange/home" data-arrange="home">
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="data">
+    <div class="ar-bar">
+      <span class="ar-fixed">ภาพสไลด์ · เมนูลัด (บนสุด)</span>
+      <span class="ar-status" aria-live="polite"></span>
+      <button class="btn" data-save disabled>บันทึกลำดับหน้าแรก</button>
+    </div>
+    <ol class="ar-tree ar-flat"></ol>
+    <script type="application/json" class="ar-data"><%- JSON.stringify(home).replace(/</g, '\\u003c') %></script>
+  </form>
+</section>
+
+<dialog class="ar-dlg" id="arEdit" aria-labelledby="arEditT">
+  <form method="dialog" class="form">
+    <h2 id="arEditT">แก้ไขเมนู</h2>
+    <div class="fld"><label for="arTitle">ชื่อเมนู *</label><input id="arTitle" maxlength="120" required></div>
+    <div class="fld" data-top-only><label for="arEn">ชื่อภาษาอังกฤษ (ตัวเล็กใต้ชื่อเมนูหลัก)</label><input id="arEn" maxlength="60"></div>
+    <div class="fld"><label for="arUrl">ลิงก์</label><input id="arUrl" inputmode="url" placeholder="/news หรือ https://…">
+      <small>เมนูหลักที่มีเมนูย่อยเว้นว่างได้ · หน้าเว็บในระบบใช้ /p/ชื่อหน้า</small></div>
+    <div class="fld chk"><label><input type="checkbox" id="arActive"> แสดงเมนูนี้บนเว็บไซต์</label></div>
+    <p class="ar-err" role="alert" hidden></p>
+    <div class="formbar"><button class="btn" value="ok">ตกลง</button><button class="btn ghost" value="cancel" formnovalidate>ยกเลิก</button></div>
+  </form>
+</dialog>
+<script src="/js/admin-arrange.js" defer></script>
+<%- include('_foot') %>

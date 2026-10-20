@@ -284,7 +284,6 @@ h1,h2,h3,h4{font-family:var(--f-head);line-height:1.3;font-weight:600}
 .aw-teacher{--aw:var(--accent);--aw-t:var(--accent-d);--aw-l:var(--accent-l);--aw-s:var(--accent-d);--aw-on:var(--on-accent-d)}
 .aw-student{--aw:var(--dark);--aw-t:var(--dark);--aw-l:var(--dark-l);--aw-s:var(--dark);--aw-on:#fff}
 .aw-badge{display:inline-flex;align-items:center;gap:5px;padding:1px 10px;border-radius:99px;background:var(--aw-s);color:var(--aw-on);font:500 .74rem/1.6 var(--f-head);white-space:nowrap}
-.aw-sec{background:linear-gradient(180deg,var(--bg),#fff 78%)}
 .aw-legend{display:flex;flex-wrap:wrap;gap:8px;margin:-8px 0 20px}
 .aw-legend a{display:inline-flex;align-items:center;gap:7px;padding:5px 8px 5px 14px;border-radius:99px;background:#fff;border:1px solid var(--line);font:500 .86rem var(--f-head);color:var(--ink2);transition:border-color .2s,color .2s}
 .aw-legend .ic{color:var(--aw-t)}

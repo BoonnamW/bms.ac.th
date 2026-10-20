@@ -1,4 +1,11 @@
 (() => {
+  // เมนูหลังบ้านบนจอเล็ก: กดปุ่ม "เมนู" เพื่อแสดง/ซ่อน
+  const sbBtn = document.querySelector('.sb-toggle');
+  sbBtn?.addEventListener('click', () => {
+    const open = sbBtn.closest('.sb').classList.toggle('open');
+    sbBtn.setAttribute('aria-expanded', String(open));
+  });
+
   // ยืนยันก่อนลบ
   document.querySelectorAll('form[data-confirm]').forEach((f) =>
     f.addEventListener('submit', (e) => { if (!confirm(f.dataset.confirm)) e.preventDefault(); }));
