@@ -2,9 +2,9 @@ import express from 'express';
 import compression from 'compression';
 import helmet from 'helmet';
 import path from 'node:path';
-import { db, getSettings, ROOT, UPLOAD_DIR } from './lib/db.js';
+import { getSettings, ROOT, UPLOAD_DIR } from './lib/db.js';
 import { navTree } from './lib/nav.js';
-import { parseCookies, icon, thDate, thDateTime, thTime, thDay, dateParts, token, pics, docs, upl, IFRAME_HOSTS, WP_FILE, RIBBON_SVG } from './lib/helpers.js';
+import { parseCookies, icon, thDate, thDateTime, thTime, thDay, dateParts, pics, docs, upl, IFRAME_HOSTS, WP_FILE, RIBBON_SVG } from './lib/helpers.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import { seedDefaults } from './lib/seed.js';
@@ -13,6 +13,7 @@ import { themeCss } from './lib/colors.js';
 import { gdriveMedia, status as driveStatus } from './lib/gdrive.js';
 import { mourning } from './lib/popups.js';
 import { imgset } from './lib/media.js';
+import { siteOrigin } from './lib/site.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 
@@ -38,7 +39,6 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(ROOT, 'views'));
 
 // ---------- Security headers + CSP (ไม่มี inline script/style) ----------
-app.use((req, res, next) => { res.locals.nonce = token(16); next(); });
 app.use(helmet({
   contentSecurityPolicy: {
     useDefaults: false,
@@ -83,6 +83,14 @@ app.use(express.static(path.join(ROOT, 'public'), {
     else if (PROD && (res.req.query.v || file.includes(`${path.sep}fonts${path.sep}`))) res.setHeader('Cache-Control', LONG_CACHE);
   },
 }));
+// ไฟล์ที่อัปโหลด/ไฟล์จากเว็บเดิม: ฝังใน iframe ของเว็บนี้ได้ (PDF ในเนื้อหาข่าว) แต่เว็บอื่นฝังไม่ได้
+// ไฟล์อื่นนอกจาก PDF เปิดแบบ sandbox — แม้มีไฟล์แปลกปลอมก็รันสคริปต์บนโดเมนนี้ไม่ได้
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Content-Security-Policy', /\.pdf$/i.test(req.path) ? "frame-ancestors 'self'"
+    : "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'self'; sandbox");
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  next();
+});
 // ไฟล์จากเว็บเดิม: เปิดเฉพาะชนิดไฟล์รูป/เอกสาร (กันไฟล์ .html/.js/.svg ในโฟลเดอร์เดิมถูกเปิดจากโดเมนนี้)
 app.use('/uploads/wp', (req, res, next) => (WP_FILE.test(req.path) ? next() : res.status(404).end()));
 app.use('/uploads', express.static(UPLOAD_DIR, {
@@ -106,7 +114,6 @@ app.get('/theme.css', (req, res) => {
 });
 
 // ---------- ตัวแปรที่ใช้ร่วมกันทุกหน้า ----------
-const extLinksSql = db.prepare('SELECT title, url FROM ext_links WHERE active=1 ORDER BY sort, id');
 app.use((req, res, next) => {
   const S = getSettings();
   // ค่าที่ผู้ชมเลือกเอง (ขนาดตัวอักษร ความคมชัดสูง ปิดประกาศ) ใส่ให้ตั้งแต่โหลดหน้า หน้าจะไม่กระพริบ
@@ -114,10 +121,9 @@ app.use((req, res, next) => {
   const ann = S.announce_on === '1' && S.announce_text
     ? crypto.createHash('md5').update(`${S.announce_text}\n${S.announce_link || ''}`).digest('hex').slice(0, 10) : '';
   Object.assign(res.locals, {
-    icon, thDate, thDateTime, thTime, thDay, dateParts, driveStatus, pics, docs, upl, imgset, S, mourning: mourning(), ribbonSvg: RIBBON_SVG, path: req.path, url: req.originalUrl, origin: `${req.protocol}://${req.get('host')}`, title: '', v: assetVersion, themeV: theme(S).v,
+    icon, thDate, thDateTime, thTime, thDay, dateParts, driveStatus, pics, docs, upl, imgset, S, mourning: mourning(), ribbonSvg: RIBBON_SVG, path: req.path, url: req.originalUrl, origin: siteOrigin(req), title: '', v: assetVersion, themeV: theme(S).v,
     fs: (pref.match(/\b(sm|lg)\b/) || [])[1] || '', hc: /\bhc\b/.test(pref),
     annKey: ann && req.cookies.ann !== ann ? ann : '',
-    extLinks: extLinksSql.all(), // ลิงก์หน่วยงานภายนอกท้ายเว็บ
   });
   next();
 });

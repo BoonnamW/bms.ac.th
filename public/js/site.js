@@ -327,12 +327,11 @@
     });
   });
 
-  // ---------- แถบเลื่อน (ผลงาน / ภาพกิจกรรม) ----------
+  // ---------- แถบเลื่อน (ภาพกิจกรรม) ----------
   part('sliders', () => {
     $$('[data-slider]').forEach((sl) => {
       const track = $('.sl-track', sl);
       if (!track) return;
-      const pause = $('[data-pause]', sl);
       const step = () => {
         const first = track.firstElementChild;
         const gap = parseFloat(getComputedStyle(track).columnGap) || 0;
@@ -346,22 +345,8 @@
         else if (dir < 0 && start) track.scrollTo({ left: track.scrollWidth, behavior: smooth });
         else track.scrollBy({ left: dir * step(), behavior: smooth });
       };
-      const ms = Number(sl.dataset.auto) || 0;
-      let timer = 0, hold = false, seen = false, paused = reduced;
-      const tick = () => { if (!hold && !paused && seen && !document.hidden) move(1); };
-      const restart = () => { if (!ms) return; clearInterval(timer); timer = setInterval(tick, ms); };
-      $('[data-prev]', sl)?.addEventListener('click', () => { move(-1); restart(); });
-      $('[data-next]', sl)?.addEventListener('click', () => { move(1); restart(); });
-      if (!ms) { pause?.remove(); return; }
-      pause?.setAttribute('aria-pressed', String(paused));
-      pause?.addEventListener('click', () => { paused = !paused; pause.setAttribute('aria-pressed', String(paused)); restart(); });
-      sl.addEventListener('mouseenter', () => { hold = true; });
-      sl.addEventListener('mouseleave', () => { hold = false; });
-      sl.addEventListener('focusin', () => { hold = true; });
-      sl.addEventListener('focusout', (e) => { if (!sl.contains(e.relatedTarget)) hold = false; });
-      if ('IntersectionObserver' in window) new IntersectionObserver((es) => { seen = es[0].isIntersecting; }, { threshold: 0.3 }).observe(sl);
-      else seen = true;
-      restart();
+      $('[data-prev]', sl)?.addEventListener('click', () => move(-1));
+      $('[data-next]', sl)?.addEventListener('click', () => move(1));
     });
   });
 
@@ -422,22 +407,19 @@
     });
   });
 
-  // ---------- โพสต์จากเพจ Facebook (หัวเพจแบบเล็ก) — โหลดเมื่อผู้ชมกด หรือเคยกดแล้ว / ผู้ดูแลตั้งให้โหลดเอง ----------
+  // ---------- เพจ Facebook แบบย่อ (ส่วนท้าย) — โหลดเมื่อผู้ชมกด หรือเคยกดแล้ว / ผู้ดูแลตั้งให้โหลดเอง ----------
   part('fb', () => {
-    const box = $('.fbbox');
+    const box = $('.fbmini');
     if (!box || !/^https:\/\/(www\.|m\.)?facebook\.com\//.test(box.dataset.fb || '')) return;
     const KEY = 'fb-ok';
     const load = () => {
       const w = Math.round(Math.min(500, Math.max(180, box.clientWidth)));
-      const h = innerWidth < 640 ? 520 : 600;
       const f = el('iframe');
-      f.src = `https://www.facebook.com/plugins/page.php?${new URLSearchParams({ href: box.dataset.fb, tabs: 'timeline', width: w, height: h,
+      f.src = `https://www.facebook.com/plugins/page.php?${new URLSearchParams({ href: box.dataset.fb, tabs: '', width: w, height: 70,
         small_header: 'true', adapt_container_width: 'true', hide_cover: 'false', show_facepile: 'false', locale: 'th_TH' })}`;
-      f.width = w; f.height = h; f.title = 'โพสต์ล่าสุดจากเพจ Facebook ของโรงเรียน';
+      f.width = w; f.height = 70; f.title = 'เพจ Facebook ของโรงเรียน';
       f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox'); // เพจเปิดลิงก์ในแท็บใหม่ได้ แต่เปลี่ยนหน้าเว็บนี้ไม่ได้
-      f.allow = 'encrypted-media; picture-in-picture; web-share'; f.allowFullscreen = true;
-      $('.fb-ph', box)?.replaceWith(f);
-      box.classList.add('on');
+      $('.fbm-ph', box)?.replaceWith(f);
       try { localStorage.setItem(KEY, '1'); } catch { /* เบราว์เซอร์ปิดการเก็บข้อมูล */ }
     };
     let ok = box.hasAttribute('data-auto');
@@ -446,7 +428,7 @@
     if (!ok) return;
     if (!('IntersectionObserver' in window)) { load(); return; }
     const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); load(); } }, { rootMargin: '300px 0px' });
-    io.observe(box); // โหลดเมื่อเลื่อนมาใกล้ (หน้าแรกเปิดเร็วขึ้น)
+    io.observe(box); // โหลดเมื่อเลื่อนมาใกล้ส่วนท้าย (หน้าเว็บเปิดเร็วขึ้น)
   });
 
   // ---------- ผู้ช่วยค้นหาข้อมูล ----------

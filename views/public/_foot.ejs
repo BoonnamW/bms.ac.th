@@ -40,6 +40,15 @@
     </div>
     <div>
       <h4>ติดตามข่าวสาร <small>Stay Updated</small></h4>
+      <% if (S.fb_embed === '1' && /^https:\/\/(www\.|m\.)?facebook\.com\/[^\s]+$/.test(S.facebook || '')) { %>
+      <div class="fbmini" data-fb="<%= S.facebook %>"<%= S.fb_autoload === '1' ? ' data-auto=1' : '' %>>
+        <div class="fbm-ph">
+          <%- icon('facebook', 18) %><span><b>เพจ Facebook</b><small>กดเพื่อแสดง · Facebook อาจบันทึกคุกกี้</small></span>
+          <button type="button" data-fb-load>แสดง</button>
+        </div>
+        <a class="fbm-open" href="<%= S.facebook %>" target="_blank" rel="noopener">เปิดเพจใน Facebook <%- icon('external', 13) %><span class="sr-only"> (เปิดหน้าต่างใหม่)</span></a>
+      </div>
+      <% } %>
       <ul class="flinks">
         <li><a href="/calendar"><%- icon('calendar', 15) %> ปฏิทินกิจกรรม</a></li>
         <li><a href="/journal"><%- icon('bookopen', 15) %> <%= S.journal_name || 'วารสารโรงเรียน' %></a></li>
@@ -53,14 +62,6 @@
       <% } %>
     </div>
   </div>
-  <% if (typeof extLinks !== 'undefined' && extLinks.length) { %>
-  <nav class="wrap foot-ext" aria-labelledby="extTitle">
-    <h4 id="extTitle">หน่วยงานภายนอก <small>External Links</small></h4>
-    <ul class="ext-grid">
-      <% extLinks.forEach(function (l) { %><li><a href="<%= l.url %>" target="_blank" rel="noopener"><%- icon('external', 14) %><span><%= l.title %></span></a></li><% }) %>
-    </ul>
-  </nav>
-  <% } %>
   <div class="copy">
     <div class="wrap copy-in">
       <span>© <%= new Date().getFullYear() + 543 %> <%= S.school_name %><%= S.footer_text ? ' · ' + S.footer_text : '' %></span>

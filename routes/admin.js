@@ -29,10 +29,18 @@ r.use((req, res, next) => {
 });
 
 // ---------- เซสชัน ----------
+// หมดอายุเมื่อไม่ได้ใช้งาน 2 ชั่วโมง — ใช้งานอยู่ระบบต่ออายุให้เอง (เขียนบทความยาว ๆ แล้วไม่หลุดกลางคัน)
+const extendSql = db.prepare('UPDATE sessions SET expires=? WHERE id=?');
 function loadSession(req, res, next) {
   const row = sessionOf(req);
   req.user = row ? { id: row.uid, username: row.username, must_change: row.must_change } : null;
-  if (row) { req.csrf = row.csrf; req.sidHash = row.id; }
+  if (row) {
+    req.csrf = row.csrf; req.sidHash = row.id;
+    if (row.expires - Date.now() < SESSION_MS - 5 * 60e3) { // ต่ออายุไม่เกินทุก 5 นาที
+      extendSql.run(Date.now() + SESSION_MS, row.id);
+      res.cookie('sid', req.cookies.sid, cookieOpts(req, { maxAge: SESSION_MS }));
+    }
+  }
   res.locals.user = req.user;
   res.locals.csrf = req.csrf || '';
   next();

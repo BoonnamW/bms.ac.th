@@ -21,7 +21,7 @@
     <a href="/admin" class="<%= (path === '/admin' || path === '/admin/') ? 'on' : '' %>">แดชบอร์ด</a>
     <a href="/admin/arrange" class="<%= path.startsWith('/admin/arrange') ? 'on' : '' %>">จัดเมนูและหน้าแรก (ลากวาง)</a>
     <% [['เนื้อหา', ['news', 'journal_entries', 'journal_issues', 'events', 'awards', 'albums', 'pages', 'staff', 'gallery']], ['หน้าแรก', ['popups', 'slides', 'links', 'stats', 'programs', 'highlights']],
-        ['เมนูและบริการ', ['menu_items', 'services', 'ext_links']]].forEach(function (g) { %>
+        ['เมนูและบริการ', ['menu_items', 'services']]].forEach(function (g) { %>
     <p><%= g[0] %></p>
     <% g[1].forEach(function (k) { %>
       <a href="/admin/<%= k %>" class="<%= path === '/admin/' + k || path.startsWith('/admin/' + k + '/') ? 'on' : '' %>"><%= entities[k].title %></a>

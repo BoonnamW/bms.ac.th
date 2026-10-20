@@ -11,13 +11,14 @@ import { album as driveAlbum, summary as driveSummary } from '../lib/gdrive.js';
 import { currentPopup, previewPopup } from '../lib/popups.js';
 import { homeSections } from '../lib/home.js';
 import { withSrcset } from '../lib/media.js';
+import { siteOrigin, siteHost } from '../lib/site.js';
 import { issues as journalIssues, issueOf, entriesOf, journalName, slugYm, ymSlug, ymLabel, thisYm, releaseDay, JOURNAL_SECTIONS } from '../lib/journal.js';
 
 const r = Router();
 const PAGE_SIZE = 9;
 const all = (sql, ...a) => db.prepare(sql).all(...a);
 const one = (sql, ...a) => db.prepare(sql).get(...a);
-const baseUrl = (req) => `${req.protocol}://${req.get('host')}`;
+const baseUrl = siteOrigin;
 const pageNo = (v) => Math.max(1, Math.min(10000, parseInt(v, 10) || 1));
 const PENDING = "body LIKE '<p>อยู่ระหว่างจัดเตรียมข้อมูล%'"; // หน้า OIT ที่ยังเป็นข้อความรอข้อมูล
 // การ์ดอัลบั้มภาพจาก Google Drive: ปก = รูปที่อัปโหลดไว้ หรือรูปแรกในโฟลเดอร์
@@ -353,7 +354,7 @@ r.get('/journal/:ym', async (req, res, next) => {
   const name = journalName(), label = ymLabel(ym);
   res.render('public/ebook', {
     title: `${name} ฉบับเดือน${label}`, css: 'ebook', name, ym, slug: ymSlug(ym), label, issue, entries, sections: JOURNAL_SECTIONS,
-    release: releaseDay(ym), host: req.get('host'), editor: !!ed,
+    release: releaseDay(ym), host: siteHost(req), editor: !!ed,
   });
 });
 
@@ -367,14 +368,14 @@ r.get('/calendar', (req, res) => {
     if (months.at(-1)?.key !== e.monthKey) months.push({ key: e.monthKey, label: `${e.start.monthLong} ${e.start.year}`, items: [] });
     months.at(-1).items.push(e);
   }
-  res.render('public/calendar', { title: 'ปฏิทินกิจกรรม', months, past, host: req.get('host') });
+  res.render('public/calendar', { title: 'ปฏิทินกิจกรรม', months, past, host: siteHost(req) });
 });
 
 r.get('/calendar.ics', (req, res) => {
   const S = getSettings();
   const events = all("SELECT * FROM events WHERE published=1 AND start_at >= datetime('now', '-365 days') ORDER BY start_at");
   res.set('Cache-Control', 'public, max-age=900').type('text/calendar; charset=utf-8')
-    .send(icsCalendar(events, { name: `ปฏิทินกิจกรรม ${S.school_name}`, host: req.hostname, base: baseUrl(req) }));
+    .send(icsCalendar(events, { name: `ปฏิทินกิจกรรม ${S.school_name}`, host: siteHost(req), base: baseUrl(req) }));
 });
 
 r.get('/events/:id.ics', (req, res, next) => {
@@ -382,7 +383,7 @@ r.get('/events/:id.ics', (req, res, next) => {
   const e = one('SELECT * FROM events WHERE id=? AND published=1', req.params.id);
   if (!e) return next();
   res.type('text/calendar; charset=utf-8').attachment(`event-${e.id}.ics`)
-    .send(icsCalendar([e], { name: getSettings().school_name, host: req.hostname, base: baseUrl(req) }));
+    .send(icsCalendar([e], { name: getSettings().school_name, host: siteHost(req), base: baseUrl(req) }));
 });
 
 // ---------- คลังภาพกิจกรรม: อัลบั้มจาก Google Drive และข่าวที่มีภาพกิจกรรม ----------
