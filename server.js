@@ -68,8 +68,8 @@ app.use((req, res, next) => {
 });
 
 app.use(compression({ threshold: 1024 })); // gzip/brotli หน้าเว็บ CSS JS (รูปและฟอนต์บีบอัดอยู่แล้ว ไม่บีบซ้ำ)
-app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 app.use((req, res, next) => { req.cookies = parseCookies(req.headers.cookie); next(); });
+app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 
 // ---------- ไฟล์สาธารณะ ----------
 // สูตรสีของธีม ใช้ร่วมกับหน้า "ปรับสีเว็บไซต์" ในหลังบ้าน (คำนวณตัวอย่างสีในเบราว์เซอร์ด้วยสูตรเดียวกัน)
@@ -114,7 +114,7 @@ app.get('/theme.css', (req, res) => {
 });
 
 // ---------- ตัวแปรที่ใช้ร่วมกันทุกหน้า ----------
-app.use((req, res, next) => {
+const pageLocals = (req, res) => {
   const S = getSettings();
   // ค่าที่ผู้ชมเลือกเอง (ขนาดตัวอักษร ความคมชัดสูง ปิดประกาศ) ใส่ให้ตั้งแต่โหลดหน้า หน้าจะไม่กระพริบ
   const pref = String(req.cookies.a11y || '');
@@ -125,8 +125,8 @@ app.use((req, res, next) => {
     fs: (pref.match(/\b(sm|lg)\b/) || [])[1] || '', hc: /\bhc\b/.test(pref),
     annKey: ann && req.cookies.ann !== ann ? ann : '',
   });
-  next();
-});
+};
+app.use((req, res, next) => { pageLocals(req, res); next(); });
 
 app.use('/admin', adminRoutes);
 app.use('/', publicRoutes);
@@ -136,6 +136,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
   const code = err.status >= 400 && err.status < 500 ? err.status : 500; // เช่น ลิงก์ที่เข้ารหัสผิด → 400
   if (code === 500) console.error(err);
   if (res.headersSent) return;
+  if (!res.locals.S) pageLocals(req, res); // ผิดพลาดก่อนถึงขั้นตั้งค่าตัวแปร (เช่น ส่งข้อมูลใหญ่เกิน) ก็ยังแสดงหน้าแจ้งข้อผิดพลาดได้
   res.status(code).render('public/error', { title: code === 500 ? 'เกิดข้อผิดพลาด' : 'คำขอไม่ถูกต้อง', code, nav: navTree() });
 });
 
