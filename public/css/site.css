@@ -430,6 +430,7 @@ h1,h2,h3,h4{font-family:var(--f-head);line-height:1.3;font-weight:600}
 .flinks a:hover{color:#fff;padding-left:3px}
 .fmap{border-radius:14px;overflow:hidden;background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.25);aspect-ratio:16/10}
 .fmap.light{background:var(--bg);border-color:var(--line);margin-top:18px;color:var(--ink2)}
+.fmap.light .map-load small{opacity:1;color:var(--muted)}
 .fmap iframe{width:100%;height:100%;border:0;display:block}
 .map-load{width:100%;height:100%;display:grid;place-items:center;align-content:center;gap:4px;background:none;border:0;color:inherit;cursor:pointer;padding:12px;text-align:center}
 .map-load span{font:500 .92rem var(--f-head)}.map-load small{font-size:.7rem;opacity:.75}

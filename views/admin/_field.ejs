@@ -26,7 +26,7 @@
           <button type="button" data-cmd="unlink" title="ลบลิงก์">ยกเลิกลิงก์</button>
           <button type="button" data-cmd="removeFormat" title="ล้างรูปแบบ">ล้าง</button>
         </div>
-        <div class="rte-area" contenteditable="true" role="textbox" aria-multiline="true"><%- v %></div>
+        <div class="rte-area" contenteditable="true" role="textbox" aria-multiline="true" aria-label="<%= f.label %>"><%- v %></div>
         <textarea id="f_<%= f.n %>" name="<%= f.n %>" hidden></textarea>
       </div>
     <% } else if (f.type === 'select') { %>

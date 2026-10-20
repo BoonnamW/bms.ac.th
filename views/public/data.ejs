@@ -36,7 +36,7 @@
             </div>
             <div class="cc-bars">
               <% years.forEach(function (y) { %>
-              <div class="cc-col" tabindex="0" data-tip="พ.ศ. <%= y.year %><%= y.current ? ' (ถึงปัจจุบัน)' : '' %>|<%= fmt(y.n) %> เรื่อง"
+              <div class="cc-col" role="img" tabindex="0" data-tip="พ.ศ. <%= y.year %><%= y.current ? ' (ถึงปัจจุบัน)' : '' %>|<%= fmt(y.n) %> เรื่อง"
                 aria-label="พ.ศ. <%= y.year %> <%= fmt(y.n) %> เรื่อง<%= y.current ? ' ข้อมูลถึงปัจจุบัน' : '' %>">
                 <span class="cc-bar h-<%= y.pct %> <%= y.current ? 'cur' : '' %>"><% if (y.label) { %><span class="cc-val"><%= fmt(y.n) %></span><% } %></span>
               </div>

@@ -137,7 +137,8 @@ input:focus,textarea:focus,select:focus{border-color:var(--primary);outline:0;bo
 .cp-nav{display:flex;gap:2px;padding:0 8px;border-top:1px solid #eee;border-bottom:1px solid #eee;background:#fff}
 .cp-nav span{padding:7px 8px;color:#3e4b44;border-bottom:3px solid transparent}
 .cp-nav .on{background:var(--primary-l);color:var(--primary-d);border-bottom-color:var(--primary)}
-.cp-hero{display:grid;gap:4px;justify-items:start;padding:22px 14px;color:#fff;background:linear-gradient(90deg,color-mix(in srgb,var(--dark) 92%,transparent),color-mix(in srgb,var(--dark) 45%,transparent)),repeating-linear-gradient(45deg,#7d8b84 0 10px,#9aa59f 10px 20px)}
+.cp-hero{position:relative;isolation:isolate;display:grid;gap:4px;justify-items:start;padding:22px 14px;color:#fff;background:var(--dark)}
+.cp-hero::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,color-mix(in srgb,var(--dark) 92%,transparent),color-mix(in srgb,var(--dark) 45%,transparent)),repeating-linear-gradient(45deg,#7d8b84 0 10px,#9aa59f 10px 20px)} /* ลายภาพแทนรูปจริง */
 .cp-hero small{letter-spacing:.14em;font-size:9.5px;opacity:.85}.cp-hero b{font-size:16px}
 .cp-ph{display:grid;gap:2px;padding:14px;background:var(--bg);border-bottom:1px solid var(--primary-l)}
 .cp-ph small{color:var(--primary-d);letter-spacing:.12em;font-size:9.5px}.cp-ph b{color:var(--dark);font-size:15px}
