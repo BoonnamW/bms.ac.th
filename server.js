@@ -8,7 +8,7 @@ import { parseCookies, icon, thDate, thDateTime, thTime, thDay, dateParts, pics,
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import { seedDefaults } from './lib/seed.js';
-import { wpMedia } from './lib/wpmedia.js';
+import { wpMedia, oldSite, oldFolders, prefetchOld } from './lib/wpmedia.js';
 import { themeCss } from './lib/colors.js';
 import { gdriveMedia, status as driveStatus } from './lib/gdrive.js';
 import { mourning } from './lib/popups.js';
@@ -29,8 +29,14 @@ const PROD = process.env.NODE_ENV === 'production';
 
 // ไฟล์จาก WordPress เดิมเก็บที่ uploads/wp/ — ไฟล์ที่ยังไม่ได้คัดลอกมาจะส่งต่อไปยังเว็บเดิม
 // ใช้ค่า WP_MEDIA_URL (เช่น https://www.bms.ac.th/bs/wp-content/uploads/) หรือค่าที่สคริปต์นำเข้าบันทึกไว้
+// OLD_SITE_URL: ที่อยู่ใหม่ของโฮสต์เดิมหลังเปลี่ยน DNS (เช่น https://old.bms.ac.th) — ใช้แทนชื่อเดิม ทั้งไฟล์ WordPress และระบบอื่นบนโฮสต์นั้น
 const httpsBase = (v) => (/^https:\/\/[^\s/]+\//.test(v || '') ? v.replace(/\/?$/, '/') : '');
-const WP_MEDIA_URL = httpsBase(process.env.WP_MEDIA_URL) || httpsBase(getSettings().wp_media_url);
+const SAVED_WP = httpsBase(getSettings().wp_media_url);
+const OLD_ENV = httpsBase(`${String(process.env.OLD_SITE_URL || '').trim().replace(/\/+$/, '')}/`);
+if (process.env.OLD_SITE_URL && !OLD_ENV) console.warn('OLD_SITE_URL ไม่ถูกต้อง (ตัวอย่าง: https://old.bms.ac.th) — ใช้ที่อยู่เดิมแทน');
+const OLD_SITE = OLD_ENV ? `${new URL(OLD_ENV).origin}/` : SAVED_WP ? `${new URL(SAVED_WP).origin}/` : '';
+const CONTENT_HOST = SAVED_WP ? new URL(SAVED_WP).hostname : ''; // ชื่อเว็บเดิมที่อยู่ในลิงก์ของเนื้อหา
+const WP_MEDIA_URL = httpsBase(process.env.WP_MEDIA_URL) || (OLD_ENV && SAVED_WP ? new URL(new URL(SAVED_WP).pathname, OLD_ENV).href : SAVED_WP);
 const WP_MEDIA_ORIGIN = WP_MEDIA_URL ? new URL(WP_MEDIA_URL).origin : null;
 
 app.disable('x-powered-by');
@@ -85,12 +91,13 @@ app.use(express.static(path.join(ROOT, 'public'), {
 }));
 // ไฟล์ที่อัปโหลด/ไฟล์จากเว็บเดิม: ฝังใน iframe ของเว็บนี้ได้ (PDF ในเนื้อหาข่าว) แต่เว็บอื่นฝังไม่ได้
 // ไฟล์อื่นนอกจาก PDF เปิดแบบ sandbox — แม้มีไฟล์แปลกปลอมก็รันสคริปต์บนโดเมนนี้ไม่ได้
-app.use('/uploads', (req, res, next) => {
+const fileHeaders = (req, res, next) => {
   res.setHeader('Content-Security-Policy', /\.pdf$/i.test(req.path) ? "frame-ancestors 'self'"
     : "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'; frame-ancestors 'self'; sandbox");
   res.setHeader('X-Frame-Options', 'SAMEORIGIN');
   next();
-});
+};
+app.use('/uploads', fileHeaders);
 // ไฟล์จากเว็บเดิม: เปิดเฉพาะชนิดไฟล์รูป/เอกสาร (กันไฟล์ .html/.js/.svg ในโฟลเดอร์เดิมถูกเปิดจากโดเมนนี้)
 app.use('/uploads/wp', (req, res, next) => (WP_FILE.test(req.path) ? next() : res.status(404).end()));
 app.use('/uploads', express.static(UPLOAD_DIR, {
@@ -130,6 +137,9 @@ app.use((req, res, next) => { pageLocals(req, res); next(); });
 
 app.use('/admin', adminRoutes);
 app.use('/', publicRoutes);
+// โฟลเดอร์ของระบบบนโฮสต์เดิมที่ยังใช้งาน (ตั้งในหลังบ้าน): รูป/เอกสารเก็บสำเนาไว้ หน้าอื่นส่งต่อไปที่โฮสต์เดิม
+const oldPaths = () => oldFolders(getSettings().old_paths);
+app.use(oldSite(OLD_SITE, oldPaths, fileHeaders));
 
 app.use((req, res) => res.status(404).render('public/error', { title: 'ไม่พบหน้าที่ต้องการ', code: 404, nav: navTree() }));
 app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
@@ -143,4 +153,5 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 app.listen(PORT, () => {
   console.log(`เว็บไซต์:   http://localhost:${PORT}`);
   console.log(`หลังบ้าน:  http://localhost:${PORT}/admin`);
+  prefetchOld(OLD_SITE, oldPaths, CONTENT_HOST).catch((e) => console.warn('เก็บสำเนาไฟล์จากโฮสต์เดิมไม่สำเร็จ:', e.message));
 });
