@@ -424,6 +424,33 @@
     });
   });
 
+  // ---------- โพสต์จากเพจ Facebook (หัวเพจแบบเล็ก) — โหลดเมื่อผู้ชมกด หรือเคยกดแล้ว / ผู้ดูแลตั้งให้โหลดเอง ----------
+  part('fb', () => {
+    const box = $('.fbbox');
+    if (!box || !/^https:\/\/(www\.|m\.)?facebook\.com\//.test(box.dataset.fb || '')) return;
+    const KEY = 'fb-ok';
+    const load = () => {
+      const w = Math.round(Math.min(500, Math.max(180, box.clientWidth)));
+      const h = innerWidth < 640 ? 520 : 600;
+      const f = el('iframe');
+      f.src = `https://www.facebook.com/plugins/page.php?${new URLSearchParams({ href: box.dataset.fb, tabs: 'timeline', width: w, height: h,
+        small_header: 'true', adapt_container_width: 'true', hide_cover: 'false', show_facepile: 'false', locale: 'th_TH' })}`;
+      f.width = w; f.height = h; f.title = 'โพสต์ล่าสุดจากเพจ Facebook ของโรงเรียน';
+      f.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox'); // เพจเปิดลิงก์ในแท็บใหม่ได้ แต่เปลี่ยนหน้าเว็บนี้ไม่ได้
+      f.allow = 'encrypted-media; picture-in-picture; web-share'; f.allowFullscreen = true;
+      $('.fb-ph', box)?.replaceWith(f);
+      box.classList.add('on');
+      try { localStorage.setItem(KEY, '1'); } catch { /* เบราว์เซอร์ปิดการเก็บข้อมูล */ }
+    };
+    let ok = box.hasAttribute('data-auto');
+    try { ok = ok || localStorage.getItem(KEY) === '1'; } catch { /* เช่นเดียวกัน */ }
+    $('[data-fb-load]', box)?.addEventListener('click', load);
+    if (!ok) return;
+    if (!('IntersectionObserver' in window)) { load(); return; }
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { io.disconnect(); load(); } }, { rootMargin: '300px 0px' });
+    io.observe(box); // โหลดเมื่อเลื่อนมาใกล้ (หน้าแรกเปิดเร็วขึ้น)
+  });
+
   // ---------- ผู้ช่วยค้นหาข้อมูล ----------
   part('assistant', () => {
     const btn = $('#botBtn'), box = $('#assistant'), body = $('#asBody'), form = $('#asForm');

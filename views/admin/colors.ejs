@@ -1,0 +1,35 @@
+<%- include('_head') %>
+<% if (saved) { %><div class="alert ok">บันทึกสีเรียบร้อยแล้ว — เปิดหน้าเว็บใหม่เพื่อดูผล</div><% } %>
+<% if (errors.length) { %><div class="alert err" role="alert"><ul><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div><% } %>
+<div class="colors">
+  <form class="form" method="post" action="/admin/colors" id="colorForm"
+    data-defaults="<%= JSON.stringify(defaults) %>">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <p class="hint">เลือกสีแล้วดูตัวอย่างด้านข้างได้ทันที — ระบบปรับสีให้เข้มหรืออ่อนลงเองถ้าตัวอักษรในส่วนนั้นจะอ่านยาก
+      (ตัวอย่างแสดงสีที่ใช้จริงหลังปรับแล้ว)</p>
+    <% fields.forEach(function (f) { %><%- include('_field', { f: f, values: values, readonly: false }) %><% }) %>
+    <div class="formbar">
+      <button class="btn">บันทึกสี</button>
+      <button type="button" class="btn ghost" data-color-reset>คืนค่าสีเริ่มต้นของโรงเรียน</button>
+      <a class="btn ghost" href="/" target="_blank" rel="noopener">ดูหน้าเว็บ ↗</a>
+    </div>
+  </form>
+  <aside class="cprev-wrap" aria-label="ตัวอย่างสีของเว็บไซต์">
+    <p class="cprev-t">ตัวอย่าง</p>
+    <div class="cprev" id="cprev">
+      <div class="cp-top cp-part" data-part="c_topbar"><span><%= S.agency || 'สังกัดสำนักงานเขตพื้นที่การศึกษา' %></span><span>ITA · e-Service</span></div>
+      <div class="cp-head"><span class="cp-logo"></span><b><%= S.school_name %></b><span class="cp-btn cp-part" data-part="c_button">สมัครเรียน</span></div>
+      <div class="cp-nav cp-part" data-part="c_nav"><span class="on">หน้าหลัก</span><span>เกี่ยวกับโรงเรียน</span><span>ข่าวสาร</span><span>วิชาการ</span></div>
+      <div class="cp-hero cp-part" data-part="c_hero"><small>WELCOME</small><b><%= S.school_name %></b><span class="cp-btn cp-part" data-part="c_button">ปุ่มหลัก</span></div>
+      <div class="cp-ph cp-part" data-part="c_pagehead"><small>NEWS &amp; UPDATES</small><b>ข่าวสาร</b></div>
+      <div class="cp-alt cp-part" data-part="c_alt">
+        <span class="cp-card"><i></i><span class="cp-chip">กิจกรรม</span><b>หัวข้อข่าว</b></span>
+        <span class="cp-card"><i></i><span class="cp-chip">ประกาศ</span><b>หัวข้อข่าว</b></span>
+      </div>
+      <div class="cp-cta cp-part" data-part="c_cta"><b>ยินดีต้อนรับ</b><span class="cp-btnw">สมัครเรียน</span></div>
+      <div class="cp-foot cp-part" data-part="c_footer"><b><%= S.school_name %></b><small>ที่อยู่ · โทรศัพท์ · อีเมล</small></div>
+    </div>
+  </aside>
+</div>
+<script type="module" src="/js/admin-colors.js"></script>
+<%- include('_foot') %>

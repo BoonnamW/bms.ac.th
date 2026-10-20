@@ -20,6 +20,12 @@
   --t0:var(--primary-l);--t0i:var(--primary-d);--t1:var(--accent-l);--t1i:var(--accent-d);--t2:var(--dark-l);--t2i:var(--dark);
   --t3:var(--t0);--t3i:var(--t0i);--t4:var(--t1);--t4i:var(--t1i);--t5:var(--t2);--t5i:var(--t2i);
 }
+/* สีแต่ละส่วน (หลังบ้าน → ปรับสีเว็บไซต์ → /theme.css เปลี่ยน --primary/--dark/--bg ของส่วนนั้น) — คำนวณโทนอ่อน/เข้มของส่วนนั้นใหม่ */
+.topbar,.nav,.hero,.pagehead,.sec-alt,.btn-primary,.cta-band,.footer{
+  --primary-d:color-mix(in srgb,var(--primary) 80%,#000);--primary-l:color-mix(in srgb,var(--primary) 9%,#fff);
+  --primary-m:color-mix(in srgb,var(--primary) 22%,#fff);--primary-lt:color-mix(in srgb,var(--primary) 45%,#fff);
+  --dark-2:color-mix(in srgb,var(--dark) 80%,var(--accent));--dark-l:color-mix(in srgb,var(--dark) 8%,#fff);
+}
 html{font-size:16px;scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 html[data-fs=sm]{font-size:14.5px}html[data-fs=lg]{font-size:18px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -390,6 +396,20 @@ h1,h2,h3,h4{font-family:var(--f-head);line-height:1.3;font-weight:600}
 
 /* ---------- stay connected / CTA ---------- */
 .conn-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+/* กล่องโพสต์จากเพจ Facebook + ช่องทางอื่นเรียงด้านข้าง */
+.conn-wrap.has-fb{display:grid;grid-template-columns:minmax(0,500px) minmax(0,1fr);gap:24px;align-items:start}
+.has-fb .conn-grid{grid-template-columns:minmax(0,1fr);gap:12px}
+.fbbox{display:grid;gap:10px;justify-items:center;min-width:0}
+.fbbox iframe{display:block;max-width:100%;border:0;border-radius:var(--r);background:#fff;box-shadow:var(--shadow)}
+.fb-ph{width:100%;display:grid;gap:14px;justify-items:start;padding:20px;background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.fb-h{display:flex;gap:12px;align-items:center;width:100%;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.fb-h img{width:44px;height:44px;border-radius:50%;object-fit:contain;background:var(--bg);padding:3px}
+.fb-h span{flex:1;min-width:0}.fb-h b{display:block;font:600 .98rem/1.35 var(--f-head)}.fb-h small{color:var(--muted);font-size:.78rem}
+.fb-h .ic{color:#1877f2}
+.fb-ph p{color:var(--ink2);font-size:.92rem}
+.fb-note{color:var(--muted);font-size:.76rem}
+.fb-open{display:inline-flex;gap:6px;align-items:center;font-size:.86rem;color:var(--primary-d)}
+.fb-open:hover{text-decoration:underline}
 .conn{display:flex;gap:14px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);transition:.2s}
 .conn:hover{border-color:var(--primary);transform:translateY(-2px)}
 .conn>span:nth-child(2){flex:1;min-width:0}
@@ -844,7 +864,7 @@ html.hc .nav-top small,html.hc .en,html.hc .q-t small{color:#000}
 }
 @media (max-width:860px){
   .aw-rows{grid-template-columns:minmax(0,1fr)}
-  .grid-2,.two,.portal-top{grid-template-columns:minmax(0,1fr)}
+  .grid-2,.two,.portal-top,.conn-wrap.has-fb{grid-template-columns:minmax(0,1fr)}
   .dept-chips{display:flex} /* จอเล็ก: รายชื่อกลุ่มอยู่ด้านบน (แถบข้างย้ายไปท้ายหน้า) */
   .grid3{grid-template-columns:repeat(2,minmax(0,1fr))}
   .hide-md{display:none!important}

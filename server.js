@@ -47,7 +47,8 @@ app.use(helmet({
       fontSrc: ["'self'", 'https://fonts.gstatic.com'],
       // blob: = ตัวอย่างรูปก่อนอัปโหลดในหลังบ้าน · Google = รูปจาก Drive กรณีเซิร์ฟเวอร์ดึงมาเก็บไม่ได้
       imgSrc: ["'self'", 'data:', 'blob:', 'https://drive.google.com', 'https://*.googleusercontent.com', ...(WP_MEDIA_ORIGIN ? [WP_MEDIA_ORIGIN] : [])],
-      frameSrc: ["'self'", ...IFRAME_HOSTS.map((h) => `https://${h}`), ...(WP_MEDIA_ORIGIN ? [WP_MEDIA_ORIGIN] : [])],
+      // www.facebook.com = กล่องโพสต์จากเพจ Facebook ในหน้าแรก (ไม่อนุญาตให้ฝังในเนื้อหาข่าว)
+      frameSrc: ["'self'", ...IFRAME_HOSTS.map((h) => `https://${h}`), 'https://www.facebook.com', ...(WP_MEDIA_ORIGIN ? [WP_MEDIA_ORIGIN] : [])],
       connectSrc: ["'self'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
@@ -68,6 +69,8 @@ app.use(express.urlencoded({ extended: false, limit: '1mb' }));
 app.use((req, res, next) => { req.cookies = parseCookies(req.headers.cookie); next(); });
 
 // ---------- ไฟล์สาธารณะ ----------
+// สูตรสีของธีม ใช้ร่วมกับหน้า "ปรับสีเว็บไซต์" ในหลังบ้าน (คำนวณตัวอย่างสีในเบราว์เซอร์ด้วยสูตรเดียวกัน)
+app.get('/js/colors.mjs', (req, res) => res.type('text/javascript').set('Cache-Control', 'no-cache').sendFile(path.join(ROOT, 'lib', 'colors.js')));
 app.use(express.static(path.join(ROOT, 'public'), {
   maxAge: PROD ? '7d' : 0,
   setHeaders: (res, file) => { if (file.endsWith(`${path.sep}sw.js`)) res.setHeader('Cache-Control', 'no-cache'); }, // service worker ต้องอัปเดตได้ทันที

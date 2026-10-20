@@ -3,7 +3,8 @@ import multer from 'multer';
 import bcrypt from 'bcryptjs';
 import rateLimit from 'express-rate-limit';
 import { db, getSettings } from '../lib/db.js';
-import { entities, settingsFields } from '../lib/entities.js';
+import { entities, settingsFields, colorFields } from '../lib/entities.js';
+import { SCHOOL_COLORS } from '../lib/seed.js';
 import { sessionOf } from '../lib/session.js';
 import { parseFolder, folderLink, refresh as refreshDrive, status as driveStatus } from '../lib/gdrive.js';
 import {
@@ -142,6 +143,19 @@ r.post('/settings', requireAuth, upload.single('logo'), csrfCheck, (req, res) =>
   const up = db.prepare('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
   for (const [k, v] of Object.entries(values)) up.run(k, String(v ?? ''));
   res.redirect('/admin/settings?saved=1');
+});
+
+// ---------- ปรับสีเว็บไซต์: สีประจำโรงเรียน 4 สี + สีแต่ละส่วน (มีตัวอย่างหน้าเว็บให้ดูขณะเลือก) ----------
+const renderColors = (res, values, errors = [], saved = false, status = 200) => res.status(status)
+  .render('admin/colors', { title: 'ปรับสีเว็บไซต์', fields: colorFields, values, errors, saved, defaults: SCHOOL_COLORS });
+r.get('/colors', requireAuth, (req, res) => renderColors(res, getSettings(), [], req.query.saved === '1'));
+r.post('/colors', requireAuth, csrfCheck, (req, res) => {
+  const current = getSettings();
+  const { values, errors } = validate(colorFields, req.body, current);
+  if (errors.length) return renderColors(res, { ...current, ...values }, errors, false, 400);
+  const up = db.prepare('INSERT INTO settings (key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value');
+  for (const [k, v] of Object.entries(values)) up.run(k, String(v ?? ''));
+  res.redirect('/admin/colors?saved=1');
 });
 
 // ---------- รูปจาก Google Drive: อ่านรายชื่อรูปใหม่ทันที (ปุ่ม "อัปเดตรูปจาก Drive" บนหน้าเว็บ) ----------

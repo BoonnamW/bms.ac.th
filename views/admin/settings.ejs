@@ -1,6 +1,7 @@
 <%- include('_head') %>
 <% if (saved) { %><div class="alert ok">บันทึกการตั้งค่าเรียบร้อยแล้ว</div><% } %>
 <% if (errors.length) { %><div class="alert err" role="alert"><ul><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div><% } %>
+<p class="tip">สีของเว็บไซต์ (สีประจำโรงเรียนและสีแต่ละส่วน) ตั้งค่าได้ที่เมนู <a href="/admin/colors"><b>ปรับสีเว็บไซต์</b></a></p>
 <form class="form" method="post" action="/admin/settings" enctype="multipart/form-data">
   <input type="hidden" name="_csrf" value="<%= csrf %>">
   <% fields.forEach(function (f) { %><%- include('_field', { f: f, values: values, readonly: false }) %><% }) %>

@@ -272,18 +272,41 @@
   </div>
 </section>
 
-<section class="sec sec-tight">
+<% var fbOn = S.fb_embed === '1' && /^https:\/\/(www\.|m\.)?facebook\.com\/[^\s]+$/.test(S.facebook || ''); %>
+<section class="sec sec-tight" aria-labelledby="connTitle">
   <div class="wrap">
-    <div class="sec-h"><div><h2>ติดตามโรงเรียนในช่องทางต่าง ๆ</h2><p class="en">Stay Connected</p></div></div>
-    <div class="conn-grid">
-      <% if (S.facebook) { %>
-      <a class="conn" href="<%= S.facebook %>" target="_blank" rel="noopener"><span class="conn-ic t0"><%- icon('broadcast', 24) %></span>
-        <span><b>Facebook และถ่ายทอดสดกิจกรรม</b><small>ติดตามข่าวและการถ่ายทอดสดกิจกรรมของโรงเรียน</small></span><%- icon('arrow', 18) %></a>
+    <div class="sec-h"><div><h2 id="connTitle">ติดตามโรงเรียนในช่องทางต่าง ๆ</h2><p class="en">Stay Connected</p></div></div>
+    <div class="conn-wrap<%= fbOn ? ' has-fb' : '' %>">
+      <% if (fbOn) { %>
+      <div class="fbbox" data-fb="<%= S.facebook %>"<%= S.fb_autoload === '1' ? ' data-auto=1' : '' %>>
+        <div class="fb-ph">
+          <div class="fb-h"><img src="<%= S.logo ? '/uploads/' + S.logo : '/img/icon-192.png' %>" alt="" data-fallback="/img/icon-192.png" loading="lazy">
+            <span><b><%= S.school_name %></b><small>เพจ Facebook ของโรงเรียน</small></span><%- icon('facebook', 22) %></div>
+          <p>ข่าว ภาพกิจกรรม และการถ่ายทอดสดล่าสุดจากเพจ Facebook ของโรงเรียน</p>
+          <button type="button" class="btn btn-primary btn-sm" data-fb-load><%- icon('facebook', 16) %> แสดงโพสต์จาก Facebook</button>
+          <small class="fb-note">เมื่อกดแสดง Facebook อาจบันทึกคุกกี้ของท่าน</small>
+        </div>
+        <a class="fb-open" href="<%= S.facebook %>" target="_blank" rel="noopener">เปิดเพจใน Facebook <%- icon('external', 14) %><span class="sr-only"> (เปิดหน้าต่างใหม่)</span></a>
+      </div>
       <% } %>
-      <a class="conn" href="/calendar#subscribe"><span class="conn-ic t1"><%- icon('calendar', 24) %></span>
-        <span><b>ปฏิทินกิจกรรม (iCal)</b><small>เพิ่มปฏิทินโรงเรียนลงในโทรศัพท์ แจ้งเตือนอัตโนมัติ</small></span><%- icon('arrow', 18) %></a>
-      <a class="conn" href="/contact"><span class="conn-ic t2"><%- icon('help', 24) %></span>
-        <span><b>สอบถาม / ร้องเรียน</b><small>ส่งข้อความถึงโรงเรียน เจ้าหน้าที่จะติดต่อกลับ</small></span><%- icon('arrow', 18) %></a>
+      <div class="conn-grid">
+        <% if (S.facebook && !fbOn) { %>
+        <a class="conn" href="<%= S.facebook %>" target="_blank" rel="noopener"><span class="conn-ic t0"><%- icon('broadcast', 24) %></span>
+          <span><b>Facebook และถ่ายทอดสดกิจกรรม</b><small>ติดตามข่าวและการถ่ายทอดสดกิจกรรมของโรงเรียน</small></span><%- icon('arrow', 18) %></a>
+        <% } %>
+        <% if (S.line_url) { %>
+        <a class="conn" href="<%= S.line_url %>" target="_blank" rel="noopener"><span class="conn-ic t1"><%- icon('chat', 24) %></span>
+          <span><b>LINE ของโรงเรียน</b><small>รับข่าวประกาศสำคัญทาง LINE</small></span><%- icon('arrow', 18) %></a>
+        <% } %>
+        <% if (S.youtube) { %>
+        <a class="conn" href="<%= S.youtube %>" target="_blank" rel="noopener"><span class="conn-ic t2"><%- icon('youtube', 24) %></span>
+          <span><b>YouTube ของโรงเรียน</b><small>วิดีโอกิจกรรมและการถ่ายทอดสด</small></span><%- icon('arrow', 18) %></a>
+        <% } %>
+        <a class="conn" href="/calendar#subscribe"><span class="conn-ic t1"><%- icon('calendar', 24) %></span>
+          <span><b>ปฏิทินกิจกรรม (iCal)</b><small>เพิ่มปฏิทินโรงเรียนลงในโทรศัพท์ แจ้งเตือนอัตโนมัติ</small></span><%- icon('arrow', 18) %></a>
+        <a class="conn" href="/contact"><span class="conn-ic t2"><%- icon('help', 24) %></span>
+          <span><b>สอบถาม / ร้องเรียน</b><small>ส่งข้อความถึงโรงเรียน เจ้าหน้าที่จะติดต่อกลับ</small></span><%- icon('arrow', 18) %></a>
+      </div>
     </div>
   </div>
 </section>
