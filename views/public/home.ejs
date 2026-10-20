@@ -157,26 +157,38 @@
 </section>
 <% } %>
 
-<% if (achievements.length) { %>
-<section class="ach" aria-labelledby="achTitle">
-  <div class="wrap ach-in">
-    <div class="ach-h">
-      <span class="ach-ic"><%- icon('award', 30) %></span>
-      <div><h2 id="achTitle">ผลงานและความภาคภูมิใจ</h2><p class="en">Our Achievements</p></div>
-      <a class="more more-light" href="/news?cat=<%= encodeURIComponent('ผลงานนักเรียน') %>">ดูทั้งหมด <%- icon('arrow', 16) %></a>
+<% if (awards.some(function (g) { return g.items.length; })) { %>
+<section class="sec aw-sec" aria-labelledby="awTitle">
+  <div class="wrap">
+    <div class="sec-h">
+      <div><h2 id="awTitle">ผลงานและความภาคภูมิใจ</h2><p class="en">Achievements &amp; Awards</p></div>
+      <a class="more" href="/awards">ดูทั้งหมด <%- icon('arrow', 16) %></a>
     </div>
-    <div class="slider" data-slider data-auto="6000">
-      <button type="button" class="sl-btn" data-prev aria-label="ผลงานก่อนหน้า"><%- icon('left', 20) %></button>
-      <div class="sl-track" tabindex="0" aria-label="รายการผลงาน (เลื่อนดูได้)">
-        <% achievements.forEach(function (a) { %>
-        <a class="ach-card" href="/news/<%= a.id %>">
-          <span class="ach-img"><% if (a.image) { %><img src="/uploads/<%= a.image %>" alt="" loading="lazy"><% } else { %><%- icon('award', 28) %><% } %></span>
-          <span><b><%= a.title %></b><small><%= thDate(a.created_at) %></small></span>
-        </a>
-        <% }) %>
+    <div class="aw-grid">
+      <% awards.forEach(function (g) { %>
+      <div class="aw-card aw-<%= g.key %> reveal">
+        <div class="aw-head">
+          <span class="aw-ic"><%- icon(awardIcons[g.key], 20) %></span>
+          <h3><%= g.title %></h3>
+          <a class="aw-all" href="/awards?owner=<%= g.key %>">ดูทั้งหมด<span class="sr-only"> (<%= g.title %>)</span> <%- icon('arrow', 14) %></a>
+        </div>
+        <% if (g.items.length) { %>
+        <ul class="aw-list">
+          <% g.items.forEach(function (a) { var sub = [awardLevels[a.level], a.people].filter(Boolean).join(' · ') || thDay(a.award_date); %>
+          <li>
+            <span class="aw-year"><%= a.award_date ? 'พ.ศ. ' + (Number(a.award_date.slice(0, 4)) + 543) : '' %></span>
+            <span class="aw-b">
+              <% if (a.link) { %><a href="<%= a.link %>"<% if (/^https?:/.test(a.link)) { %> target="_blank" rel="noopener"<% } %>><%= a.title %></a><% } else { %><b><%= a.title %></b><% } %>
+              <% if (sub) { %><small><%= sub %></small><% } %>
+            </span>
+          </li>
+          <% }) %>
+        </ul>
+        <% } else { %>
+        <p class="aw-empty"><%- icon('award', 28) %>ยังไม่มีผลงานในหมวดนี้</p>
+        <% } %>
       </div>
-      <button type="button" class="sl-btn" data-next aria-label="ผลงานถัดไป"><%- icon('right', 20) %></button>
-      <button type="button" class="sl-pause" data-pause aria-pressed="false" aria-label="หยุดเลื่อนอัตโนมัติ"><%- icon('pause', 16) %></button>
+      <% }) %>
     </div>
   </div>
 </section>

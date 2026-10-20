@@ -173,6 +173,9 @@ function validate(fields, body, existing = {}) {
       case 'color': v = String(v ?? '').trim();
         if (!/^#[0-9a-fA-F]{6}$/.test(v)) { errors.push(`"${f.label}" ต้องเป็นรหัสสี เช่น #14325e`); continue; }
         break;
+      case 'date': v = String(v ?? '').trim();
+        if (v && (!/^\d{4}-\d{2}-\d{2}$/.test(v) || Number.isNaN(Date.parse(`${v}T00:00:00Z`)))) { errors.push(`"${f.label}" รูปแบบไม่ถูกต้อง`); continue; }
+        break;
       case 'datetime': v = String(v ?? '').trim();
         if (v && !/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}$/.test(v)) { errors.push(`"${f.label}" รูปแบบไม่ถูกต้อง`); continue; }
         if (v) {
@@ -201,7 +204,7 @@ r.get('/:e', requireAuth, getEntity, (req, res) => {
 });
 
 // ปุ่มเพิ่ม/แก้ไขบนหน้าเว็บส่งหน้าเดิมมาเป็น back → บันทึกแล้วกลับไปหน้านั้น (รับเฉพาะหน้าในเว็บนี้)
-const backUrl = (v) => (/^\/p\/[a-z0-9-]+$/.test(String(v || '')) ? String(v) : '');
+const backUrl = (v) => (/^\/(p\/[a-z0-9-]+|awards)$/.test(String(v || '')) ? String(v) : '');
 
 r.get('/:e/new', requireAuth, getEntity, (req, res) => {
   if (req.ent.readonly) return res.redirect(`/admin/${req.table}`);

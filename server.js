@@ -3,7 +3,7 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { db, getSettings, ROOT, UPLOAD_DIR } from './lib/db.js';
 import { navTree } from './lib/nav.js';
-import { parseCookies, icon, thDate, thDateTime, thTime, dateParts, token, IFRAME_HOSTS, WP_FILE } from './lib/helpers.js';
+import { parseCookies, icon, thDate, thDateTime, thTime, thDay, dateParts, token, IFRAME_HOSTS, WP_FILE } from './lib/helpers.js';
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import { seedDefaults } from './lib/seed.js';
@@ -117,7 +117,7 @@ app.use((req, res, next) => {
   const ann = S.announce_on === '1' && S.announce_text
     ? crypto.createHash('md5').update(`${S.announce_text}\n${S.announce_link || ''}`).digest('hex').slice(0, 10) : '';
   Object.assign(res.locals, {
-    icon, thDate, thDateTime, thTime, dateParts, S, path: req.path, url: req.originalUrl, title: '', v: assetVersion,
+    icon, thDate, thDateTime, thTime, thDay, dateParts, S, path: req.path, url: req.originalUrl, title: '', v: assetVersion,
     fs: (pref.match(/\b(sm|lg)\b/) || [])[1] || '', hc: /\bhc\b/.test(pref),
     annKey: ann && req.cookies.ann !== ann ? ann : '',
     extLinks: extLinksSql.all(), // ลิงก์หน่วยงานภายนอกท้ายเว็บ

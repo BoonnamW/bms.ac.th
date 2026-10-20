@@ -41,6 +41,8 @@
       <input id="f_<%= f.n %>" type="file" name="<%= f.n %>" accept="image/jpeg,image/png,image/webp,image/gif">
     <% } else if (f.type === 'color') { %>
       <input id="f_<%= f.n %>" type="color" name="<%= f.n %>" value="<%= v %>" class="colorin">
+    <% } else if (f.type === 'date') { %>
+      <input id="f_<%= f.n %>" type="date" name="<%= f.n %>" value="<%= v || '' %>" <%= f.req ? 'required' : '' %>>
     <% } else if (f.type === 'datetime') { %>
       <input id="f_<%= f.n %>" type="datetime-local" name="<%= f.n %>" value="<%= v ? new Date(new Date(String(v).replace(' ', 'T') + 'Z').getTime() + 7 * 3600 * 1000).toISOString().slice(0, 16) : '' %>" <%= f.req ? 'required' : '' %>>
     <% } else { %>

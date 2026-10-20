@@ -18,7 +18,7 @@
   <a class="sb-brand" href="/admin"><%- icon('building', 22) %> <span>หลังบ้าน<small><%= S.school_name %></small></span></a>
   <nav>
     <a href="/admin" class="<%= (path === '/admin' || path === '/admin/') ? 'on' : '' %>">แดชบอร์ด</a>
-    <% [['เนื้อหา', ['news', 'events', 'pages', 'staff', 'gallery']], ['หน้าแรก', ['popups', 'slides', 'links', 'stats', 'programs', 'highlights']],
+    <% [['เนื้อหา', ['news', 'events', 'awards', 'pages', 'staff', 'gallery']], ['หน้าแรก', ['popups', 'slides', 'links', 'stats', 'programs', 'highlights']],
         ['เมนูและบริการ', ['menu_items', 'services', 'ext_links']]].forEach(function (g) { %>
     <p><%= g[0] %></p>
     <% g[1].forEach(function (k) { %>
