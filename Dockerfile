@@ -5,7 +5,7 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 COPY . .
 RUN chown -R node:node /app
-USER node
 EXPOSE 3000
-# นำเข้าเนื้อหาทั้งหมดจากเว็บ WordPress เดิม + หน้ามาตรฐาน (ITA/PDPA) ครั้งแรกเท่านั้น (ข้ามถ้าเคยทำแล้ว) แล้วเริ่มเซิร์ฟเวอร์
-CMD ["sh", "-c", "node scripts/import-wp.mjs seed/bms-wp.json.gz --once; node scripts/add-standard-pages.mjs; exec node server.js"]
+# เริ่มด้วย root เพื่อให้สิทธิ์ดิสก์ถาวร (DATA_PATH) แก่ผู้ใช้ node แล้วรันเว็บด้วยสิทธิ์ node — ดู scripts/start.mjs
+# (นำเข้าเนื้อหาจากเว็บ WordPress เดิม + หน้ามาตรฐาน ITA/PDPA ครั้งแรกเท่านั้น แล้วเริ่มเซิร์ฟเวอร์)
+CMD ["node", "scripts/start.mjs"]
