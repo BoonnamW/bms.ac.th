@@ -30,14 +30,6 @@
       </ul>
     </div>
     <div>
-      <h4>ลิงก์ด่วน <small>Quick Links</small></h4>
-      <ul class="flinks">
-        <% nav.forEach(function (i) { var h = i.href || (i.children && i.children[0].href); if (h && h !== '/') { %><li><a href="<%= h %>"><%= i.label %></a></li><% } }) %>
-        <li><a href="/ita">ITA / OIT</a></li>
-        <li><a href="/portal">บริการออนไลน์</a></li>
-      </ul>
-    </div>
-    <div>
       <h4>แผนที่โรงเรียน <small>School Location</small></h4>
       <div class="fmap" id="fmap">
         <button type="button" class="map-load" data-map="https://www.google.com/maps?q=<%= encodeURIComponent(mapQuery) %>&amp;output=embed">
