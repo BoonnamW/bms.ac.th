@@ -28,10 +28,10 @@
   <link rel="icon" href="/img/favicon-32.png" type="image/png">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <link rel="alternate" type="application/rss+xml" title="ข่าวสาร <%= S.school_name %>" href="/feed.xml">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/theme.css">
+  <link rel="preload" href="/fonts/noto-sans-thai-thai.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/prompt-thai-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/css/fonts.css?v=<%= v %>">
+  <link rel="stylesheet" href="/theme.css?v=<%= themeV %>">
   <link rel="stylesheet" href="/css/site.css?v=<%= v %>">
   <% if (typeof css !== 'undefined' && css) { %><link rel="stylesheet" href="/css/<%= css %>.css?v=<%= v %>"><% } %>
   <script src="/js/site.js?v=<%= v %>" defer></script>
@@ -43,11 +43,10 @@
 <div class="topbar">
   <div class="wrap topbar-in">
     <div class="tb-l">
-      <% if (S.agency) { %><span class="tb-agency"><%- icon('building', 14) %><%= S.agency %></span><% } %>
+      <% if (S.agency) { %><span class="tb-agency"><%- icon('building', 14) %><span><%= S.agency %></span></span><% } %>
     </div>
     <div class="tb-r">
       <a href="/ita" class="hide-sm">ITA / OIT</a>
-      <a href="/portal" class="hide-sm">e-Service</a>
       <% if (S.phone) { %><a href="tel:<%= S.phone.replace(/[^\d+]/g, '') %>" class="hide-xs"><%- icon('phone', 14) %><%= S.phone %></a><% } %>
       <% if (S.email) { %><a href="mailto:<%= S.email %>" class="hide-md"><%- icon('mail', 14) %><%= S.email %></a><% } %>
       <div class="a11y" role="group" aria-label="ขนาดตัวอักษร">

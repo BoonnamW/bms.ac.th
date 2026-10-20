@@ -36,7 +36,7 @@
       </select>
     <% } else if (f.type === 'image') { %>
       <% if (v) { %>
-        <div class="imgcur"><img src="<%= /^https:\/\//.test(v) ? v : '/uploads/' + v %>" alt=""><label class="inl"><input type="checkbox" name="remove_<%= f.n %>" value="1"> ลบรูปนี้</label></div>
+        <div class="imgcur"><img src="<%= upl(v) %>" alt=""><label class="inl"><input type="checkbox" name="remove_<%= f.n %>" value="1"> ลบรูปนี้</label></div>
       <% } %>
       <input id="f_<%= f.n %>" type="file" name="<%= f.n %>" accept="image/jpeg,image/png,image/webp,image/gif">
     <% } else if (f.type === 'images') { var cur = pics(v); %>

@@ -17,7 +17,7 @@
         <% }) %>
         <% if (!albums.length) gallery.forEach(function (g, i) { %>
         <a class="gal-item" href="/gallery">
-          <% if (g.image) { %><img src="/uploads/<%= g.image %>" alt="" loading="lazy"><% } else { %><span class="ph ph-<%= i % 5 %>"><%- icon('image', 36) %></span><% } %>
+          <% if (g.image) { %><img src="/uploads/<%= g.image %>" alt="" loading="lazy" <%- imgset(g.image, '220px') %>><% } else { %><span class="ph ph-<%= i % 5 %>"><%- icon('image', 36) %></span><% } %>
           <span class="gal-cap"><%= g.title %></span>
         </a>
         <% }) %>

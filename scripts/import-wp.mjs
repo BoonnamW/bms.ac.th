@@ -37,6 +37,19 @@ const { cleanHtml } = await import('../lib/helpers.js');
 const { OIT_GROUP, OIT_SORT, oitSort } = await import('../lib/oit.js');
 const { SCHOOL_COLORS } = await import('../lib/seed.js');
 
+// ขนาดรูปย่อของรูปจากเว็บเดิม (srcset) — เติมทุกครั้ง แม้เคยนำเข้าแล้ว (เว็บที่นำเข้าก่อนมีข้อมูลนี้จะได้ด้วย)
+if (content.media) {
+  const insMedia = db.prepare('INSERT OR REPLACE INTO wp_media (file, sizes) VALUES (?,?)');
+  db.exec('BEGIN');
+  for (const [file, [w, sizes]] of Object.entries(content.media)) {
+    const dir = file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : '';
+    const list = JSON.stringify([...sizes.map(([sw, f]) => [sw, dir + f]), [w, file]]);
+    insMedia.run(file, list);
+    for (const [, f] of sizes) insMedia.run(dir + f, list);
+  }
+  db.exec('COMMIT');
+}
+
 if (args.includes('--once') && db.prepare("SELECT 1 FROM settings WHERE key='wp_imported'").get()) {
   console.log('นำเข้าข้อมูลจาก WordPress ไปแล้ว — ข้าม');
   process.exit(0);

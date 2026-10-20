@@ -3,13 +3,14 @@ import rateLimit from 'express-rate-limit';
 import { db, getSettings } from '../lib/db.js';
 import { navTree } from '../lib/nav.js';
 import { CATEGORIES, AWARD_OWNERS, AWARD_LEVELS, AWARD_ICONS } from '../lib/entities.js';
-import { formToken, checkFormToken, thDate, parseUtc, pics, docs, textOf } from '../lib/helpers.js';
+import { formToken, checkFormToken, thDate, parseUtc, pics, docs, textOf, upl } from '../lib/helpers.js';
 import { OIT_GROUP } from '../lib/oit.js';
 import { EVENT_END_SQL, nowUtc, eventView, icsCalendar } from '../lib/events.js';
 import { sessionOf } from '../lib/session.js';
 import { album as driveAlbum, summary as driveSummary } from '../lib/gdrive.js';
 import { currentPopup, previewPopup } from '../lib/popups.js';
 import { homeSections } from '../lib/home.js';
+import { withSrcset } from '../lib/media.js';
 import { issues as journalIssues, issueOf, entriesOf, journalName, slugYm, ymSlug, ymLabel, thisYm, releaseDay, JOURNAL_SECTIONS } from '../lib/journal.js';
 
 const r = Router();
@@ -26,7 +27,6 @@ const albumCard = (a) => {
     image: a.image ? `/uploads/${a.image}` : d?.cover ? `/gdrive/t/${d.cover}` : '' };
 };
 const editorOf = (req) => { const s = sessionOf(req); return s ? { csrf: s.csrf } : null; };
-const upl = (v) => (!v ? '' : /^https:\/\//.test(v) ? v : `/uploads/${v}`);
 // การ์ดผลงาน: รูปปก = รูปหลัก → รูปเพิ่มเติมรูปแรก → รูปแรกในโฟลเดอร์ Google Drive
 const awardCard = (a) => {
   const extra = pics(a.images), cover = a.image || extra[0];
@@ -257,7 +257,7 @@ r.get('/news/:id', async (req, res, next) => {
     item.category, item.id);
   const ed = editorOf(req);
   res.render('public/article', { title: item.title, description: textOf(item.excerpt || item.body, 160), ogImage: upl(item.image),
-    item, recent, related, photos, editor: !!ed, csrf: ed?.csrf, shareUrl: `${baseUrl(req)}/news/${item.id}` });
+    item: { ...item, body: withSrcset(item.body) }, recent, related, photos, editor: !!ed, csrf: ed?.csrf, shareUrl: `${baseUrl(req)}/news/${item.id}` });
 });
 
 // ---------- หน้าเว็บทั่วไป ----------
@@ -280,7 +280,7 @@ r.get('/p/:slug', (req, res, next) => {
     staff = rows[0]?.is_head ? { head: rows[0], members: rows.slice(1) } : { head: null, members: rows };
   }
   const editor = !!(staff || depts) && !!sessionOf(req); // ผู้ดูแลที่เข้าสู่ระบบอยู่ เห็นปุ่มเพิ่ม/แก้ไข
-  res.render('public/page', { title: page.title, page, siblings, staff, depts, editor });
+  res.render('public/page', { title: page.title, page: { ...page, body: withSrcset(page.body) }, siblings, staff, depts, editor });
 });
 
 // ---------- ผลงานและรางวัล ----------
@@ -323,7 +323,7 @@ r.get('/awards/:id', async (req, res, next) => {
   const more = all(`SELECT * FROM awards WHERE published=1 AND id<>? ORDER BY owner=? DESC, ${AWARD_ORDER} LIMIT 4`, a.id, a.owner).map(awardCard);
   res.render('public/award', {
     title: a.title, description: textOf(a.detail, 160) || [AWARD_OWNERS[a.owner], a.people].filter(Boolean).join(' · '),
-    ogImage: awardCard(a).cover, a, images: pics(a.images), files: docs(a.files), photos, more,
+    ogImage: awardCard(a).cover, a: { ...a, detail: withSrcset(a.detail) }, images: pics(a.images), files: docs(a.files), photos, more,
     owners: AWARD_OWNERS, awardLevels: AWARD_LEVELS, awardIcons: AWARD_ICONS, editor: !!ed, csrf: ed?.csrf, shareUrl: `${baseUrl(req)}/awards/${a.id}`,
   });
 });

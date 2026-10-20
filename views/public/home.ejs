@@ -3,7 +3,8 @@
 <section class="hero" id="hero" aria-roledescription="carousel" aria-label="ภาพประชาสัมพันธ์">
   <% slides.forEach(function (s, i) { %>
   <div class="slide <%= i === 0 ? 'on' : '' %>" role="group" aria-roledescription="slide" aria-label="<%= i + 1 %> จาก <%= slides.length %>">
-    <img class="slide-img" src="<%= s.image ? '/uploads/' + s.image : '/img/hero.jpg' %>" alt="" data-fallback="/img/hero.jpg" <%= i ? 'loading=lazy' : 'fetchpriority=high' %>>
+    <% if (s.image) { %><img class="slide-img" src="/uploads/<%= s.image %>" alt="" data-fallback="/img/hero.jpg" <%= i ? 'loading=lazy' : 'fetchpriority=high' %>>
+    <% } else { %><%- include('_heroimg', { cls: 'slide-img', attrs: i ? 'loading="lazy"' : 'fetchpriority="high"' }) %><% } %>
     <div class="slide-shade"></div>
     <div class="wrap slide-in">
       <span class="eyebrow"><%= S.school_name_en %></span>
@@ -48,7 +49,7 @@
 <% }) %>
 
 <% if (popup) {
-  var pimg = popup.image ? (/^https:\/\//.test(popup.image) ? popup.image : '/uploads/' + popup.image) : '';
+  var pimg = upl(popup.image);
   var pstyle = ['poster', 'mourning'].indexOf(popup.style) >= 0 ? popup.style : 'card';
   if (pstyle === 'poster' && !pimg) pstyle = 'card'; // โปสเตอร์ต้องมีภาพ
   var psize = ['m', 'l', 'xl'].indexOf(popup.size) >= 0 ? popup.size : 'm';
@@ -65,7 +66,7 @@
     <div class="popup-mourn"><%- ribbonSvg %></div>
   <% } else { %>
     <div class="popup-hero">
-      <img src="/img/hero.jpg" alt="">
+      <%- include('_heroimg', { cls: 'popup-hero-img', attrs: '' }) %>
       <span class="popup-brand"><img src="<%= S.logo ? '/uploads/' + S.logo : '/img/icon-192.png' %>" alt="" data-fallback="/img/icon-192.png"><span><%= S.school_name %><small><%= S.school_name_en %></small></span></span>
     </div>
   <% } %>

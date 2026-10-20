@@ -3,7 +3,7 @@
   <div class="wrap grid-2">
     <% if (tour && tour.embed) { %>
     <div class="tour" id="tour">
-      <img class="tour-bg" src="/img/hero.jpg" alt="" loading="lazy">
+      <%- include('../_heroimg', { cls: 'tour-bg' }) %>
       <div class="tour-in">
         <span class="eyebrow">Virtual Campus Tour</span>
         <h2>เยี่ยมชมโรงเรียนแบบออนไลน์</h2>
@@ -13,7 +13,7 @@
     </div>
     <% } else { %>
     <div class="tour">
-      <img class="tour-bg" src="/img/hero.jpg" alt="" loading="lazy">
+      <%- include('../_heroimg', { cls: 'tour-bg' }) %>
       <div class="tour-in">
         <span class="eyebrow">About Us</span>
         <h2><%= S.about_title %></h2>

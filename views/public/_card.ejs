@@ -1,6 +1,6 @@
 <article class="card reveal">
   <a href="/news/<%= n.id %>" class="thumb" tabindex="-1" aria-hidden="true">
-    <% if (n.image) { %><img src="/uploads/<%= n.image %>" alt="" loading="lazy">
+    <% if (n.image) { %><img src="/uploads/<%= n.image %>" alt="" loading="lazy" <%- imgset(n.image, '(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 400px') %>>
     <% } else { %><div class="ph ph-<%= n.id % 5 %>"><%- icon('book', 44) %></div><% } %>
   </a>
   <div class="card-b">

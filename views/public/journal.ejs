@@ -1,6 +1,5 @@
 <%- include('_head') %>
 <%
-  var img = function (v) { return !v ? '' : /^https:\/\//.test(v) ? v : '/uploads/' + v; };
   var href = function (x) { return x.link && !editor ? x.link : '/journal/' + x.slug; };
   var ext = function (x) { return x.link && !editor ? ' target="_blank" rel="noopener"' : ''; };
   var sub = function (x) { return x.link ? 'E-Book (ลิงก์ภายนอก)' : (x.number ? 'ฉบับที่ ' + x.number + ' · ' : '') + x.n + ' บทความ'; };
@@ -30,7 +29,7 @@
       <a class="jcard" href="<%= href(feat) %>"<%- ext(feat) %> aria-hidden="true" tabindex="-1">
         <span class="jbook<%= feat.link ? ' ext' : '' %>">
           <span class="jb-top"><b><%= name %></b><small><%= feat.label %></small></span>
-          <span class="jb-img"><% if (feat.cover) { %><img src="<%= img(feat.cover) %>" alt="" loading="lazy"><% } %><%- icon('bookopen', 40) %></span>
+          <span class="jb-img"><% if (feat.cover) { %><img src="<%= upl(feat.cover) %>" alt="" loading="lazy"><% } %><%- icon('bookopen', 40) %></span>
           <span class="jb-foot"><%= S.school_name %></span>
         </span>
       </a>
@@ -52,7 +51,7 @@
       <a class="jcard" href="<%= href(x) %>"<%- ext(x) %>>
         <span class="jbook<%= x.link ? ' ext' : '' %>" aria-hidden="true">
           <span class="jb-top"><b><%= name %></b><small><%= x.label %></small></span>
-          <span class="jb-img"><% if (x.cover) { %><img src="<%= img(x.cover) %>" alt="" loading="lazy"><% } %><%- icon('bookopen', 30) %></span>
+          <span class="jb-img"><% if (x.cover) { %><img src="<%= upl(x.cover) %>" alt="" loading="lazy"><% } %><%- icon('bookopen', 30) %></span>
           <span class="jb-foot"><%= x.link ? 'E-Book' : (x.number ? 'ฉบับที่ ' + x.number : S.school_name) %></span>
         </span>
         <span class="jcard-m"><b><%= x.label %></b><small><%= sub(x) %></small>

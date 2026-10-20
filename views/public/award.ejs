@@ -1,6 +1,5 @@
 <%- include('_head') %>
 <%
-  var upl = function (v) { return !v ? '' : /^https:\/\//.test(v) ? v : '/uploads/' + v; };
   var back = '/awards/' + a.id;
   var ext = /^https?:/.test(a.link || '');
   var KIND = { pdf: 'PDF', doc: 'Word', docx: 'Word', xls: 'Excel', xlsx: 'Excel', ppt: 'PowerPoint', pptx: 'PowerPoint' };
@@ -34,7 +33,7 @@
       <p class="awd-who aw-<%= a.owner %>"><%- icon('user', 18) %><span><small>ผู้ได้รับรางวัล / เจ้าของผลงาน</small><%= a.people %></span></p>
       <% } %>
       <article class="prose">
-        <% if (a.image) { %><img class="cover" src="<%= upl(a.image) %>" alt=""><% } %>
+        <% if (a.image) { %><img class="cover" src="<%= upl(a.image) %>" alt="" <%- imgset(a.image, '(max-width: 860px) 100vw, 820px') %>><% } %>
         <%- a.detail || '' %>
       </article>
 
@@ -80,7 +79,7 @@
       <ul class="side-news awd-more">
         <% more.forEach(function (m) { %>
         <li class="aw-<%= m.owner %>"><a href="/awards/<%= m.id %>">
-          <span class="awd-th"><% if (m.cover) { %><img src="<%= m.cover %>" alt="" loading="lazy"><% } %><%- icon(awardIcons[m.owner] || 'award', 22) %></span>
+          <span class="awd-th"><% if (m.cover) { %><img src="<%= m.cover %>" alt="" loading="lazy" <%- imgset(m.cover, '64px') %>><% } %><%- icon(awardIcons[m.owner] || 'award', 22) %></span>
           <span><%= m.title %><time><%= owners[m.owner] %> · <%= thDay(m.award_date, 'short') %></time></span>
         </a></li>
         <% }) %>

@@ -42,8 +42,7 @@
       <h4>ติดตามข่าวสาร <small>Stay Updated</small></h4>
       <ul class="flinks">
         <li><a href="/calendar"><%- icon('calendar', 15) %> ปฏิทินกิจกรรม</a></li>
-        <li><a href="/feed.xml"><%- icon('rss', 15) %> ข่าวสาร (RSS)</a></li>
-        <% if (S.facebook) { %><li><a href="<%= S.facebook %>" target="_blank" rel="noopener"><%- icon('facebook', 15) %> Facebook โรงเรียน</a></li><% } %>
+        <li><a href="/journal"><%- icon('bookopen', 15) %> <%= S.journal_name || 'วารสารโรงเรียน' %></a></li>
       </ul>
       <% if (typeof visits !== 'undefined' && visits) { %>
       <div class="counter" aria-label="สถิติผู้เข้าชม">
@@ -76,8 +75,6 @@
 </footer>
 
 <div class="fab" role="group" aria-label="เครื่องมือช่วยเหลือ">
-  <button type="button" class="fab-btn" data-fs-cycle aria-label="ปรับขนาดตัวอักษร" title="ปรับขนาดตัวอักษร"><%- icon('type', 18) %></button>
-  <button type="button" class="fab-btn" data-hc aria-pressed="<%= hc %>" aria-label="โหมดความคมชัดสูง" title="ความคมชัดสูง"><%- icon('contrast', 18) %></button>
   <button type="button" class="fab-btn" id="toTop" aria-label="กลับขึ้นด้านบน" title="กลับขึ้นด้านบน"><%- icon('up', 20) %></button>
   <button type="button" class="fab-bot" id="botBtn" aria-expanded="false" aria-controls="assistant"><%- icon('bot', 24) %><span>ผู้ช่วย</span></button>
 </div>

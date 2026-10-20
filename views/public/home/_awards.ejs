@@ -13,7 +13,7 @@
     <ul class="awc-grid">
       <% awards.forEach(function (a) { %>
       <li class="awc aw-<%= a.owner %> reveal">
-        <span class="awc-img"><% if (a.cover) { %><img src="<%= a.cover %>" alt="" loading="lazy"><% } %><%- icon(awardIcons[a.owner] || 'award', 34) %></span>
+        <span class="awc-img"><% if (a.cover) { %><img src="<%= a.cover %>" alt="" loading="lazy" <%- imgset(a.cover, '(max-width: 640px) 96px, (max-width: 1100px) 33vw, 300px') %>><% } %><%- icon(awardIcons[a.owner] || 'award', 34) %></span>
         <div class="awc-b">
           <span class="aw-badge"><%= owners[a.owner] || 'ผลงาน' %></span>
           <h3><a href="/awards/<%= a.id %>"><%= a.title %></a></h3>

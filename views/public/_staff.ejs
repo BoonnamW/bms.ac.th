@@ -1,7 +1,6 @@
 <%
   // part: top = แถบเลือกหน้า (จอเล็ก) + ปุ่มของผู้ดูแล, list = รายชื่อ/การ์ด
   // รูปเก็บเป็นชื่อไฟล์ใต้ uploads/ หรือเป็นลิงก์รูปบนเว็บเดิม
-  var photo = function (v) { return /^https:\/\//.test(v) ? v : '/uploads/' + v; };
   var back = '/p/' + page.slug;
   var headLabel = page.head_label || 'หัวหน้า';
 %>
@@ -26,7 +25,7 @@
   <ul class="dept-grid">
     <% depts.forEach(function (d) { %>
     <li><a class="dept reveal" href="/p/<%= d.slug %>">
-      <span class="dept-img"><% if (d.lead && d.lead.image) { %><img src="<%= photo(d.lead.image) %>" alt="" loading="lazy"><% } %><%- icon('users', 28) %></span>
+      <span class="dept-img"><% if (d.lead && d.lead.image) { %><img src="<%= upl(d.lead.image) %>" alt="" loading="lazy"><% } %><%- icon('users', 28) %></span>
       <span class="dept-b">
         <b><%= d.title %></b>
         <% if (d.lead && d.lead.is_head) { %><small><%= d.head_label || 'หัวหน้า' %>: <%= d.lead.name %></small><% } %>
@@ -40,7 +39,7 @@
 
 <% if (staff) { %>
   <% var card = function (s, head) { %>
-    <span class="person-img"><% if (s.image) { %><img src="<%= photo(s.image) %>" alt="" loading="lazy"><% } %><%- icon('user', head ? 72 : 56) %></span>
+    <span class="person-img"><% if (s.image) { %><img src="<%= upl(s.image) %>" alt="" loading="lazy"><% } %><%- icon('user', head ? 72 : 56) %></span>
     <span class="person-t">
       <% if (head) { %><span class="badge-head"><%- icon('award', 14) %> <%= headLabel %></span><% } %>
       <b><%= s.name %></b>

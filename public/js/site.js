@@ -35,7 +35,6 @@
 
   // ---------- ขนาดตัวอักษร / ความคมชัดสูง (จำค่าไว้ในคุกกี้ เซิร์ฟเวอร์ใส่ให้ตั้งแต่โหลดหน้า) ----------
   part('a11y', () => {
-    const FS = ['md', 'lg', 'sm'];
     const fs = () => root.dataset.fs || 'md';
     const sync = () => {
       $$('button[data-fs]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.fs === fs())));
@@ -51,7 +50,6 @@
       root.classList.toggle('hc', /\bhc\b/.test(saved));
     }
     $$('button[data-fs]').forEach((b) => b.addEventListener('click', () => setFs(b.dataset.fs)));
-    $$('[data-fs-cycle]').forEach((b) => b.addEventListener('click', () => setFs(FS[(FS.indexOf(fs()) + 1) % FS.length])));
     $$('[data-hc]').forEach((b) => b.addEventListener('click', () => { root.classList.toggle('hc'); sync(); save(); }));
     sync();
   });

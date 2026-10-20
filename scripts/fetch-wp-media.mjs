@@ -26,7 +26,7 @@ const add = (p) => {
   rel = rel.replace(/&amp;/g, '&');
   if (rel && WP_FILE.test(rel) && !rel.split('/').some((s) => s === '..' || s === '')) files.add(rel);
 };
-for (const t of ['news', 'gallery', 'slides']) {
+for (const t of ['news', 'gallery', 'slides', 'awards']) {
   for (const r of db.prepare(`SELECT image FROM ${t} WHERE image LIKE 'wp/%'`).all()) add(r.image.slice(3));
 }
 const logo = getSettings().logo;
@@ -35,6 +35,12 @@ for (const t of ['news', 'pages']) {
   for (const r of db.prepare(`SELECT body FROM ${t}`).all()) {
     for (const m of String(r.body || '').matchAll(/\/uploads\/wp\/([^"'\s<>]+)/g)) add(m[1]);
   }
+}
+
+// รูปย่อของรูปเหล่านี้ที่ WordPress สร้างไว้ (หน้าเว็บใช้ใน srcset) — ต้องมีด้วย ไม่อย่างนั้นรูปจะหายเมื่อปิดเว็บเดิม
+const sizesOf = db.prepare('SELECT sizes FROM wp_media WHERE file=?');
+for (const f of [...files]) {
+  try { for (const [, v] of JSON.parse(sizesOf.get(f)?.sizes || '[]')) add(v); } catch { /* ไม่มีข้อมูลขนาด */ }
 }
 
 // ---------- ดาวน์โหลด (พร้อมกันครั้งละ 4 ไฟล์) ----------

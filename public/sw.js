@@ -1,6 +1,7 @@
 // Service worker: ให้เว็บติดตั้งเป็นแอปได้ และเปิดหน้าที่เคยเข้าชมได้แม้ไม่มีอินเทอร์เน็ต
-// ใช้ "เครือข่ายก่อน" เสมอ — ออนไลน์อยู่จะได้ข้อมูลล่าสุดทุกครั้ง แคชใช้เฉพาะตอนออฟไลน์
-const VERSION = 'v1';
+// หน้าเว็บใช้ "เครือข่ายก่อน" — ออนไลน์อยู่จะได้ข้อมูลล่าสุดทุกครั้ง แคชใช้เฉพาะตอนออฟไลน์
+// ไฟล์ที่มีเลขเวอร์ชัน (?v=) และฟอนต์ใช้ "แคชก่อน" เพราะเนื้อหาไม่เปลี่ยน (เวอร์ชันใหม่ = ที่อยู่ใหม่)
+const VERSION = 'v2';
 const CORE = `core-${VERSION}`, PAGES = `pages-${VERSION}`, ASSETS = `assets-${VERSION}`;
 const CORE_FILES = ['/offline.html', '/theme.css', '/css/site.css', '/js/site.js', '/img/icon-192.png', '/img/favicon-32.png'];
 
@@ -36,11 +37,16 @@ async function networkFirst(req, cacheName, max) {
   }
 }
 
+async function cacheFirst(req, cacheName, max) {
+  return (await caches.match(req)) || networkFirst(req, cacheName, max);
+}
+
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/admin') || url.pathname.startsWith('/api/') || url.pathname.endsWith('.ics')) return;
   if (req.mode === 'navigate') return e.respondWith(networkFirst(req, PAGES, 40));
+  if (url.searchParams.has('v') || url.pathname.startsWith('/fonts/')) return e.respondWith(cacheFirst(req, ASSETS, 120));
   if (/\.(css|js|png|jpe?g|webp|gif|svg|woff2?)$/i.test(url.pathname)) e.respondWith(networkFirst(req, ASSETS, 120));
 });

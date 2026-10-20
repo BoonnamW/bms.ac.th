@@ -14,7 +14,7 @@
         <% if (feat) { %>
         <article class="nf-main">
           <a class="nf-img" href="/news/<%= feat.id %>" tabindex="-1" aria-hidden="true">
-            <% if (feat.image) { %><img src="/uploads/<%= feat.image %>" alt="" loading="lazy"><% } else { %><div class="ph ph-<%= feat.id % 5 %>"><%- icon('book', 48) %></div><% } %>
+            <% if (feat.image) { %><img src="/uploads/<%= feat.image %>" alt="" loading="lazy" <%- imgset(feat.image, '(max-width: 860px) 100vw, 520px') %>><% } else { %><div class="ph ph-<%= feat.id % 5 %>"><%- icon('book', 48) %></div><% } %>
           </a>
           <p class="meta-row"><span class="chip"><%= feat.category %></span><time><%= thDate(feat.created_at) %></time></p>
           <h3><a href="/news/<%= feat.id %>"><%= feat.title %></a></h3>
@@ -25,7 +25,7 @@
           <% rest.forEach(function (n) { %>
           <article class="nf-item">
             <a class="nf-thumb" href="/news/<%= n.id %>" tabindex="-1" aria-hidden="true">
-              <% if (n.image) { %><img src="/uploads/<%= n.image %>" alt="" loading="lazy"><% } else { %><div class="ph ph-<%= n.id % 5 %>"><%- icon('book', 26) %></div><% } %>
+              <% if (n.image) { %><img src="/uploads/<%= n.image %>" alt="" loading="lazy" <%- imgset(n.image, '160px') %>><% } else { %><div class="ph ph-<%= n.id % 5 %>"><%- icon('book', 26) %></div><% } %>
             </a>
             <div>
               <p class="meta-row"><span class="chip"><%= n.category %></span><time><%= thDate(n.created_at) %></time></p>
@@ -48,7 +48,6 @@
       <% } else { %>
         <div class="ev-empty"><%- icon('calendar', 34) %><p>ยังไม่มีกิจกรรมที่กำลังจะมาถึง</p><a href="/calendar">ดูปฏิทินกิจกรรม</a></div>
       <% } %>
-      <a class="ical" href="/calendar#subscribe"><%- icon('rss', 15) %> ติดตามปฏิทินโรงเรียน (iCal)</a>
     </aside>
   </div>
 </section>

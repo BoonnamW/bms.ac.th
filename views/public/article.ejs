@@ -10,7 +10,7 @@
   <div class="wrap two">
     <div class="main-col">
       <article class="prose">
-        <% if (item.image) { %><img class="cover" src="/uploads/<%= item.image %>" alt=""><% } %>
+        <% if (item.image) { %><img class="cover" src="/uploads/<%= item.image %>" alt="" <%- imgset(item.image, '(max-width: 860px) 100vw, 820px') %>><% } %>
         <%- item.body %>
       </article>
       <% if (photos) { %><%- include('_photos', { photos: photos, caption: item.title, heading: 'ภาพกิจกรรม', back: '/news/' + item.id }) %><% } %>
@@ -28,7 +28,7 @@
     <aside class="side">
       <h3>ข่าวล่าสุด</h3>
       <ul class="side-news"><% recent.forEach(function (r) { %>
-        <li><a href="/news/<%= r.id %>"><% if (r.image) { %><img src="/uploads/<%= r.image %>" alt="" loading="lazy"><% } %><span><%= r.title %><time><%= thDate(r.created_at) %></time></span></a></li><% }) %></ul>
+        <li><a href="/news/<%= r.id %>"><% if (r.image) { %><img src="/uploads/<%= r.image %>" alt="" loading="lazy" <%- imgset(r.image, '64px') %>><% } %><span><%= r.title %><time><%= thDate(r.created_at) %></time></span></a></li><% }) %></ul>
       <a class="more" href="/news">ข่าวทั้งหมด <%- icon('arrow', 15) %></a>
     </aside>
   </div>

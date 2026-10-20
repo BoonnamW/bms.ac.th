@@ -1,6 +1,5 @@
 <%- include('_head') %>
 <%
-  var img = function (v) { return !v ? '' : /^https:\/\//.test(v) ? v : '/uploads/' + v; };
   var logo = S.logo ? '/uploads/' + S.logo : '/img/icon-192.png';
   var row = (issue && issue.row) || {};
   var number = issue && issue.number, cover = issue ? issue.cover : '';
@@ -48,7 +47,7 @@
       <section class="eb-page eb-cover" data-fixed aria-label="ปกหน้า">
         <div class="ebc-top"><img src="<%= logo %>" alt="" data-fallback="/img/icon-192.png"><span><%= S.school_name %><small><%= S.school_name_en %></small></span><% if (issueLine) { %><span class="ebc-no"><%= issueLine %></span><% } %></div>
         <div class="ebc-mast"><h2><%= name %></h2><p>จดหมายข่าวประจำเดือน<b><%= label %></b></p></div>
-        <figure class="ebc-img"><% if (cover) { %><img src="<%= img(cover) %>" alt=""><% } %><%- icon('bookopen', 56) %></figure>
+        <figure class="ebc-img"><% if (cover) { %><img src="<%= upl(cover) %>" alt=""><% } %><%- icon('bookopen', 56) %></figure>
         <div class="ebc-in"><h3>ในฉบับนี้</h3>
           <ol><% highlights.forEach(function (e) { %><li class="sec-<%= e.section %>"><span><%= sections[e.section] %></span><b><%= e.title %></b></li><% }) %></ol></div>
         <div class="ebc-foot"><span><%= host %>/journal</span><span><%= S.phone || '' %></span></div>
@@ -67,8 +66,8 @@
 
       <% entries.forEach(function (e) {
         // รูปทั้งหมดของบทความ: รูปหลัก · รูปประกอบที่อัปโหลด · รูปจาก Google Drive
-        var main = e.image ? img(e.image) : '';
-        var extra = pics(e.images).map(function (x) { return img(x); }).concat(e.photos.map(function (p) { return '/gdrive/t/' + p.id; }));
+        var main = e.image ? upl(e.image) : '';
+        var extra = pics(e.images).map(function (x) { return upl(x); }).concat(e.photos.map(function (p) { return '/gdrive/t/' + p.id; }));
         var layout = e.layout || 'top';
         if (layout === 'feature' && !main && extra.length) main = extra.shift();
         if (layout === 'feature' && !main) layout = 'top';
