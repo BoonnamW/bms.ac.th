@@ -62,6 +62,14 @@
       <% } %>
     </div>
   </div>
+  <% if (typeof extLinks !== 'undefined' && extLinks.length) { %>
+  <nav class="wrap foot-ext" aria-labelledby="extTitle">
+    <h4 id="extTitle">หน่วยงานภายนอก <small>External Links</small></h4>
+    <ul class="ext-grid">
+      <% extLinks.forEach(function (l) { %><li><a href="<%= l.url %>" target="_blank" rel="noopener"><%- icon('external', 14) %><span><%= l.title %></span></a></li><% }) %>
+    </ul>
+  </nav>
+  <% } %>
   <div class="copy">
     <div class="wrap copy-in">
       <span>© <%= new Date().getFullYear() + 543 %> <%= S.school_name %><%= S.footer_text ? ' · ' + S.footer_text : '' %></span>

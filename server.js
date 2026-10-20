@@ -1,7 +1,7 @@
 import express from 'express';
 import helmet from 'helmet';
 import path from 'node:path';
-import { getSettings, ROOT, UPLOAD_DIR } from './lib/db.js';
+import { db, getSettings, ROOT, UPLOAD_DIR } from './lib/db.js';
 import { navTree } from './lib/nav.js';
 import { parseCookies, icon, thDate, thDateTime, thTime, dateParts, token, IFRAME_HOSTS, WP_FILE } from './lib/helpers.js';
 import publicRoutes from './routes/public.js';
@@ -109,6 +109,7 @@ app.get('/theme.css', (req, res) => {
 });
 
 // ---------- ตัวแปรที่ใช้ร่วมกันทุกหน้า ----------
+const extLinksSql = db.prepare('SELECT title, url FROM ext_links WHERE active=1 ORDER BY sort, id');
 app.use((req, res, next) => {
   const S = getSettings();
   // ค่าที่ผู้ชมเลือกเอง (ขนาดตัวอักษร ความคมชัดสูง ปิดประกาศ) ใส่ให้ตั้งแต่โหลดหน้า หน้าจะไม่กระพริบ
@@ -119,6 +120,7 @@ app.use((req, res, next) => {
     icon, thDate, thDateTime, thTime, dateParts, S, path: req.path, url: req.originalUrl, title: '', v: assetVersion,
     fs: (pref.match(/\b(sm|lg)\b/) || [])[1] || '', hc: /\bhc\b/.test(pref),
     annKey: ann && req.cookies.ann !== ann ? ann : '',
+    extLinks: extLinksSql.all(), // ลิงก์หน่วยงานภายนอกท้ายเว็บ
   });
   next();
 });

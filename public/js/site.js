@@ -67,6 +67,22 @@
     $$('img').forEach((img) => { if (img.complete && img.getAttribute('src') && !img.naturalWidth) fix(img); });
   });
 
+  // ---------- ป๊อปอัปก่อนเข้าเว็บ (หน้าแรก): ครั้งเดียวต่อการเปิดเว็บ / วันละครั้ง / ทุกครั้ง ตามที่ตั้งไว้ ----------
+  part('popup', () => {
+    const d = $('#popup');
+    if (!d || typeof d.showModal !== 'function') return;
+    const freq = d.dataset.frequency;
+    const key = `popup-${d.dataset.key}`, today = new Date().toLocaleDateString('en-CA');
+    let store = null;
+    try { store = freq === 'day' ? localStorage : sessionStorage; } catch { /* เบราว์เซอร์ปิดการเก็บข้อมูล */ }
+    let seen = '';
+    try { seen = store?.getItem(key) || ''; } catch { /* เช่นเดียวกัน */ }
+    if (freq !== 'always' && (freq === 'day' ? seen === today : seen)) return;
+    d.addEventListener('click', (e) => { if (e.target === d || e.target.closest('[data-close]')) d.close(); });
+    d.showModal();
+    try { store?.setItem(key, today); } catch { /* ไม่เป็นไร */ } // แสดงแล้ว = เห็นแล้ว
+  });
+
   // ---------- ประกาศสำคัญ (ปิดแล้วไม่แสดงซ้ำจนกว่าจะมีประกาศใหม่) ----------
   part('announce', () => {
     const a = $('#announce');

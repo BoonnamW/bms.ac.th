@@ -361,6 +361,12 @@ h1,h2,h3,h4{font-family:var(--f-head);line-height:1.3;font-weight:600}
 .counter{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:16px}
 .counter div{background:rgba(255,255,255,.07);border-radius:10px;padding:8px 4px;text-align:center;line-height:1.25}
 .counter b{display:block;color:#fff;font:600 1rem var(--f-head)}.counter span{font-size:.7rem;color:#a9b8c8}
+.foot-ext{border-top:1px solid rgba(255,255,255,.1);padding:24px 0 26px}
+.foot-ext h4{margin-bottom:12px}
+.ext-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px 22px}
+.ext-grid a{display:flex;gap:8px;align-items:flex-start;line-height:1.45;transition:.15s}
+.ext-grid .ic{color:var(--accent-lt);margin-top:4px}
+.ext-grid a:hover{color:#fff;text-decoration:underline}
 .copy{border-top:1px solid rgba(255,255,255,.1);padding:16px 0;font-size:.8rem;color:#a9b8c8}
 .copy-in{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .copy nav{display:flex;gap:16px;flex-wrap:wrap}
@@ -404,6 +410,26 @@ h1,h2,h3,h4{font-family:var(--f-head);line-height:1.3;font-weight:600}
 .cookie .btn{flex:none;white-space:nowrap}
 .tip{position:fixed;z-index:120;pointer-events:none;background:var(--ink);color:#fff;border-radius:10px;padding:6px 10px;font-size:.8rem;line-height:1.35;box-shadow:var(--shadow-l);max-width:240px}
 .tip b{display:block;font:600 .95rem var(--f-head)}.tip span{color:#c7d0dc}
+
+/* ---------- ป๊อปอัปก่อนเข้าเว็บ ---------- */
+.popup{margin:auto;border:0;padding:0;border-radius:20px;width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:var(--ink);box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.popup::backdrop{background:rgba(10,16,28,.62);backdrop-filter:blur(3px)}
+.popup[open]{animation:pop-in .35s ease-out}
+@keyframes pop-in{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+.popup-x{position:absolute;top:10px;right:10px;z-index:2;width:38px;height:38px;border-radius:50%;border:0;background:rgba(0,0,0,.5);color:#fff;display:grid;place-items:center;cursor:pointer}
+.popup-x:hover{background:rgba(0,0,0,.75)}
+.popup-img{display:block;background:#0e1420}
+.popup-img img{width:100%;max-height:68vh;object-fit:contain;margin:0 auto}
+.popup-hero{position:relative;height:230px;overflow:hidden;background:var(--primary-dd)}
+.popup-hero>img{width:100%;height:100%;object-fit:cover}
+.popup-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,color-mix(in srgb,var(--primary-dd) 88%,transparent),transparent 72%)}
+.popup-brand{position:absolute;left:22px;bottom:16px;z-index:1;display:flex;gap:12px;align-items:center;color:#fff;font:600 1.05rem/1.25 var(--f-head)}
+.popup-brand img{width:50px;height:50px;border-radius:12px;background:#fff;padding:3px;object-fit:contain}
+.popup-brand small{display:block;font:400 .74rem var(--f-body);opacity:.85}
+.popup-b{padding:20px 24px 24px;display:grid;gap:10px}
+.popup-b h2{font-size:1.35rem;color:var(--primary-d)}
+.popup-b p{color:var(--ink2);white-space:pre-line}
+.popup-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:6px}
 
 /* ---------- inner pages ---------- */
 .pagehead{background:radial-gradient(circle at 90% 10%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 40%),linear-gradient(120deg,var(--primary-dd),var(--primary-d));color:#fff;padding:40px 0 38px}
@@ -737,4 +763,7 @@ html.hc .nav-top small,html.hc .en,html.hc .q-t small{color:#000}
   .dept-grid{grid-template-columns:minmax(0,1fr)}
   .kpi-hero strong{font-size:2.4rem}
   .oit-grid,.link-grid{grid-template-columns:minmax(0,1fr)}
+  .popup-hero{height:160px}
+  .popup-b{padding:16px 18px 20px}
+  .popup-btns .btn{flex:1}
 }

@@ -293,4 +293,27 @@
   </div>
 </section>
 
+<% if (popup) { var pimg = popup.image ? '/uploads/' + popup.image : ''; %>
+<dialog class="popup" id="popup" data-key="<%= popup.key %>" data-frequency="<%= popup.frequency || 'session' %>" aria-labelledby="popupTitle">
+  <button type="button" class="popup-x" data-close aria-label="ปิดหน้าต่างนี้"><%- icon('x', 20) %></button>
+  <% if (pimg) { %>
+    <% if (popup.link) { %><a class="popup-img" href="<%= popup.link %>"><img src="<%= pimg %>" alt="<%= popup.title %>"></a>
+    <% } else { %><span class="popup-img"><img src="<%= pimg %>" alt="<%= popup.title %>"></span><% } %>
+  <% } else { %>
+    <div class="popup-hero">
+      <img src="/img/hero.jpg" alt="">
+      <span class="popup-brand"><img src="<%= S.logo ? '/uploads/' + S.logo : '/img/icon-192.png' %>" alt="" data-fallback="/img/icon-192.png"><span><%= S.school_name %><small><%= S.school_name_en %></small></span></span>
+    </div>
+  <% } %>
+  <div class="popup-b">
+    <h2 id="popupTitle"><%= popup.title %></h2>
+    <% if (popup.body) { %><p><%= popup.body %></p><% } %>
+    <div class="popup-btns">
+      <% if (popup.link) { %><a class="btn btn-ghost" href="<%= popup.link %>"><%= popup.link_text || 'ดูรายละเอียด' %></a><% } %>
+      <button type="button" class="btn btn-primary" data-close autofocus>เข้าสู่เว็บไซต์ <%- icon('arrow', 16) %></button>
+    </div>
+  </div>
+</dialog>
+<% } %>
+
 <%- include('_foot') %>
