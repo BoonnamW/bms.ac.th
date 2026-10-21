@@ -205,3 +205,17 @@ form.dirty .ar-status{color:#8a5a00}
 .ar-dlg h2{font-size:19px}
 .ar-err{color:#b42318;font-size:14px}
 @media (max-width:760px){.ar-card{padding:16px}.ar-head{flex-direction:column}.ar-bar .btn{padding:8px 14px;font-size:14px}.ar-row{flex-wrap:wrap}.ar-acts{width:100%;justify-content:flex-start;padding-left:44px}.ar-sub{margin-left:14px}}
+/* ผู้ใช้งาน */
+.issued{background:#fff8e1;border-left:4px solid var(--accent);padding:14px 18px;border-radius:0 12px 12px 0;margin-bottom:18px;display:grid;gap:6px}
+.issued code{font:600 15px ui-monospace,Menlo,Consolas,monospace;background:#fff;padding:2px 8px;border-radius:6px;border:1px solid var(--line)}
+.issued .pw{font-size:18px;letter-spacing:.06em;user-select:all}
+.issued .muted,.us-add .muted{color:var(--muted);font-size:14px}
+.us-add{margin-bottom:18px}
+.us-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;align-items:end}
+.pill.warn{background:#fff4e5;color:#9a3412}
+.btn.sm{padding:6px 12px;font-size:13.5px}
+.act select{width:auto;padding:5px 8px;font-size:14px}
+.us-tbl td,.us-tbl th{white-space:nowrap}
+.us-tbl td.act{white-space:normal}
+.us-act{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;align-items:center;min-width:240px}
+.us-act form{display:flex;gap:6px;align-items:center}

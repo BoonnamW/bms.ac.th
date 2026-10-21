@@ -1,0 +1,28 @@
+<%- include('_head') %>
+<%
+  var mb = function (n) { return (n / 1048576).toLocaleString('th-TH', { maximumFractionDigits: 1 }) + ' MB'; };
+%>
+<div class="dash2">
+  <section class="panel">
+    <h3>ดาวน์โหลดไฟล์สำรอง</h3>
+    <p>ได้ไฟล์ <b>.zip</b> หนึ่งไฟล์ ข้างในมีฐานข้อมูล (ข่าว หน้าเว็บ ผลงาน บุคลากร ผู้ใช้ การตั้งค่า) และรูปหรือเอกสารที่อัปโหลดจากหลังบ้าน
+      ระบบทำสำเนาขณะเว็บเปิดอยู่ได้ ไม่ต้องหยุดเว็บ</p>
+    <p class="muted">ขนาดโดยประมาณก่อนบีบอัด: ฐานข้อมูล <%= mb(sum.dbBytes) %> · ไฟล์อัปโหลด <%= sum.files.toLocaleString('th-TH') %> ไฟล์ <%= mb(sum.upBytes) %></p>
+    <% if (sum.tooBig) { %>
+    <div class="alert err">ข้อมูลรวมใหญ่เกิน 3.5 GB — ใช้วิธีบีบอัดโฟลเดอร์ข้อมูลใน File Manager ของโฮสต์แทน</div>
+    <% } else { %>
+    <form method="post" action="/admin/backup"><input type="hidden" name="_csrf" value="<%= csrf %>">
+      <button class="btn">⬇ ดาวน์โหลดไฟล์สำรอง</button></form>
+    <% } %>
+    <p class="muted">ไม่รวมไฟล์ของ WordPress เดิม (สำรองแยก) และสำเนารูปจาก Google Drive (ระบบดึงใหม่เอง)</p>
+  </section>
+  <section class="panel">
+    <h3>เก็บไฟล์ให้ปลอดภัย</h3>
+    <ul class="todo">
+      <li>อัปโหลดไว้ใน Google Drive ของโรงเรียน ตั้งการเข้าถึงเป็น <b>จำกัด</b> — ไฟล์มีรหัสผ่านหลังบ้าน (แบบเข้ารหัส) และข้อความจากผู้ติดต่อ</li>
+      <li>ทำทุกเดือน และทุกครั้งหลังลงข้อมูลสำคัญ เก็บย้อนหลังไว้ 3–6 ไฟล์</li>
+      <li>วิธีกู้คืนอยู่ในไฟล์ <code>อ่านก่อน-วิธีกู้คืน.txt</code> ข้างในไฟล์สำรอง</li>
+    </ul>
+  </section>
+</div>
+<%- include('_foot') %>

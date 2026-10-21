@@ -19,23 +19,27 @@
   </div>
   <nav id="sbNav">
     <a href="/admin" class="<%= (path === '/admin' || path === '/admin/') ? 'on' : '' %>">แดชบอร์ด</a>
-    <a href="/admin/arrange" class="<%= path.startsWith('/admin/arrange') ? 'on' : '' %>">จัดเมนูและหน้าแรก (ลากวาง)</a>
+    <% if (user.role === 'admin') { %><a href="/admin/arrange" class="<%= path.startsWith('/admin/arrange') ? 'on' : '' %>">จัดเมนูและหน้าแรก (ลากวาง)</a><% } %>
     <% [['เนื้อหา', ['news', 'journal_entries', 'journal_issues', 'events', 'awards', 'albums', 'pages', 'staff', 'gallery']], ['หน้าแรก', ['popups', 'slides', 'links', 'stats', 'programs', 'highlights']],
-        ['เมนูและบริการ', ['menu_items', 'services']]].forEach(function (g) { %>
+        ['เมนูและบริการ', ['menu_items', 'services']]].forEach(function (g) { var ks = g[1].filter(can); if (!ks.length) return; %>
     <p><%= g[0] %></p>
-    <% g[1].forEach(function (k) { %>
+    <% ks.forEach(function (k) { %>
       <a href="/admin/<%= k %>" class="<%= path === '/admin/' + k || path.startsWith('/admin/' + k + '/') ? 'on' : '' %>"><%= entities[k].title %></a>
     <% }) %>
     <% }) %>
     <p>ระบบ</p>
+    <% if (user.role === 'admin') { %>
     <a href="/admin/messages" class="<%= path.startsWith('/admin/messages') ? 'on' : '' %>"><%= entities.messages.title %></a>
     <a href="/admin/colors" class="<%= path.startsWith('/admin/colors') ? 'on' : '' %>">ปรับสีเว็บไซต์</a>
     <a href="/admin/settings" class="<%= path.startsWith('/admin/settings') ? 'on' : '' %>">ตั้งค่าเว็บไซต์</a>
+    <a href="/admin/users" class="<%= path.startsWith('/admin/users') ? 'on' : '' %>">ผู้ใช้งาน</a>
+    <a href="/admin/backup" class="<%= path.startsWith('/admin/backup') ? 'on' : '' %>">สำรองข้อมูล</a>
+    <% } %>
     <a href="/admin/password" class="<%= path.startsWith('/admin/password') ? 'on' : '' %>">เปลี่ยนรหัสผ่าน</a>
   </nav>
   <div class="sb-foot">
     <a href="/" target="_blank" rel="noopener">ดูหน้าเว็บไซต์ ↗</a>
-    <form method="post" action="/admin/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>ออกจากระบบ (<%= user.username %>)</button></form>
+    <form method="post" action="/admin/logout"><input type="hidden" name="_csrf" value="<%= csrf %>"><button>ออกจากระบบ (<%= user.name || user.username %> · <%= roles[user.role] || '' %>)</button></form>
   </div>
 </aside>
 <main class="main">

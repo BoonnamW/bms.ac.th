@@ -1,0 +1,57 @@
+<%- include('_head') %>
+<% if (error) { %><div class="alert err" role="alert"><%= error %></div><% } %>
+<% if (notice) { %><div class="alert ok" role="status"><%= notice %></div><% } %>
+<% if (issued) { %>
+<div class="issued" role="status">
+  <p><b><%= issued.added ? 'สร้างบัญชีแล้ว' : 'ตั้งรหัสผ่านใหม่แล้ว' %></b> — ชื่อผู้ใช้ <code><%= issued.username %></code> รหัสผ่านชั่วคราว <code class="pw"><%= issued.password %></code></p>
+  <p class="muted">แจ้งรหัสนี้กับเจ้าของบัญชีโดยตรง รหัสแสดงครั้งเดียว ออกจากหน้านี้แล้วดูอีกไม่ได้ · เข้าระบบครั้งแรกแล้วระบบจะให้ตั้งรหัสผ่านใหม่ของตัวเอง</p>
+</div>
+<% } %>
+<section class="panel us-add">
+  <h3>เพิ่มผู้ใช้</h3>
+  <form class="us-form" method="post" action="/admin/users/add">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="fld"><label for="uU">ชื่อผู้ใช้ (ภาษาอังกฤษ)</label>
+      <input id="uU" name="username" required maxlength="30" pattern="[a-z0-9][a-z0-9._\-]{2,29}" placeholder="เช่น somchai.k" autocomplete="off" autocapitalize="none" spellcheck="false"></div>
+    <div class="fld"><label for="uN">ชื่อ-นามสกุล</label><input id="uN" name="name" maxlength="80" placeholder="เช่น ครูสมชาย ใจดี"></div>
+    <div class="fld"><label for="uR">สิทธิ์</label>
+      <select id="uR" name="role"><option value="editor">ผู้ลงเนื้อหา</option><option value="admin">ผู้ดูแลระบบ</option></select></div>
+    <div class="fld"><button class="btn">+ เพิ่มผู้ใช้</button></div>
+  </form>
+  <p class="muted"><b>ผู้ลงเนื้อหา</b> จัดการข่าว ผลงาน อัลบั้ม เบญจมาฯ สาร ปฏิทิน หน้าเว็บ บุคลากร และส่วนต่าง ๆ ของหน้าแรกได้ ·
+    <b>ผู้ดูแลระบบ</b> ทำได้ทุกอย่าง รวมถึงตั้งค่า สี เมนู ข้อความติดต่อ ผู้ใช้งาน และไฟล์สำรอง</p>
+</section>
+<div class="tablewrap">
+<table class="tbl us-tbl">
+  <thead><tr><th>ชื่อผู้ใช้</th><th>ชื่อ</th><th>สิทธิ์</th><th>สถานะ</th><th>เข้าใช้ล่าสุด</th><th class="r">จัดการ</th></tr></thead>
+  <tbody>
+  <% users.forEach(function (u) { var me = u.id === user.id; %>
+    <tr>
+      <td><strong><%= u.username %></strong><% if (me) { %> <span class="pill no">บัญชีของคุณ</span><% } %></td>
+      <td><%= u.name || '' %></td>
+      <td><%= roles[u.role] || u.role %></td>
+      <td><% if (!u.active) { %><span class="pill no">ปิดบัญชี</span>
+        <% } else if (u.locked_until > now) { %><span class="pill warn">ล็อกชั่วคราว</span>
+        <% } else if (u.must_change) { %><span class="pill warn">รอตั้งรหัสผ่าน</span>
+        <% } else { %><span class="pill yes">ใช้งานอยู่</span><% } %></td>
+      <td><%= u.last_login ? thDateTime(new Date(u.last_login).toISOString().slice(0, 19).replace('T', ' ')) : '—' %></td>
+      <td class="r act"><div class="us-act">
+        <% if (me) { %><a href="/admin/password">เปลี่ยนรหัสผ่าน</a><% } else { %>
+        <form method="post" action="/admin/users/<%= u.id %>/role"><input type="hidden" name="_csrf" value="<%= csrf %>">
+          <select name="role" aria-label="สิทธิ์ของ <%= u.username %>"><% Object.keys(roles).forEach(function (k) { %><option value="<%= k %>"<%= k === u.role ? ' selected' : '' %>><%= roles[k] %></option><% }) %></select>
+          <button class="btn ghost sm">บันทึกสิทธิ์</button></form>
+        <form method="post" action="/admin/users/<%= u.id %>/active"<% if (u.active) { %> data-confirm="ปิดบัญชี <%= u.username %>? ผู้ใช้จะออกจากระบบทันทีและเข้าใหม่ไม่ได้จนกว่าจะเปิดอีกครั้ง"<% } %>>
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="active" value="<%= u.active ? 0 : 1 %>">
+          <button class="btn ghost sm"><%= u.active ? 'ปิดบัญชี' : 'เปิดบัญชี' %></button></form>
+        <form method="post" action="/admin/users/<%= u.id %>/reset" data-confirm="ตั้งรหัสผ่านชั่วคราวใหม่ให้ <%= u.username %>? รหัสเดิมจะใช้ไม่ได้อีก">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn ghost sm">ตั้งรหัสใหม่</button></form>
+        <form method="post" action="/admin/users/<%= u.id %>/delete" data-confirm="ลบบัญชี <%= u.username %>? การลบไม่สามารถกู้คืนได้ (ปิดบัญชีแทนได้ถ้าอาจกลับมาใช้)">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><button class="del">ลบ</button></form>
+        <% } %>
+      </div></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<%- include('_foot') %>

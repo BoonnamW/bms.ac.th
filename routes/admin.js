@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import multer from 'multer';
 import bcrypt from 'bcryptjs';
+import crypto from 'node:crypto';
 import rateLimit from 'express-rate-limit';
 import { db, getSettings } from '../lib/db.js';
-import { entities, settingsFields, colorFields } from '../lib/entities.js';
+import { entities, settingsFields, colorFields, ROLES, canManage } from '../lib/entities.js';
+import { backupSummary, writeBackup } from '../lib/backup.js';
 import { SCHOOL_COLORS } from '../lib/seed.js';
 import { HOME_SECTIONS, homeLayout } from '../lib/home.js';
 import { sessionOf } from '../lib/session.js';
@@ -33,7 +35,7 @@ r.use((req, res, next) => {
 const extendSql = db.prepare('UPDATE sessions SET expires=? WHERE id=?');
 function loadSession(req, res, next) {
   const row = sessionOf(req);
-  req.user = row ? { id: row.uid, username: row.username, must_change: row.must_change } : null;
+  req.user = row ? { id: row.uid, username: row.username, name: row.name, role: row.role, must_change: row.must_change } : null;
   if (row) {
     req.csrf = row.csrf; req.sidHash = row.id;
     if (row.expires - Date.now() < SESSION_MS - 5 * 60e3) { // ต่ออายุไม่เกินทุก 5 นาที
@@ -43,6 +45,8 @@ function loadSession(req, res, next) {
   }
   res.locals.user = req.user;
   res.locals.csrf = req.csrf || '';
+  res.locals.roles = ROLES;
+  res.locals.can = (key) => canManage(req.user, key);
   next();
 }
 r.use(loadSession);
@@ -59,6 +63,9 @@ const requireAuth = (req, res, next) => {
   if (req.user.must_change && req.path !== '/password' && req.path !== '/logout') return res.redirect('/admin/password');
   next();
 };
+// ตั้งค่า สี การจัดเมนู ผู้ใช้งาน และไฟล์สำรอง — ใช้หลัง requireAuth
+const forbidden = (res) => res.status(403).render('admin/message', { title: 'ไม่มีสิทธิ์', msg: 'หน้านี้สำหรับผู้ดูแลระบบเท่านั้น หากต้องใช้งาน กรุณาติดต่อผู้ดูแลระบบของโรงเรียน' });
+const requireAdmin = (req, res, next) => (req.user.role === 'admin' ? next() : forbidden(res));
 
 // ตรวจ CSRF token — ต้องเรียกหลัง multer/urlencoded แปลง body แล้ว
 const csrfCheck = (req, res, next) => {
@@ -96,7 +103,8 @@ r.post('/login', loginLimiter, async (req, res) => {
     }
     return fail('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง');
   }
-  db.prepare('UPDATE users SET fails=0, locked_until=0 WHERE id=?').run(u.id);
+  if (!u.active) return fail('บัญชีนี้ถูกปิดใช้งาน กรุณาติดต่อผู้ดูแลระบบ');
+  db.prepare('UPDATE users SET fails=0, locked_until=0, last_login=? WHERE id=?').run(Date.now(), u.id);
   startSession(req, res, u.id); // สร้าง session ใหม่ทุกครั้ง (กัน session fixation)
   res.redirect('/admin');
 });
@@ -125,19 +133,20 @@ r.post('/password', requireAuth, csrfCheck, async (req, res) => {
 
 // ---------- แดชบอร์ด ----------
 r.get('/', requireAuth, (req, res) => {
+  const shown = Object.fromEntries(Object.entries(entities).filter(([k]) => canManage(req.user, k)));
   const counts = {};
-  for (const k of Object.keys(entities)) counts[k] = db.prepare(`SELECT COUNT(*) c FROM ${k}`).get().c;
+  for (const k of Object.keys(shown)) counts[k] = db.prepare(`SELECT COUNT(*) c FROM ${k}`).get().c;
   // ความพร้อมของหน้าเปิดเผยข้อมูล (OIT): หน้าที่ยังเป็นข้อความรอข้อมูล
   const oit = db.prepare("SELECT id, title, slug, body LIKE '<p>อยู่ระหว่างจัดเตรียมข้อมูล%' AS pending FROM pages WHERE slug LIKE 'oit-o%' ORDER BY sort, id").all();
   const upcoming = db.prepare("SELECT COUNT(*) c FROM events WHERE published=1 AND COALESCE(NULLIF(end_at,''), start_at) >= datetime('now')").get().c;
-  res.render('admin/dashboard', { title: 'แดชบอร์ด', counts, entities, oit, upcoming });
+  res.render('admin/dashboard', { title: 'แดชบอร์ด', counts, entities: shown, oit, upcoming });
 });
 
 // ---------- ตั้งค่าเว็บไซต์ ----------
-r.get('/settings', requireAuth, (req, res) =>
+r.get('/settings', requireAuth, requireAdmin, (req, res) =>
   res.render('admin/settings', { title: 'ตั้งค่าเว็บไซต์', fields: settingsFields, values: getSettings(), errors: [], saved: req.query.saved === '1' }));
 
-r.post('/settings', requireAuth, upload.single('logo'), csrfCheck, (req, res) => {
+r.post('/settings', requireAuth, requireAdmin, upload.single('logo'), csrfCheck, (req, res) => {
   const current = getSettings();
   const { values, errors } = validate(settingsFields, req.body, current);
   let newImg = null;
@@ -157,8 +166,8 @@ r.post('/settings', requireAuth, upload.single('logo'), csrfCheck, (req, res) =>
 // ---------- ปรับสีเว็บไซต์: สีประจำโรงเรียน 4 สี + สีแต่ละส่วน (มีตัวอย่างหน้าเว็บให้ดูขณะเลือก) ----------
 const renderColors = (res, values, errors = [], saved = false, status = 200) => res.status(status)
   .render('admin/colors', { title: 'ปรับสีเว็บไซต์', fields: colorFields, values, errors, saved, defaults: SCHOOL_COLORS });
-r.get('/colors', requireAuth, (req, res) => renderColors(res, getSettings(), [], req.query.saved === '1'));
-r.post('/colors', requireAuth, csrfCheck, (req, res) => {
+r.get('/colors', requireAuth, requireAdmin, (req, res) => renderColors(res, getSettings(), [], req.query.saved === '1'));
+r.post('/colors', requireAuth, requireAdmin, csrfCheck, (req, res) => {
   const current = getSettings();
   const { values, errors } = validate(colorFields, req.body, current);
   if (errors.length) return renderColors(res, { ...current, ...values }, errors, false, 400);
@@ -216,8 +225,8 @@ const renderArrange = (req, res, errors = [], status = 200) => {
     home: homeLayout(getSettings().home_sections).map((x) => ({ ...x, label: HOME_SECTIONS[x.k].label })),
   });
 };
-r.get('/arrange', requireAuth, (req, res) => renderArrange(req, res));
-r.post('/arrange/menu', requireAuth, csrfCheck, (req, res) => {
+r.get('/arrange', requireAuth, requireAdmin, (req, res) => renderArrange(req, res));
+r.post('/arrange/menu', requireAuth, requireAdmin, csrfCheck, (req, res) => {
   const rows = menuRows();
   if (req.body.rev !== menuRev(rows)) return renderArrange(req, res, ['มีการแก้ไขเมนูจากที่อื่นระหว่างที่จัดอยู่ — หน้านี้แสดงเมนูล่าสุดแล้ว กรุณาจัดอีกครั้ง'], 409);
   const { items, errors } = parseMenu(req.body.data, new Set(rows.map((x) => x.id)));
@@ -240,7 +249,7 @@ r.post('/arrange/menu', requireAuth, csrfCheck, (req, res) => {
   } catch (e) { db.exec('ROLLBACK'); throw e; }
   res.redirect('/admin/arrange?saved=menu');
 });
-r.post('/arrange/home', requireAuth, csrfCheck, (req, res) => {
+r.post('/arrange/home', requireAuth, requireAdmin, csrfCheck, (req, res) => {
   let list;
   try { list = JSON.parse(req.body.data || ''); } catch { list = null; }
   if (!Array.isArray(list)) return renderArrange(req, res, ['ข้อมูลลำดับหน้าแรกไม่ถูกต้อง'], 400);
@@ -258,10 +267,89 @@ r.post('/gdrive/refresh', requireAuth, csrfCheck, async (req, res) => {
   res.redirect(`${back}${back.includes('?') ? '&' : '?'}drive=${r2.ok ? 'ok' : 'err'}`);
 });
 
+// ---------- ผู้ใช้งาน (เฉพาะผู้ดูแลระบบ) ----------
+// บัญชีแยกรายคน · รหัสผ่านแรกเข้าสุ่มให้และแสดงครั้งเดียว เจ้าของบัญชีต้องตั้งรหัสใหม่เมื่อเข้าครั้งแรก
+// แก้บัญชีของตัวเองที่หน้านี้ไม่ได้ (กันปิดหรือลดสิทธิ์ตัวเองจนไม่เหลือผู้ดูแลระบบ)
+const USERNAME = /^[a-z0-9][a-z0-9._-]{2,29}$/;
+const TEMP_CHARS = 'abcdefghjkmnpqrstuvwxyz23456789'; // ไม่มีตัวที่อ่านสับสนง่าย (0 o 1 l i)
+const tempPassword = () => Array.from({ length: 10 }, () => TEMP_CHARS[crypto.randomInt(TEMP_CHARS.length)]).join('');
+const usersSql = db.prepare('SELECT id, username, name, role, active, must_change, last_login, locked_until FROM users ORDER BY role, username');
+const otherAdmins = (id) => db.prepare("SELECT COUNT(*) c FROM users WHERE role='admin' AND active=1 AND id<>?").get(id).c;
+const isLastAdmin = (u) => u.role === 'admin' && u.active && otherAdmins(u.id) === 0;
+
+function renderUsers(req, res, { notice = '', error = '', issued = null } = {}) {
+  res.status(error ? 400 : 200).render('admin/users', { title: 'ผู้ใช้งาน', users: usersSql.all(), notice, error, issued, now: Date.now() });
+}
+function targetUser(req, res, next) {
+  const u = db.prepare('SELECT * FROM users WHERE id=?').get(Number(req.params.id) || 0);
+  if (!u) return renderUsers(req, res, { error: 'ไม่พบบัญชีผู้ใช้' });
+  if (u.id === req.user.id) return renderUsers(req, res, { error: 'แก้บัญชีของตัวเองที่หน้านี้ไม่ได้ — เปลี่ยนรหัสผ่านได้ที่เมนู “เปลี่ยนรหัสผ่าน”' });
+  req.target = u;
+  next();
+}
+
+r.get('/users', requireAuth, requireAdmin, (req, res) => renderUsers(req, res));
+r.post('/users/add', requireAuth, requireAdmin, csrfCheck, async (req, res) => {
+  const username = String(req.body.username || '').trim().toLowerCase();
+  const name = String(req.body.name || '').trim().slice(0, 80);
+  const role = Object.hasOwn(ROLES, req.body.role) ? req.body.role : '';
+  if (!USERNAME.test(username)) return renderUsers(req, res, { error: 'ชื่อผู้ใช้ต้องเป็นภาษาอังกฤษตัวเล็ก ตัวเลข จุด หรือขีด ยาว 3–30 ตัว เช่น somchai.k' });
+  if (!role) return renderUsers(req, res, { error: 'กรุณาเลือกสิทธิ์ของบัญชี' });
+  if (db.prepare('SELECT 1 FROM users WHERE username=?').get(username)) return renderUsers(req, res, { error: `มีชื่อผู้ใช้ ${username} อยู่แล้ว` });
+  const password = tempPassword();
+  db.prepare('INSERT INTO users (username, hash, must_change, role, name) VALUES (?,?,1,?,?)').run(username, await bcrypt.hash(password, 12), role, name);
+  renderUsers(req, res, { issued: { username, password, added: true } });
+});
+r.post('/users/:id/role', requireAuth, requireAdmin, csrfCheck, targetUser, (req, res) => {
+  const role = Object.hasOwn(ROLES, req.body.role) ? req.body.role : '';
+  if (!role) return renderUsers(req, res, { error: 'สิทธิ์ไม่ถูกต้อง' });
+  if (role !== 'admin' && isLastAdmin(req.target)) return renderUsers(req, res, { error: 'ต้องมีผู้ดูแลระบบที่ใช้งานได้อย่างน้อย 1 คน' });
+  db.prepare('UPDATE users SET role=? WHERE id=?').run(role, req.target.id);
+  renderUsers(req, res, { notice: `เปลี่ยนสิทธิ์ของ ${req.target.username} เป็น “${ROLES[role]}” แล้ว` });
+});
+r.post('/users/:id/active', requireAuth, requireAdmin, csrfCheck, targetUser, (req, res) => {
+  const on = req.body.active === '1';
+  if (!on && isLastAdmin(req.target)) return renderUsers(req, res, { error: 'ต้องมีผู้ดูแลระบบที่ใช้งานได้อย่างน้อย 1 คน' });
+  db.prepare('UPDATE users SET active=? WHERE id=?').run(on ? 1 : 0, req.target.id);
+  if (!on) db.prepare('DELETE FROM sessions WHERE user_id=?').run(req.target.id); // ออกจากระบบทุกเครื่องทันที
+  renderUsers(req, res, { notice: on ? `เปิดใช้บัญชี ${req.target.username} แล้ว` : `ปิดบัญชี ${req.target.username} แล้ว — เข้าระบบไม่ได้จนกว่าจะเปิดอีกครั้ง` });
+});
+r.post('/users/:id/reset', requireAuth, requireAdmin, csrfCheck, targetUser, async (req, res) => {
+  const password = tempPassword();
+  db.prepare('UPDATE users SET hash=?, must_change=1, fails=0, locked_until=0 WHERE id=?').run(await bcrypt.hash(password, 12), req.target.id);
+  db.prepare('DELETE FROM sessions WHERE user_id=?').run(req.target.id);
+  renderUsers(req, res, { issued: { username: req.target.username, password } });
+});
+r.post('/users/:id/delete', requireAuth, requireAdmin, csrfCheck, targetUser, (req, res) => {
+  if (isLastAdmin(req.target)) return renderUsers(req, res, { error: 'ต้องมีผู้ดูแลระบบที่ใช้งานได้อย่างน้อย 1 คน' });
+  db.prepare('DELETE FROM sessions WHERE user_id=?').run(req.target.id);
+  db.prepare('DELETE FROM users WHERE id=?').run(req.target.id);
+  renderUsers(req, res, { notice: `ลบบัญชี ${req.target.username} แล้ว` });
+});
+
+// ---------- สำรองข้อมูล (เฉพาะผู้ดูแลระบบ) ----------
+r.get('/backup', requireAuth, requireAdmin, (req, res) => res.render('admin/backup', { title: 'สำรองข้อมูล', sum: backupSummary() }));
+r.post('/backup', requireAuth, requireAdmin, csrfCheck, async (req, res, next) => {
+  const sum = backupSummary();
+  if (sum.tooBig) return res.status(413).render('admin/message', { title: 'ไฟล์สำรองใหญ่เกินไป', msg: 'ข้อมูลรวมเกิน 3.5 GB — ใช้วิธีบีบอัดโฟลเดอร์ข้อมูลใน File Manager ของโฮสต์แทน' });
+  const d = new Date(Date.now() + 7 * 3600e3); // วันที่ตามเวลาไทย ปี พ.ศ.
+  const stamp = `${d.getUTCFullYear() + 543}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+  res.set({ 'Content-Type': 'application/zip', 'Content-Disposition': `attachment; filename="bms-backup-${stamp}.zip"` });
+  try {
+    await writeBackup(res);
+    res.end();
+  } catch (e) {
+    if (!res.headersSent) return next(e);
+    console.error('สร้างไฟล์สำรองไม่สำเร็จ:', e);
+    res.destroy(e); // ตัดการดาวน์โหลด เบราว์เซอร์จะแจ้งว่าไฟล์ไม่สมบูรณ์
+  }
+});
+
 // ---------- CRUD ทั่วไป ----------
 function getEntity(req, res, next) {
   const e = Object.hasOwn(entities, req.params.e) ? entities[req.params.e] : null;
   if (!e) return res.status(404).render('admin/message', { title: 'ไม่พบหน้า', msg: 'ไม่พบเมนูที่ต้องการ' });
+  if (!canManage(req.user, req.params.e)) return forbidden(res);
   req.ent = e; req.table = req.params.e;
   res.locals.ent = e; res.locals.table = req.table;
   next();

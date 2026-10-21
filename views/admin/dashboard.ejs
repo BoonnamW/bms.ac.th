@@ -6,7 +6,7 @@
     <a class="btn" href="/admin/news/new">+ เพิ่มข่าวใหม่</a>
     <a class="btn ghost" href="/admin/events/new">+ เพิ่มกิจกรรมในปฏิทิน</a>
     <a class="btn ghost" href="/admin/pages/new">+ เพิ่มหน้าเว็บ</a>
-    <a class="btn ghost" href="/admin/menu_items">จัดการเมนูหลัก</a>
+    <% if (user.role === 'admin') { %><a class="btn ghost" href="/admin/menu_items">จัดการเมนูหลัก</a><% } %>
   </div>
 </div>
 <div class="dash2">
@@ -35,7 +35,8 @@
   <a class="stat" href="/admin/<%= k %>"><strong><%= counts[k] %></strong><span><%= entities[k].title %></span></a>
   <% }) %>
 </div>
-<% if (user.username === 'admin') { %>
-<div class="tip"><b>คำแนะนำด้านความปลอดภัย:</b> ใช้รหัสผ่านที่คาดเดายาก, ออกจากระบบทุกครั้งเมื่อใช้เครื่องสาธารณะ และสำรองโฟลเดอร์ <code>data</code> กับ <code>uploads</code> เป็นประจำ</div>
+<% if (user.role === 'admin') { %>
+<div class="tip"><b>คำแนะนำด้านความปลอดภัย:</b> ให้ทุกคนใช้บัญชีของตัวเอง (เมนู <a href="/admin/users">ผู้ใช้งาน</a>) ใช้รหัสผ่านที่คาดเดายาก ออกจากระบบทุกครั้งเมื่อใช้เครื่องสาธารณะ
+  และดาวน์โหลดไฟล์สำรองทุกเดือนที่เมนู <a href="/admin/backup">สำรองข้อมูล</a></div>
 <% } %>
 <%- include('_foot') %>
