@@ -123,6 +123,15 @@ npm run dev          # (ระหว่างแก้โค้ด) เปิด
   และถ้าเว็บ WordPress เดิมอยู่บนโฮสต์เดียวกัน `WP_UPLOADS_DIR=<public_html>/bs/wp-content/uploads` (ใช้รูปเดิมได้เลย ไม่ต้องคัดลอก)
 - กด Run NPM Install → Run JS script `setup` (นำเข้าเนื้อหาครั้งแรก) → Restart
 - ทดสอบที่ subdomain ก่อน (เช่น new.bms.ac.th) แล้วค่อยเปลี่ยน Application URL เป็นโดเมนหลัก
+- ไฟล์ใน `public_html` ที่มีอยู่จริงถูกส่งตรงโดยไม่ผ่านแอป: ต้องเปลี่ยนชื่อ `index.html` / `index.php` เดิม
+  และเอากฎ rewrite เดิมใน `public_html/.htaccess` ออก (เช่นของ Website Builder ที่ส่งทุกลิงก์ไป `index.php`) — ห้ามแตะบล็อก `CLOUDLINUX ...`
+- ระบบ PHP เดิมในโฟลเดอร์ย่อย (เช่น `room-booking`, `e-borrow`): ใส่ `PassengerEnabled off` เป็นบรรทัดแรกของ `.htaccess` ในโฟลเดอร์นั้น
+  ใช้ที่อยู่เดิมได้ต่อ — ห้ามใส่บรรทัดนี้ใน `public_html/.htaccess` (เว็บทั้งเว็บจะขึ้น 403)
+- old.bms.ac.th บน DirectAdmin นี้ใช้โฟลเดอร์ `domains/old.bms.ac.th/public_html` — ข้างในเป็นทางลัด (symlink) ไปยังโฟลเดอร์เดิมใน `public_html`
+  อย่าลบทางลัดด้วย File Manager (อาจลบโฟลเดอร์จริงไปด้วย) ให้ลบด้วยสคริปต์ที่ใช้ `unlink()`
+- อัปเดตเวอร์ชันใหม่: ดาวน์โหลด ZIP จาก GitHub → Extract ในโฟลเดอร์บนสุด → STOP APP → เปลี่ยนชื่อ `bms-web` เป็น `bms-web-prev`
+  และโฟลเดอร์ใหม่เป็น `bms-web` → Run NPM Install → START APP (มีปัญหาให้สลับชื่อกลับ) — ข้อมูลอยู่ใน `bms-data` ไม่ถูกแตะ
+- สำรองข้อมูล: `bms-data` อยู่นอก `domains/` จึงอาจไม่อยู่ในไฟล์สำรองของ DirectAdmin — บีบอัดแล้วดาวน์โหลดเก็บเป็นประจำ
 - ก่อนลบโฟลเดอร์ `bs` ของเว็บเดิม: ย้าย `bs/wp-content/uploads` ไปไว้ที่ `<DATA_PATH>/uploads/wp` แล้วลบตัวแปร `WP_UPLOADS_DIR`
 
 ## ย้ายข้อมูลจากเว็บ WordPress เดิม (www.bms.ac.th/bs)
