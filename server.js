@@ -8,7 +8,7 @@ import { parseCookies, icon, thDate, thDateTime, thTime, thDay, dateParts, pics,
 import publicRoutes from './routes/public.js';
 import adminRoutes from './routes/admin.js';
 import { seedDefaults } from './lib/seed.js';
-import { wpMedia, oldSite, oldFolders, prefetchOld } from './lib/wpmedia.js';
+import { wpMedia, oldSite, oldFolders, prefetchOld, WP_DIR } from './lib/wpmedia.js';
 import { themeCss } from './lib/colors.js';
 import { gdriveMedia, status as driveStatus } from './lib/gdrive.js';
 import { mourning } from './lib/popups.js';
@@ -100,10 +100,12 @@ const fileHeaders = (req, res, next) => {
 app.use('/uploads', fileHeaders);
 // ไฟล์จากเว็บเดิม: เปิดเฉพาะชนิดไฟล์รูป/เอกสาร (กันไฟล์ .html/.js/.svg ในโฟลเดอร์เดิมถูกเปิดจากโดเมนนี้)
 app.use('/uploads/wp', (req, res, next) => (WP_FILE.test(req.path) ? next() : res.status(404).end()));
-app.use('/uploads', express.static(UPLOAD_DIR, {
+const uploadsStatic = (dir) => express.static(dir, {
   maxAge: '30d', index: false, dotfiles: 'deny',
   setHeaders: (res) => res.setHeader('Content-Disposition', 'inline'),
-}));
+});
+if (process.env.WP_UPLOADS_DIR) app.use('/uploads/wp', uploadsStatic(WP_DIR)); // โฟลเดอร์ wp-content/uploads ของเว็บเดิมบนโฮสต์เดียวกัน
+app.use('/uploads', uploadsStatic(UPLOAD_DIR));
 app.use('/uploads/wp', wpMedia(WP_MEDIA_URL)); // ไฟล์ที่ยังไม่มีในเครื่อง → ดึงจากเว็บเดิมมาเก็บไว้
 app.get('/gdrive/:size/:file', gdriveMedia()); // รูปย่อจากโฟลเดอร์ Google Drive ที่ใช้บนเว็บ
 

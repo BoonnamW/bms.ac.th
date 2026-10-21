@@ -116,6 +116,15 @@ npm run dev          # (ระหว่างแก้โค้ด) เปิด
 (Google Cloud Console → APIs & Services → เปิด Google Drive API → Credentials → Create API key แล้วจำกัดคีย์ให้ใช้กับ Drive API เท่านั้น)
 ถ้าไม่ตั้ง เว็บอ่านรายชื่อรูปจากหน้าแสดงโฟลเดอร์แบบฝังของ Google แทน (ใช้ได้กับโฟลเดอร์ที่แชร์สาธารณะ)
 
+### บนโฮสต์ DirectAdmin / cPanel ("Setup Node.js App" ของ CloudLinux)
+
+- อัปโหลดโค้ดไว้นอก `public_html` (เช่น `~/bms-web`) แล้วสร้างแอป: Node.js 24 · Production · Application startup file `passenger.cjs`
+- ตัวแปร: `DATA_PATH` (โฟลเดอร์นอก `public_html` เช่น `~/bms-data`), `SITE_URL`, `ADMIN_PASSWORD`, `TRUST_PROXY=1`
+  และถ้าเว็บ WordPress เดิมอยู่บนโฮสต์เดียวกัน `WP_UPLOADS_DIR=<public_html>/bs/wp-content/uploads` (ใช้รูปเดิมได้เลย ไม่ต้องคัดลอก)
+- กด Run NPM Install → Run JS script `setup` (นำเข้าเนื้อหาครั้งแรก) → Restart
+- ทดสอบที่ subdomain ก่อน (เช่น new.bms.ac.th) แล้วค่อยเปลี่ยน Application URL เป็นโดเมนหลัก
+- ก่อนลบโฟลเดอร์ `bs` ของเว็บเดิม: ย้าย `bs/wp-content/uploads` ไปไว้ที่ `<DATA_PATH>/uploads/wp` แล้วลบตัวแปร `WP_UPLOADS_DIR`
+
 ## ย้ายข้อมูลจากเว็บ WordPress เดิม (www.bms.ac.th/bs)
 
 `scripts/import-wp.mjs` นำเข้าเนื้อหาที่เผยแพร่แล้วทั้งหมด: ข่าว 440 เรื่อง, หน้าเว็บ, อัลบั้มภาพ (Responsive Lightbox),
