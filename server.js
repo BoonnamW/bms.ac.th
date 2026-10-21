@@ -13,7 +13,7 @@ import { themeCss } from './lib/colors.js';
 import { gdriveMedia, status as driveStatus } from './lib/gdrive.js';
 import { mourning } from './lib/popups.js';
 import { imgset } from './lib/media.js';
-import { siteOrigin } from './lib/site.js';
+import { siteOrigin, canonicalHost } from './lib/site.js';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 
@@ -73,6 +73,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(canonicalHost);
 app.use(compression({ threshold: 1024 })); // gzip/brotli หน้าเว็บ CSS JS (รูปและฟอนต์บีบอัดอยู่แล้ว ไม่บีบซ้ำ)
 app.use((req, res, next) => { req.cookies = parseCookies(req.headers.cookie); next(); });
 app.use(express.urlencoded({ extended: false, limit: '1mb' }));
