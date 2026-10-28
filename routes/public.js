@@ -111,6 +111,11 @@ const youtubeEmbed = (url) => {
 };
 
 // ---------- robots / sitemap / RSS / app manifest ----------
+// sitemap และ RSS เป็น XML ล้วน: ตัวแสดง XML ของเบราว์เซอร์ใช้ style ในหน้าและรูป data: ซึ่ง CSP หลักบล็อก
+// (เปิดดูแล้วขึ้นเป็นข้อความติดกันทั้งหน้า) จึงใช้ CSP เฉพาะ ที่ยังห้ามสคริปต์ทั้งหมด
+const XML_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; frame-ancestors 'none'";
+const sendXml = (res, type, xml) => res.set('Content-Security-Policy', XML_CSP).type(type).send(xml);
+
 r.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(`User-agent: *\nDisallow: /admin\nDisallow: /search\nDisallow: /api/\nSitemap: ${baseUrl(req)}/sitemap.xml\n`);
 });
@@ -128,7 +133,7 @@ r.get('/sitemap.xml', (req, res) => {
     ...all('SELECT id FROM news WHERE published=1 ORDER BY created_at DESC LIMIT 500').map((n) => [`/news/${n.id}`, '0.5']),
   ];
   const body = urls.map(([u, p]) => `<url><loc>${esc(base + encodeURI(u))}</loc><priority>${p}</priority></url>`).join('');
-  res.type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`);
+  sendXml(res, 'application/xml', `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`);
 });
 
 r.get('/feed.xml', (req, res) => {
@@ -138,7 +143,7 @@ r.get('/feed.xml', (req, res) => {
     .map((n) => `<item><title>${x(n.title)}</title><link>${base}/news/${n.id}</link><guid>${base}/news/${n.id}</guid>`
       + `<pubDate>${parseUtc(n.created_at).toUTCString()}</pubDate><category>${x(n.category)}</category>`
       + `<description>${x(n.excerpt)}</description></item>`).join('');
-  res.type('application/rss+xml').send(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${x(S.school_name)}</title>`
+  sendXml(res, 'application/rss+xml', `<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>${x(S.school_name)}</title>`
     + `<link>${base}/</link><description>${x(S.tagline)}</description><language>th</language>${items}</channel></rss>`);
 });
 
